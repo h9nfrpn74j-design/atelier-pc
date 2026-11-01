@@ -395,6 +395,41 @@ body[data-mode="dp-facade"] .pc-only,body[data-mode="dp-toiture"] .pc-only{displ
 }
 @media (max-width:420px){.wz-styles{grid-template-columns:1fr}}
 @media print{.wiz{display:none!important}}
+/* Sur place : caméra et placement */
+.cam{position:fixed;inset:0;z-index:60;background:#000;color:#fff;display:grid;grid-template-rows:1fr}
+.cam video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+.cam-top{position:absolute;left:0;right:0;top:0;display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:max(10px,env(safe-area-inset-top)) 14px 10px;background:linear-gradient(rgba(0,0,0,.65),transparent);font:500 13px var(--f-mono)}
+.cam-top b{font:600 15px var(--f-ui);flex:1 1 100%}.cam-top span{background:rgba(0,0,0,.45);padding:3px 8px;border-radius:99px}.cam-top span.ok{color:#9fe0b4}
+.cam-hz{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.cam-hz i{display:block;width:70%;height:0;border-top:2px dashed rgba(255,255,255,.75);transition:border-color .2s}.cam-hz i.lvl{border-top:2px solid #6fe39a}
+.cam-tip{position:absolute;left:12px;right:12px;bottom:calc(120px + env(safe-area-inset-bottom));text-align:center;font-size:14px;text-shadow:0 1px 3px #000}
+.cam-err{position:absolute;left:14px;right:14px;top:40%;background:rgba(174,51,40,.92);padding:12px;border-radius:10px;font-size:14px}
+.cam-bar{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:16px 18px max(18px,env(safe-area-inset-bottom));background:linear-gradient(transparent,rgba(0,0,0,.7))}
+.cam-bar>button:first-child,.cam-gal{background:none;border:0;color:#fff;font:500 15px var(--f-ui);cursor:pointer;justify-self:start;padding:10px}
+.cam-gal{justify-self:end}
+.cam-shut{width:74px;height:74px;border-radius:50%;border:5px solid #fff;background:rgba(255,255,255,.25);cursor:pointer}
+.cam-shut:active{background:#fff}
+.place{position:fixed;inset:0;z-index:61;background:#111;color:#fff;display:grid;grid-template-rows:auto 1fr auto}
+.pl-top{padding:max(10px,env(safe-area-inset-top)) 14px 10px;font-size:14px;background:#1b2421}
+.pl-photo{position:relative;min-height:0;display:grid;place-items:center;overflow:hidden}
+#plSvg{width:100%;height:100%;touch-action:none;cursor:crosshair;display:block}
+.pl-ctl{background:var(--panel);color:var(--ink);padding:10px 14px max(10px,env(safe-area-inset-bottom));display:grid;gap:8px;max-height:46vh;overflow:auto}
+.pl-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;font-size:13px}.pl-row input{width:100%;accent-color:var(--accent)}.pl-row b{font:600 12px var(--f-mono);min-width:44px;text-align:right}
+#plPort.pl-row{grid-template-columns:auto 1fr auto 1fr}
+.pl-adv summary{font-size:13px;color:var(--muted);cursor:pointer;padding:4px 0}.pl-adv{display:grid;gap:6px}
+.pl-bar{display:flex;gap:8px;flex-wrap:wrap}.pl-bar .btn{min-height:44px;flex:1}.pl-bar #plOk{flex:2}
+.wz-big{width:100%;min-height:52px;font-size:15px!important;font-weight:600}
+.wz-or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px}.wz-or::before,.wz-or::after{content:"";flex:1;border-top:1px solid var(--line)}
+.wz-kinds{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.wz-kinds label{position:relative;display:grid;gap:4px;border:1px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;align-content:start}
+.wz-kinds label:has(input:checked){border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft);background:#F4FAF8}
+.wz-kinds input{position:absolute;opacity:0}.wz-kinds .ic{font-size:28px}.wz-kinds b{font-size:15px}.wz-kinds small{color:var(--muted);font-size:12px}
+.wz-cols{display:flex;flex-wrap:wrap;gap:8px}.wz-cols label{display:flex;align-items:center;gap:6px;font-size:12px;border:1px solid var(--line);border-radius:99px;padding:4px 10px 4px 4px;cursor:pointer}
+.wz-cols label:has(input:checked){border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}.wz-cols input{position:absolute;opacity:0}.wz-cols span{width:20px;height:20px;border-radius:50%;border:1px solid rgba(0,0,0,.2)}
+.wz-shot{width:100%;border-radius:8px;margin-top:6px;max-height:220px;object-fit:cover}
+#wzPElev svg{width:100%;height:auto}
+@media (max-width:820px){.wz-kinds{grid-template-columns:1fr}.wz-kinds label{grid-template-columns:40px 1fr;column-gap:10px}.wz-kinds .ic{grid-row:span 2}}
+@media print{.cam,.place{display:none!important}}
 </style>
 </head>
 <body>
@@ -714,6 +749,29 @@ body[data-mode="dp-facade"] .pc-only,body[data-mode="dp-toiture"] .pc-only{displ
   <div id="wzBody"></div>
   <div class="wz-foot"><button class="btn" id="wzPrev" type="button">Précédent</button><button class="btn primary" id="wzNext" type="button">Continuer</button></div>
 </div></div>
+<div class="cam" id="cam" hidden role="dialog" aria-modal="true" aria-labelledby="camTitle">
+  <video id="camV" playsinline muted autoplay></video>
+  <div class="cam-top"><b id="camTitle">Photo sur place</b><span id="camHead">Cap —</span><span id="camAcc">GPS…</span></div>
+  <div class="cam-hz"><i id="camHz"></i></div>
+  <div class="cam-tip" id="camTip"></div>
+  <div class="cam-err" id="camErr" hidden></div>
+  <div class="cam-bar"><button type="button" id="camCancel">Annuler</button><button class="cam-shut" type="button" id="camShot" aria-label="Prendre la photo"></button><label class="cam-gal">Galerie<input type="file" accept="image/*,.heic,.heif" id="camFile" hidden></label></div>
+</div>
+<div class="place" id="place" hidden role="dialog" aria-modal="true" aria-label="Placer le projet sur la photo">
+  <div class="pl-top"><span id="plMsg"></span></div>
+  <div class="pl-photo"><svg id="plSvg" preserveAspectRatio="xMidYMid meet"></svg></div>
+  <div class="pl-ctl">
+    <div id="plRotRow" class="pl-row"><span>Orientation</span><input type="range" id="plRot" min="-180" max="180" step="1"><b id="plRotV"></b></div>
+    <div id="plSnap" class="btns"><button class="btn sm" type="button" id="plFace">Face à moi</button><button class="btn sm" type="button" id="plStreet">Parallèle à la rue</button><button class="btn sm" type="button" id="plLim">Parallèle à la limite la plus proche</button></div>
+    <div id="plPort" class="pl-row" hidden><span>Largeur</span><input type="range" id="plPortW" min="1" max="7" step="0.1"><span>Hauteur</span><input type="range" id="plPortH" min="0.8" max="2.4" step="0.05"></div>
+    <details class="pl-adv"><summary>Ajuster la prise de vue (si le dessin ne colle pas à la photo)</summary>
+      <div class="pl-row"><span>Direction</span><input type="range" id="plDh" min="-30" max="30" step="0.5"><b id="plDhV"></b></div>
+      <div class="pl-row"><span>Inclinaison</span><input type="range" id="plDp" min="-15" max="15" step="0.25"><b id="plDpV"></b></div>
+      <div class="pl-row"><span>Champ de vue</span><input type="range" id="plFov" min="40" max="90" step="1"><b id="plFovV"></b></div>
+      <p class="hint" id="plInfo"></p></details>
+    <div class="pl-bar"><button class="btn" type="button" id="plCancel">Annuler</button><button class="btn" type="button" id="plRetake">Reprendre la photo</button><button class="btn primary" type="button" id="plOk">Valider l'emplacement</button></div>
+  </div>
+</div>
 <div class="picker" id="picker" hidden role="dialog" aria-modal="true" aria-labelledby="pkTitle">
   <div class="pk-head">
     <div class="pk-txt">
@@ -820,7 +878,7 @@ if(!S.existants)S.existants=[];if(!S.projet.nature)S.projet.nature='maison';
 function loadLocal(){try{const s=localStorage.getItem('atelier-pc');return s?JSON.parse(s):null}catch(e){return null}}
 let saveT;
 let quotaWarned=false;
-function saveLocal(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem('atelier-pc',JSON.stringify(S))}catch(e){try{const c=JSON.parse(JSON.stringify(S));for(const k of['p7','p8','ins','insImg'])c.photos[k]=null;localStorage.setItem('atelier-pc',JSON.stringify(c));
+function saveLocal(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem('atelier-pc',JSON.stringify(S))}catch(e){try{const c=JSON.parse(JSON.stringify(S));for(const k of['p7','p8','ins','insImg'])c.photos[k]=null;if(c.onsite)c.onsite.shot=null;localStorage.setItem('atelier-pc',JSON.stringify(c));
   if(!quotaWarned){quotaWarned=true;toast('Vos images sont trop lourdes pour la sauvegarde automatique du navigateur. Elles restent affichées : utilisez « Enregistrer » pour les conserver dans un fichier projet.',8000)}}catch(_){}}},400)}
 
 /* ================= Géométrie locale ================= */
@@ -2311,8 +2369,12 @@ async function loadPK(){
     const j=await getJSON(`${CAD}?geom=${encodeURIComponent(JSON.stringify({type:'Polygon',coordinates:[ring]}))}&_limit=1000`);
     if(seq!==PK.seq)return;PK.feats=j.features||[];
     let note='';
-    if(PK.preselectAt){const hit=PK.feats.find(f=>featContains(f,PK.preselectAt));PK.preselectAt=null;
-      if(hit){PK.sel.set(hit.properties.idu,hit);note='La parcelle à cette adresse est surlignée en jaune. Vérifiez sur la photo que c\'est bien votre terrain : l\'adresse est parfois placée sur une parcelle voisine.'}
+    if(PK.preselectAt){const at=PK.preselectAt;let hit=PK.feats.find(f=>featContains(f,at));PK.preselectAt=null;let near=false;
+      if(!hit&&PK.onsite){const kx=111320*Math.cos(at[1]*D2R),ky=110574;let bd=35;for(const f of PK.feats){const g=f.geometry;const polys=g.type==='MultiPolygon'?g.coordinates:[g.coordinates];
+          for(const pl of polys)for(const r of pl)for(let i=0;i+1<r.length;i++){const q=pSeg([(at[0])*kx,at[1]*ky],[r[i][0]*kx,r[i][1]*ky],[r[i+1][0]*kx,r[i+1][1]*ky]);if(q.d<bd){bd=q.d;hit=f}}}near=!!hit}
+      PK.onsite=false;
+      if(hit&&near){PK.sel.set(hit.properties.idu,hit);note='Vous êtes hors des parcelles (dans la rue ?) : la parcelle la plus proche est surlignée. Touchez la bonne parcelle si ce n\'est pas celle-là.'}
+      else if(hit){PK.sel.set(hit.properties.idu,hit);note='La parcelle à cette adresse est surlignée en jaune. Vérifiez sur la photo que c\'est bien votre terrain : l\'adresse est parfois placée sur une parcelle voisine.'}
       else note='Cliquez sur la parcelle de votre terrain.'}
     if(PK.keepIdus){for(const f of PK.feats)if(PK.keepIdus.has(f.properties.idu))PK.sel.set(f.properties.idu,f);PK.keepIdus=null}
     pkDraw();renderPkSel();pkMsg(PK.feats.length>=1000?'Beaucoup de parcelles dans cette zone : zoomez davantage.':note);
@@ -2436,135 +2498,326 @@ setTimeout(()=>netCheck(false),800);
 if(isMobile()){let v='panel';try{v=sessionStorage.getItem('apc-view')||'panel'}catch(e){}setView(v)}
 if(S.demo)status('#stTerrain','','Exemple chargé (terrain fictif). Saisissez l\'adresse de votre terrain pour commencer.');
 else status('#stTerrain','ok',`Parcelle ${parcelRefs()} — ${fmt(parcelArea(),0)} m².`);
+/* ================= Sur place : GPS, boussole, caméra, placement sur la photo ================= */
+const ORI={h:null,p:0,r:0,src:null,on:false,t:0};
+const GPS={best:null,last:null,watch:null};
+const nAng=a=>((a%360)+360)%360;
+function oriHandle(e,abs){if(e.beta==null)return;const a=(e.alpha||0)*D2R,b=e.beta*D2R,g=(e.gamma||0)*D2R;
+  const ca=Math.cos(a),sa=Math.sin(a),cb=Math.cos(b),sb=Math.sin(b),cg=Math.cos(g),sg=Math.sin(g);
+  const vE=-ca*sg-sa*sb*cg,vN=-sa*sg+ca*sb*cg,vU=-cb*cg;ORI.p=Math.asin(clamp(vU,-1,1))/D2R;
+  const so=((screen.orientation&&screen.orientation.angle)??window.orientation??0)*D2R;const xz=-cb*sg,yz=sb;
+  ORI.r=Math.atan2(Math.cos(so)*xz-Math.sin(so)*yz,Math.sin(so)*xz+Math.cos(so)*yz)/D2R;
+  if(e.webkitCompassHeading!=null&&!isNaN(e.webkitCompassHeading)){ORI.h=nAng(e.webkitCompassHeading);ORI.src='ios'}
+  else if(abs||e.absolute===true){if(Math.hypot(vE,vN)>0.2){ORI.h=nAng(Math.atan2(vE,vN)/D2R);ORI.src='abs'}}
+  ORI.t=Date.now()}
+async function startOrientation(){if(ORI.on)return true;const DOE=window.DeviceOrientationEvent;if(!DOE)return false;
+  if(typeof DOE.requestPermission==='function'){try{if(await DOE.requestPermission()!=='granted')return false}catch(e){return false}}
+  if('ondeviceorientationabsolute' in window)window.addEventListener('deviceorientationabsolute',e=>oriHandle(e,true));
+  window.addEventListener('deviceorientation',e=>oriHandle(e,false));ORI.on=true;return true}
+function gpsWatch(on){if(!navigator.geolocation)return;if(on&&GPS.watch==null){GPS.watch=navigator.geolocation.watchPosition(p=>{const f={lonlat:[p.coords.longitude,p.coords.latitude],acc:p.coords.accuracy,t:Date.now()};GPS.last=f;if(!GPS.best||f.acc<=GPS.best.acc||Date.now()-GPS.best.t>30000)GPS.best=f},()=>{},{enableHighAccuracy:true,maximumAge:0})}
+  if(!on&&GPS.watch!=null){navigator.geolocation.clearWatch(GPS.watch);GPS.watch=null}}
+function geoFix(onProg,maxMs=12000,good=8){return new Promise((res,rej)=>{
+  if(!window.isSecureContext)return rej(new Error('la localisation ne fonctionne que sur le site en ligne (adresse https)'));
+  if(!navigator.geolocation)return rej(new Error('ce navigateur ne donne pas la position'));let best=null,id=null;
+  const end=()=>{navigator.geolocation.clearWatch(id);clearTimeout(t);best?res(best):rej(new Error('position introuvable, réessayez à l\'extérieur'))};
+  id=navigator.geolocation.watchPosition(p=>{const f={lonlat:[p.coords.longitude,p.coords.latitude],acc:p.coords.accuracy,t:Date.now()};if(!best||f.acc<best.acc)best=f;GPS.best=best;GPS.last=f;onProg&&onProg(best);if(f.acc<=good)end()},
+    e=>{navigator.geolocation.clearWatch(id);clearTimeout(t);if(best)res(best);else rej(new Error(e.code===1?'la localisation est refusée : autorisez-la pour ce site dans les réglages du téléphone':e.code===3?'délai dépassé, réessayez à l\'extérieur':'position indisponible'))},
+    {enableHighAccuracy:true,maximumAge:0,timeout:maxMs});const t=setTimeout(end,maxMs)})}
+async function locateOnSite(msg){msg('Recherche de votre position… (restez immobile quelques secondes)','busy');
+  const f=await geoFix(b=>msg(`Recherche de votre position… précision actuelle ± ${Math.round(b.acc)} m`,'busy'));
+  S.onsite=Object.assign(S.onsite||{},{here:f.lonlat,acc:f.acc});let addr=null;
+  try{const j=await getJSON(`${GEO}/reverse?lon=${f.lonlat[0]}&lat=${f.lonlat[1]}&limit=1`);if(j.features&&j.features[0])addr=j.features[0].properties}catch(e){}
+  msg(`Position trouvée (± ${Math.round(f.acc)} m). Vérifiez la parcelle surlignée puis validez.`,'');
+  openPicker({lonlat:f.lonlat,zoom:19,addr,preselectAt:f.lonlat});PK.onsite=true;PK.mark=f.lonlat;try{pkDraw()}catch(e){}
+  return f}
+
+/* ---------- Caméra ---------- */
+const CAM={stream:null,res:null,mode:null};
+function camHudLoop(){if($('#cam').hidden)return;const h=ORI.h;const card=h==null?'':['N','NE','E','SE','S','SO','O','NO'][Math.round(h/45)%8];
+  $('#camHead').textContent=h==null?'Boussole indisponible':`Cap ${Math.round(h)}° ${card}`;
+  const g=GPS.last;$('#camAcc').textContent=g?`GPS ± ${Math.round(g.acc)} m`:'GPS…';$('#camAcc').className=g&&g.acc<=10?'ok':'';
+  const hz=$('#camHz');const pitchPx=ORI.p*($('#camV').clientHeight/48);hz.style.transform=`translateY(${(pitchPx).toFixed(1)}px) rotate(${(ORI.r).toFixed(1)}deg)`;
+  hz.classList.toggle('lvl',Math.abs(ORI.r)<2&&Math.abs(ORI.p)<4);requestAnimationFrame(camHudLoop)}
+function camStop(){if(CAM.stream){CAM.stream.getTracks().forEach(t=>t.stop());CAM.stream=null}$('#camV').srcObject=null;gpsWatch(false)}
+function closeCamera(r){camStop();$('#cam').hidden=true;document.body.classList.remove('cam-on');const f=CAM.res;CAM.res=null;f&&f(r)}
+async function openCamera(opt={}){$('#camTip').textContent=opt.tip||'Visez l\'endroit du projet, téléphone droit';$('#camTitle').textContent=opt.title||'Photo sur place';
+  $('#cam').hidden=false;document.body.classList.add('cam-on');$('#camErr').hidden=true;startOrientation();gpsWatch(true);requestAnimationFrame(camHudLoop);
+  const p=new Promise(r=>CAM.res=r);
+  try{if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error(window.isSecureContext?'caméra non disponible dans ce navigateur':'la caméra ne fonctionne que sur le site en ligne (adresse https)');
+    CAM.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1440}},audio:false});
+    const v=$('#camV');v.srcObject=CAM.stream;await v.play().catch(()=>{})}
+  catch(e){$('#camErr').hidden=false;$('#camErr').textContent='Caméra indisponible ('+(e.name==='NotAllowedError'?'autorisation refusée':e.message)+'). Utilisez « Galerie » pour choisir une photo : l\'orientation sera estimée.'}
+  return p}
+function poseNow(src){const g=GPS.best&&Date.now()-GPS.best.t<60000?GPS.best:GPS.last||null;const here=g?g.lonlat:(S.onsite&&S.onsite.here)||null;
+  return{lonlat:here,acc:g?g.acc:null,h:ORI.h,hSrc:ORI.h==null?'estime':ORI.src,p:ORI.ON===false?0:ORI.p,r:ORI.r,fov:66,eye:1.5,src,dh:0,dp:0}}
+function shrinkCanvas(cv,maxPx=1800){const k=Math.min(1,maxPx/Math.max(cv.width,cv.height));if(k>=1)return cv;const c2=document.createElement('canvas');c2.width=Math.round(cv.width*k);c2.height=Math.round(cv.height*k);c2.getContext('2d').drawImage(cv,0,0,c2.width,c2.height);return c2}
+$('#camShot').onclick=()=>{const v=$('#camV');if(!v.videoWidth){toast('La caméra n\'est pas prête.');return}
+  const cv=document.createElement('canvas');cv.width=v.videoWidth;cv.height=v.videoHeight;cv.getContext('2d').drawImage(v,0,0);const c2=shrinkCanvas(cv);
+  const pose=poseNow('live');closeCamera({img:c2.toDataURL('image/jpeg',0.85),w:c2.width,h:c2.height,pose})};
+$('#camFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const pose=poseNow('file');
+  try{const url=await importImage(f,1800);const im=await loadImg(url);closeCamera({img:url,w:im.naturalWidth,h:im.naturalHeight,pose})}catch(err){toast('Image illisible : '+err.message)}};
+$('#camCancel').onclick=()=>closeCamera(null);
+function loadImg(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('image illisible'));i.src=src})}
+
+/* ---------- Géométrie de la prise de vue ---------- */
+function shotGeom(sh){const P=sh.pose;const cw=P.lonlat?toLocal(...P.lonlat):fallbackCam();let h=P.h;
+  if(h==null){const c=S.onsite&&S.onsite.target?S.onsite.target:parcelCentroid(boundary().rings);h=bearing(c[0]-cw[0],c[1]-cw[1])}
+  h=nAng(h+(+P.dh||0));const p=(+P.p||0)+(+P.dp||0);const long=Math.max(sh.w,sh.h);const tl=Math.tan((+P.fov||66)*D2R/2);const fpx=(long/2)/tl;
+  const hfovW=2*Math.atan((sh.w/2)/fpx);const fw=[Math.sin(h*D2R)*Math.cos(p*D2R),Math.cos(h*D2R)*Math.cos(p*D2R),Math.sin(p*D2R)];
+  return{cw,h,p,r:+P.r||0,fpx,hfovW,fw,eye:+P.eye||1.5}}
+function fallbackCam(){const ve=voieMain();if(ve)return[ve.mid[0]+ve.n[0]*3,ve.mid[1]+ve.n[1]*3];const c=parcelCentroid(boundary().rings);return[c[0],c[1]-20]}
+function shotView(sh){const G=shotGeom(sh);const B=bat();const zc=zRelAt(...G.cw);const cb=toBld(...G.cw);const C=[cb[0],cb[1],zc+G.eye];
+  const fb=[G.fw[0]*B.U[0]+G.fw[1]*B.U[1],G.fw[0]*B.V[0]+G.fw[1]*B.V[1],G.fw[2]];const T=[C[0]+fb[0]*20,C[1]+fb[1]*20,C[2]+fb[2]*20];
+  return{G,V:camView(C,T,G.hfovW)}}
+/* pixel de la photo -> point au sol (repère local) */
+function shotGround(sh,px,py){const G=shotGeom(sh);const cx=sh.w/2,cy=sh.h/2;const a=-G.r*D2R;const dx=px-cx,dy=py-cy;
+  const qx=dx*Math.cos(a)-dy*Math.sin(a),qy=dx*Math.sin(a)+dy*Math.cos(a);const x=qx/G.fpx,y=-qy/G.fpx;const f=G.fw;
+  const rr=[f[1],-f[0],0];const l=Math.hypot(rr[0],rr[1])||1;const r=[rr[0]/l,rr[1]/l,0];const u=[r[1]*f[2]-r[2]*f[1],r[2]*f[0]-r[0]*f[2],r[0]*f[1]-r[1]*f[0]];
+  const ray=[f[0]+x*r[0]+y*u[0],f[1]+x*r[1]+y*u[1],f[2]+x*r[2]+y*u[2]];if(ray[2]>-0.004)return null;const t=G.eye/(-ray[2]);
+  const d=Math.hypot(ray[0]*t,ray[1]*t);if(d>150)return null;return[G.cw[0]+ray[0]*t,G.cw[1]+ray[1]*t]}
+function shotOverlay(sh,opts={}){const {G,V}=shotView(sh);const s=(sh.w/2)/V.W;const cx=sh.w/2,cy=sh.h/2;let inner='';
+  if(mode()==='dp-cloture'){inner=cloInsertion(V).sort((a,b)=>b.d-a.d).map(o=>o.svg).join('')}
+  else{const R=renderBuilding([V.f[0],V.f[1]],0,{V,mode:'render',sw:0.03,shadow:true,blur:0.22,lines:true,shadowK:0.8});inner=R.svg}
+  return`<g transform="rotate(${G.r.toFixed(2)} ${cx} ${cy}) translate(${cx} ${cy}) scale(${s.toFixed(4)})"${opts.op?` opacity="${opts.op}"`:''}>${inner}</g>`}
+async function shotComposite(sh){const im=await loadImg(sh.img);const cv=document.createElement('canvas');cv.width=sh.w;cv.height=sh.h;const g=cv.getContext('2d');g.drawImage(im,0,0,sh.w,sh.h);
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${sh.w}" height="${sh.h}" viewBox="0 0 ${sh.w} ${sh.h}">${shotOverlay(sh)}</svg>`;
+  const ov=await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg));g.drawImage(ov,0,0);return cv.toDataURL('image/jpeg',0.86)}
+
+/* ---------- Placement du projet sur la photo ---------- */
+function isPortail(){return mode()==='dp-cloture'}
+function frontNormal(){return sideWorldNormal([0,-1])}
+function placeAt(pt){if(isPortail()){const L=limits();if(!L.length)return;let best=null;for(const l of L){const q=pSeg(pt,l.a,l.b);if(!best||q.d<best.d)best={l,q}}
+    let c=S.clo.find(o=>o.kind==='portail');if(!c){addClo('portail',true);c=S.clo[S.clo.length-1]}const l=best.l;const s=Math.hypot(best.q.q[0]-l.a[0],best.q.q[1]-l.a[1]);
+    c.lim=toLL(...l.mid);c.pos=Math.round(clamp(s,(+c.w||3.5)/2,l.len-(+c.w||3.5)/2)*10)/10;return}
+  const p=S.projet,n=frontNormal();p.x=pt[0]-n[0]*p.W/2;p.y=pt[1]-n[1]*p.W/2;S.onsite.target=pt}
+function faceCamera(sh){const p=S.projet;const cw=shotGeom(sh).cw;const b=bearing(cw[0]-p.x,cw[1]-p.y);const front=[p.x+frontNormal()[0]*p.W/2,p.y+frontNormal()[1]*p.W/2];
+  p.rot=Math.round(nAng(180-b+90)-90);/* façade S3 tournée vers la caméra */const n=frontNormal();p.x=front[0]-n[0]*p.W/2;p.y=front[1]-n[1]*p.W/2;normRot()}
+function normRot(){const p=S.projet;p.rot=Math.round(((p.rot+180)%360+360)%360-180)}
+function rotKeepFront(deg){const p=S.projet;const n0=frontNormal();const f=[p.x+n0[0]*p.W/2,p.y+n0[1]*p.W/2];p.rot=deg;normRot();const n=frontNormal();p.x=f[0]-n[0]*p.W/2;p.y=f[1]-n[1]*p.W/2}
+function alignNearest(){const p=S.projet;const L=limits();if(!L.length)return;let best=null;for(const l of L){const q=pSeg([p.x,p.y],l.a,l.b);if(!best||q.d<best.d)best={l,d:q.d}}
+  const a=Math.atan2(best.l.b[1]-best.l.a[1],best.l.b[0]-best.l.a[0])/D2R;let r=a;let bestR=r;for(let k=-4;k<=4;k++){const c=a+k*90;if(Math.abs(((c-p.rot+540)%360)-180)<Math.abs(((bestR-p.rot+540)%360)-180))bestR=c}rotKeepFront(bestR)}
+function alignStreet(){const ve=voieMain();if(!ve){toast('Aucune voie repérée sur ce terrain.');return}const a=Math.atan2(ve.b[1]-ve.a[1],ve.b[0]-ve.a[0])/D2R;let bestR=a;const p=S.projet;
+  for(let k=-4;k<=4;k++){const c=a+k*90;if(Math.abs(((c-p.rot+540)%360)-180)<Math.abs(((bestR-p.rot+540)%360)-180))bestR=c}rotKeepFront(bestR)}
+
+const PL={sh:null,done:null,placed:false,drag:false};
+function plRender(){const sh=PL.sh;if(!sh)return;const svg=$('#plSvg');svg.setAttribute('viewBox',`0 0 ${sh.w} ${sh.h}`);
+  svg.innerHTML=`<image href="${sh.img}" x="0" y="0" width="${sh.w}" height="${sh.h}" preserveAspectRatio="none"/>`+(PL.placed?shotOverlay(sh):'');
+  const P=sh.pose,G=shotGeom(sh);const port=isPortail();
+  $('#plMsg').innerHTML=PL.placed?(port?'Le portail est posé sur la limite la plus proche. Touchez ou glissez pour le déplacer.':'Glissez le doigt pour déplacer, tournez avec le curseur. Le projet est dessiné à la bonne échelle.'):`<b>Touchez la photo à l'endroit du ${port?'portail':'projet'}</b>${port?' (au sol, au pied du futur portail)':' (au sol, au pied de la façade avant)'}.`;
+  $('#plRot').value=S.projet.rot;$('#plRotV').textContent=Math.round(S.projet.rot)+'°';$('#plRotRow').hidden=port||!PL.placed;$('#plSnap').hidden=port||!PL.placed;
+  $('#plDh').value=P.dh||0;$('#plDp').value=P.dp||0;$('#plFov').value=P.fov||66;$('#plDhV').textContent=(P.dh>0?'+':'')+(P.dh||0)+'°';$('#plDpV').textContent=(P.dp>0?'+':'')+(P.dp||0)+'°';$('#plFovV').textContent=(P.fov||66)+'°';
+  $('#plInfo').textContent=`Prise de vue : cap ${Math.round(G.h)}°${P.hSrc==='estime'?' (estimé, pas de boussole)':''} · inclinaison ${Math.round(G.p)}°${P.acc?` · GPS ± ${Math.round(P.acc)} m`:P.lonlat?'':' · position estimée depuis la rue'}`;
+  if(port&&PL.placed){const c=S.clo.find(o=>o.kind==='portail');if(c){$('#plPort').hidden=false;$('#plPortW').value=c.w;$('#plPortH').value=c.h}}else $('#plPort').hidden=true;
+  $('#plOk').disabled=!PL.placed}
+function plPoint(e){const svg=$('#plSvg');const m=svg.getScreenCTM().inverse();const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(m);return[p.x,p.y]}
+function plTap(e){const [px,py]=plPoint(e);const pt=shotGround(PL.sh,px,py);if(!pt){if(!PL.drag)toast('Touchez le sol, plus bas que l\'horizon.');return}
+  const first=!PL.placed;placeAt(pt);if(first&&!isPortail())faceCamera(PL.sh);PL.placed=true;plRender()}
+$('#plSvg').addEventListener('pointerdown',e=>{e.preventDefault();PL.drag=false;plTap(e);try{$('#plSvg').setPointerCapture(e.pointerId)}catch(_){}PL.down=true});
+$('#plSvg').addEventListener('pointermove',e=>{if(!PL.down||!PL.placed)return;PL.drag=true;const now=performance.now();if(PL.lt&&now-PL.lt<40)return;PL.lt=now;plTap(e)});
+$('#plSvg').addEventListener('pointerup',()=>{PL.down=false});$('#plSvg').addEventListener('pointercancel',()=>{PL.down=false});
+$('#plRot').oninput=e=>{rotKeepFront(+e.target.value);plRender()};
+$('#plFace').onclick=()=>{faceCamera(PL.sh);plRender()};$('#plStreet').onclick=()=>{alignStreet();plRender()};$('#plLim').onclick=()=>{alignNearest();plRender()};
+for(const[k,id]of[['dh','#plDh'],['dp','#plDp'],['fov','#plFov']])$(id).oninput=e=>{PL.sh.pose[k]=+e.target.value;plRender()};
+for(const[k,id]of[['w','#plPortW'],['h','#plPortH']])$(id).oninput=e=>{const c=S.clo.find(o=>o.kind==='portail');if(c){c[k]=+e.target.value;plRender()}};
+$('#plRetake').onclick=()=>{const f=PL.done;PL.done=null;$('#place').hidden=true;f&&f('retake')};
+$('#plCancel').onclick=()=>{const f=PL.done;PL.done=null;$('#place').hidden=true;f&&f(null)};
+$('#plOk').onclick=()=>{const f=PL.done;PL.done=null;$('#place').hidden=true;f&&f('ok')};
+function placeOnPhoto(sh){PL.sh=sh;PL.placed=false;$('#place').hidden=false;
+  // si le projet est déjà dans le champ, on le montre tout de suite
+  const {V}=shotView(sh);const cen=toBld(...(isPortail()?(cloCenter()||[S.projet.x,S.projet.y]):[S.projet.x,S.projet.y]));const c=V.cam([cen[0],cen[1],0]);
+  if(c[2]>2&&Math.abs(c[0]/c[2])<Math.tan(shotGeom(sh).hfovW/2)&&(!isPortail()||S.clo.some(o=>o.kind==='portail')))PL.placed=true;
+  plRender();return new Promise(r=>PL.done=r)}
+
+/* ---------- Parcours complet : photo + placement + pièces graphiques ---------- */
+async function onsiteFlow(){if(S.demo){toast('Choisissez d\'abord votre terrain.');return false}
+  for(;;){const sh=await openCamera({title:isPortail()?'Photo de l\'emplacement du portail':'Photo de l\'emplacement du projet',tip:isPortail()?'Placez-vous dans la rue, face à l\'emplacement du portail, téléphone droit':'Placez-vous dans la rue ou en limite de terrain, visez l\'emplacement du projet, téléphone droit'});
+    if(!sh)return false;S.onsite=Object.assign(S.onsite||{},{shot:sh});const r=await placeOnPhoto(sh);
+    if(r==='retake')continue;if(r!=='ok'){save();return false}break}
+  await onsiteApply();toast(isPortail()?'Portail placé. Photo DP7 et insertion DP6 prêtes.':'Projet placé. Photo PCMI7 et insertion PCMI6 prêtes.');return true}
+async function onsiteApply(){const sh=S.onsite&&S.onsite.shot;if(!sh)return;const G=shotGeom(sh);const ph=S.photos;
+  ph.p7=sh.img;ph.p7pos=toLL(...G.cw);ph.p7dir=Math.round(G.h);ph.pv6pos=toLL(...G.cw);
+  try{ph.insImg=await shotComposite(sh);ph.insMode='image';ph.insFit='contain'}catch(e){ph.ins=sh.img;ph.insMode='auto'}
+  S.onsite.composedFor=onsiteKey();fillInputs();renderAll();save()}
+function onsiteKey(){const p=S.projet;return JSON.stringify([p.x,p.y,p.rot,p.L,p.W,p.niveaux,p.toit,p.pente,p.ouv,p.facadeCouleur,p.couvCouleur,S.clo])}
+async function onsiteRefresh(){const o=S.onsite;if(!o||!o.shot||S.photos.p7!==o.shot.img)return;if(o.composedFor===onsiteKey())return;
+  try{S.photos.insImg=await shotComposite(o.shot);S.photos.insMode='image';o.composedFor=onsiteKey();save()}catch(e){}}
+/* photo d'environnement avec position et direction automatiques */
+async function onsitePhoto(k){if(S.demo){toast('Choisissez d\'abord votre terrain.');return}
+  const sh=await openCamera({title:k==='p8'?'Photo de l\'environnement lointain':'Photo de l\'environnement proche',tip:k==='p8'?'Reculez dans la rue pour montrer le terrain dans son paysage':'Depuis la rue, face au terrain'});if(!sh)return;
+  const G=shotGeom(sh);S.photos[k]=sh.img;S.photos[k+'pos']=toLL(...G.cw);S.photos[k+'dir']=Math.round(G.h);fillInputs();renderAll();save();toast('Photo enregistrée, point de vue placé sur le plan de masse.')}
+
 /* ================= Dossier express : permis de construire guidé en ~10 minutes ================= */
 const WZ={step:0,t0:null,timer:null,plu:null,pluBusy:false};
-const WSTEPS=['Bienvenue','Terrain','Votre maison','Implantation','Aperçu','Photos','Vous','Dossier prêt'];
+const WDEF={welcome:'Bienvenue',terrain:'Terrain',maison:'Votre maison',garage:'Votre garage',portail:'Votre portail',implant:'Implantation',apercu:'Aperçu',photos:'Photos',vous:'Vous',fin:'Dossier prêt'};
 const STYLES={
   trad:{n:'Traditionnelle',d:'Enduit ton pierre, tuiles terre cuite, toit 2 pans',p:{facade:'Enduit gratté fin ton pierre',facadeCouleur:'#DDCFB6',couv:'Tuiles terre cuite',couvCouleur:'#A65A3F',menuis:'PVC blanc',menuisCouleur:'#F3F2EE',toit:'2pans',pente:35,debord:0.5,monoInv:false}},
   contemp:{n:'Contemporaine',d:'Enduit blanc, monopente bac acier, alu anthracite',p:{facade:'Enduit lisse blanc cassé',facadeCouleur:'#ECE7DC',couv:'Bac acier',couvCouleur:'#62696E',menuis:'Aluminium gris anthracite',menuisCouleur:'#3A3F44',toit:'mono',pente:12,debord:0.3,monoInv:false}},
   plat:{n:'Toit plat',d:'Enduit gris clair, toiture-terrasse, alu anthracite',p:{facade:'Enduit lisse gris clair',facadeCouleur:'#CFD1CE',couv:'Étanchéité avec gravillons',couvCouleur:'#9B9A93',menuis:'Aluminium gris anthracite',menuisCouleur:'#3A3F44',toit:'plat',pente:0,debord:0,monoInv:false}},
   bois:{n:'Bois et nature',d:'Bardage bois, tuiles ardoisées, alu noir',p:{facade:'Bardage bois naturel',facadeCouleur:'#A8835B',couv:'Tuiles ardoisées',couvCouleur:'#4D545B',menuis:'Aluminium noir',menuisCouleur:'#232526',toit:'2pans',pente:30,debord:0.4,monoInv:false}},
   ardoise:{n:'Ardoise',d:'Enduit blanc cassé, ardoise naturelle, toit 4 pans',p:{facade:'Enduit gratté fin blanc cassé',facadeCouleur:'#ECE7DC',couv:'Ardoise naturelle',couvCouleur:'#454D55',menuis:'Aluminium gris anthracite',menuisCouleur:'#3A3F44',toit:'4pans',pente:40,debord:0.4,monoInv:false}}};
-function wzState(){S.wz=S.wz||{surf:110,niv:1,garage:true,style:'trad',chambres:3};return S.wz}
-/* dimensions à partir de la surface de plancher visée */
-function sizeFromSurface(){const w=wzState(),p=S.projet;const niv=+w.niv||1;p.niveaux=niv;p.combles=false;p.hEtage=2.7;
-  const A=(+w.surf||110)/niv;const r=niv===1?1.55:1.3;let Wi=Math.sqrt(A/r),Li=A/Wi;
+const PORT_COLS={'#3A3F44':'Gris anthracite','#232526':'Noir','#F3F2EE':'Blanc','#5B6B4E':'Vert','#A8835B':'Bois'};
+function wzState(){S.wz=S.wz||{};const w=S.wz;for(const[k,v]of Object.entries({kind:'maison',surf:110,niv:1,garage:true,style:'trad',gsurf:20}))if(w[k]==null)w[k]=v;return w}
+const wzKind=()=>wzState().kind;
+function wzKeys(){const k=wzKind();return k==='portail'?['welcome','terrain','portail','implant','photos','vous','fin']:['welcome','terrain',k,'implant','apercu','photos','vous','fin']}
+const wzKey=()=>wzKeys()[WZ.step];
+function wzWantMode(){return wzKind()==='portail'?'dp-cloture':'pc'}
+/* dimensions à partir de la surface */
+function sizeFromSurface(){const w=wzState(),p=S.projet;
+  if(w.kind==='garage'){const A=+w.gsurf||20;p.niveaux=1;p.combles=false;p.hEtage=2.5;const Wi=Math.max(3,Math.min(6,Math.sqrt(A/1.6)));p.W=Math.round((Wi+0.4)*10)/10;p.L=Math.round((A/Wi+0.4)*10)/10;p.nature='annexe';p.park=0;return}
+  const niv=+w.niv||1;p.niveaux=niv;p.combles=false;p.hEtage=2.7;const A=(+w.surf||110)/niv;const r=niv===1?1.55:1.3;const Wi=Math.sqrt(A/r),Li=A/Wi;
   p.L=Math.round((Li+0.6)*10)/10;p.W=Math.round(Math.max(6,Wi+0.6)*10)/10;p.park=w.garage?1:2;p.nature='maison'}
+function wzApplyStyle(){const w=wzState();const st=STYLES[w.style]||STYLES.trad;Object.assign(S.projet,st.p);if(w.kind==='garage'&&S.projet.toit==='4pans')S.projet.toit='2pans'}
 /* ouvertures générées selon la rue et l'orientation */
 function autoOuvertures(){const p=S.projet,w=wzState();const sd=sidesDef();const ve=voieMain();const rueN=ve?ve.n:[0,-1];
-  const wn=s=>sideWorldNormal(s.n);const sc=sd.map(s=>{const n=wn(s);return{s,rue:n[0]*rueN[0]+n[1]*rueN[1],sud:-n[1]}});
+  const sc=sd.map(s=>{const n=sideWorldNormal(s.n);return{s,rue:n[0]*rueN[0]+n[1]*rueN[1],sud:-n[1]}});
   const rue=sc.slice().sort((a,b)=>b.rue-a.rue)[0].s;const jardin=sc.slice().sort((a,b)=>a.rue-b.rue)[0].s;const sud=sc.slice().sort((a,b)=>b.sud-a.sud)[0].s;
+  const out={};
+  if(w.kind==='garage'){for(const s of sd)out[s.id]=s===rue?(s.len>=5.5?'G':'G'):s===jardin?'P':(s.len>=4?'FE':'');p.ouv=out;return}
   const fill=(arr,len,per,tok)=>{const n=Math.max(arr.length,Math.floor(len/per));while(arr.length<n)arr.push(tok);return arr};
-  const lv=s=>{const up=[];for(let i=1;i<p.niveaux;i++)up.push(fill([],s.len,3.6,'F').join(' '));return up};
-  const out={};for(const s of sd){let rdc;
+  for(const s of sd){let rdc;
     if(s===rue){rdc=['P'];if(w.garage)rdc.push('G');fill(rdc,s.len,3.4,'F');const i=rdc.indexOf('P');if(rdc.length>2){rdc.splice(i,1);rdc.splice(Math.floor(rdc.length/2),0,'P')}}
     else if(s===jardin||s===sud){rdc=['B','PF'];fill(rdc,s.len,3.3,'F')}
     else rdc=fill([],s.len,4.2,'F');
-    if(s===sud&&s!==jardin&&s!==rue&&rdc[0]!=='B')rdc[0]='PF';
-    const levels=[rdc.join(' '),...lv(s)];out[s.id]=levels.join(' / ')}
+    const up=[];for(let i=1;i<p.niveaux;i++)up.push(fill([],s.len,3.6,'F').join(' '));out[s.id]=[rdc.join(' '),...up].join(' / ')}
   p.ouv=out}
-/* implantation automatique : au recul de la voie, parallèle à la rue, centrée */
-function autoImplant(){const p=S.projet,R=S.regles;if(!voieMain()){centerBuilding();return}
-  const dv=Math.max(+R.reculVoie||0,5);placeFromVoie(dv);
+/* implantation automatique : au recul de la voie, parallèle à la rue */
+function autoImplant(){const R=S.regles;if(!voieMain()){centerBuilding();return}
+  const dv=Math.max(+R.reculVoie||0,wzKind()==='garage'?1:5);placeFromVoie(dv);
   const {rings}=boundary();const ok=()=>bat().corners.every(c=>inParcel(c,rings));
-  if(!ok()){for(const d of[dv+2,dv+4,dv+6,3]){placeFromVoie(d);if(ok())break}}
-  if(!ok())centerBuilding();const pp=parkPos();p.parkX=null;p.parkY=null;void pp}
+  if(!ok()){for(const d of[dv+2,dv+4,dv+6,3])if((placeFromVoie(d),ok()))break}
+  if(!ok())centerBuilding();S.projet.parkX=null;S.projet.parkY=null}
+function wzDefaults(){const w=wzState();if(w.kind==='portail'){if(!S.clo.some(c=>c.kind==='portail'))addClo('portail',true);return}
+  sizeFromSurface();wzApplyStyle();if(!(S.onsite&&S.onsite.placed))autoImplant();autoOuvertures()}
 /* lecture automatique du règlement pour proposer les règles */
 async function wzReadPLU(){const z=S.terrain.zone;const url=reglementUrl(z);if(!url||WZ.pluBusy)return;WZ.pluBusy=true;WZ.plu={busy:true,msg:'Lecture du règlement du PLU…'};wzRender();
-  try{const L=String(z.libelle||'').trim();const R=await reglementZone(url,L,(m,f)=>{WZ.plu={busy:true,msg:m,f};const el=$('#wzPluMsg');if(el)el.textContent=m});
+  try{const L=String(z.libelle||'').trim();const R=await reglementZone(url,L,m=>{WZ.plu={busy:true,msg:m};const el=$('#wzPluMsg');if(el)el.textContent=m});
     if(!R.range){WZ.plu={busy:false,none:true};return}
     const paras=paragraphs(R.pages,R.range[0],R.range[1]);const found={};
     for(const th of THEMES){if(!th.field)continue;const c=themeCands(themeHits(paras,th),th);if(c.length)found[th.field]=c[0]}
     WZ.plu={busy:false,found,label:R.label,pages:[R.range[0]+1,R.range[1]]}}
-  catch(e){WZ.plu={busy:false,err:e.message}}finally{WZ.pluBusy=false;wzRender()}}
+  catch(e){WZ.plu={busy:false,err:e.message}}finally{WZ.pluBusy=false;if(wzKey()==='implant')wzRender()}}
 function wzTime(){if(!WZ.t0)return'';const s=Math.round((Date.now()-WZ.t0)/1000);return`${Math.floor(s/60)} min ${String(s%60).padStart(2,'0')}`}
 function wzPreview3d(){const yaw=215*D2R;const R=renderBuilding([Math.cos(yaw),Math.sin(yaw)],24,{mode:'render',sw:0.045,ground:true});const bb=R.bb;
-  return`<svg viewBox="${(bb[0]-0.5).toFixed(2)} ${(-bb[3]-0.5).toFixed(2)} ${(bb[2]-bb[0]+1).toFixed(2)} ${(bb[3]-bb[1]+1).toFixed(2)}" aria-label="Aperçu 3D de la maison">${R.svg}</svg>`}
+  return`<svg viewBox="${(bb[0]-0.5).toFixed(2)} ${(-bb[3]-0.5).toFixed(2)} ${(bb[2]-bb[0]+1).toFixed(2)} ${(bb[3]-bb[1]+1).toFixed(2)}" aria-label="Aperçu 3D">${R.svg}</svg>`}
 function wzMasse(){return svgMasse().replace('id="svg-masse"','').replace(/width="[\d.]+mm" height="[\d.]+mm"/,'')}
-function wzOpen(){if(mode()!=='pc')setMode('pc');wzState();WZ.t0=WZ.t0||Date.now();WZ.step=S.demo?Math.min(WZ.step,1):WZ.step;$('#wiz').hidden=false;document.body.classList.add('wz-on');
+function wzOpen(){if(mode()!==wzWantMode())setMode(wzWantMode());wzState();WZ.t0=WZ.t0||Date.now();if(S.demo)WZ.step=Math.min(WZ.step,1);$('#wiz').hidden=false;document.body.classList.add('wz-on');
   clearInterval(WZ.timer);WZ.timer=setInterval(()=>{const t=$('#wzTime');if(t)t.textContent=wzTime()},1000);wzRender()}
-function wzClose(){$('#wiz').hidden=true;document.body.classList.remove('wz-on');clearInterval(WZ.timer);fillInputs();renderAll();save()}
-function wzGo(n){WZ.step=clamp(n,0,WSTEPS.length-1);wzRender();const b=$('#wzBody');if(b)b.scrollTop=0}
-function wzCanNext(){if(WZ.step===1)return!S.demo&&S.terrain.parcels.length>0;return true}
-function wzRender(){const el=$('#wiz');if(!el||el.hidden)return;const st=WZ.step,w=wzState(),p=S.projet,T=S.terrain;
-  $('#wzSteps').innerHTML=WSTEPS.map((n,i)=>`<span class="${i<st?'done':i===st?'on':''}" title="${esc(n)}"></span>`).join('');
-  $('#wzTitle').textContent=`${st}. ${WSTEPS[st]}`.replace(/^0\. /,'');$('#wzTime').textContent=wzTime();
+function wzClose(){$('#wiz').hidden=true;document.body.classList.remove('wz-on');clearInterval(WZ.timer);onsiteRefresh().then(()=>{fillInputs();renderAll()});fillInputs();renderAll();save()}
+function wzGo(n){WZ.step=clamp(n,0,wzKeys().length-1);wzRender();const b=$('#wzBody');if(b)b.scrollTop=0}
+function wzCanNext(){if(wzKey()==='terrain')return!S.demo&&S.terrain.parcels.length>0;return true}
+const isTouch=()=>matchMedia('(pointer:coarse)').matches;
+function wzRender(){const el=$('#wiz');if(!el||el.hidden)return;const keys=wzKeys();const st=WZ.step,k=keys[st],w=wzState(),p=S.projet,T=S.terrain;const port=w.kind==='portail';
+  $('#wzSteps').innerHTML=keys.map((n,i)=>`<span class="${i<st?'done':i===st?'on':''}" title="${esc(WDEF[n])}"></span>`).join('');
+  $('#wzTitle').textContent=st?`${st}. ${WDEF[k]}`:WDEF[k];$('#wzTime').textContent=wzTime();
   let h='';
-  if(st===0)h=`<div class="wz-hero"><h3>Votre permis de construire en 10 minutes</h3><p>Sept étapes guidées. L'application va chercher le cadastre, le PLU, l'altimétrie et les bâtiments existants, puis dessine toutes les pièces : plans de situation, de masse, coupe, façades, notice, insertion et récapitulatif du cerfa.</p>
-    <ol class="wz-list"><li><b>Terrain</b> — votre adresse, puis un clic sur la parcelle</li><li><b>Votre maison</b> — surface, étage, garage, style</li><li><b>Implantation</b> — règles du PLU lues automatiquement</li><li><b>Aperçu</b> — façades et 3D générées</li><li><b>Photos</b> — trois photos prises sur place</li><li><b>Vous</b> — l'identité du demandeur</li><li><b>Dossier prêt</b> — vérification et impression en PDF</li></ol>
-    <p class="hint">Vous pourrez affiner chaque détail ensuite dans le mode complet.</p></div>`;
-  if(st===1){const ok=!S.demo&&T.parcels.length;h=`<p>Saisissez l'adresse du terrain et choisissez-la dans la liste : une carte aérienne s'ouvre pour cliquer sur votre parcelle.</p>
-    <label class="f">Adresse du terrain<input type="text" id="wzAddr" autocomplete="off" placeholder="ex. 12 route de Périgueux, Bassillac" value="${esc(ok?adresseTerrain():'')}"></label><div class="sugg" id="wzSugg" hidden></div><div class="wz-msg" id="wzAddrMsg" hidden></div><div class="btns"><button class="btn sm" type="button" id="wzMapOnly">Je ne trouve pas mon adresse : chercher sur la carte</button></div>
-    <div class="wz-card ${ok?'ok':''}">${ok?`<b>✓ Terrain choisi</b>${esc(adresseTerrain())}<br>Parcelle${T.parcels.length>1?'s':''} ${esc(parcelRefs())} · ${fmt(parcelArea(),0)} m²${T.zone?` · zone ${esc(T.zone.libelle)} du ${esc(T.zone.doc)}`:''}<br><span class="hint">${esc($('#stTerrain').textContent)}</span>`:'<b>Aucun terrain choisi</b>Saisissez l\'adresse ci-dessus.'}</div>
-    ${ok?'<div class="btns"><button class="btn sm" type="button" id="wzRepick">Modifier la sélection sur la carte</button></div>':''}`}
-  if(st===2){const sf=surfaces();h=`<div class="wz-split"><div>
+  if(k==='welcome'){const K=[['maison','🏠','Une maison','Permis de construire, cerfa 13406'],['garage','🚗','Un garage ou une annexe','Garage, atelier, abri : permis ou déclaration selon la surface'],['portail','🚪','Un portail','Déclaration préalable, cerfa 16702']];
+    h=`<div class="wz-hero"><h3>Votre dossier en 10 minutes</h3><p>Sur place avec votre téléphone, c'est encore plus rapide : la position GPS trouve la parcelle, et vous placez le projet en touchant une photo.</p></div>
+    <div class="wz-kinds">${K.map(([v,i,t,d])=>`<label class="${w.kind===v?'on':''}"><input type="radio" name="wzKind" value="${v}"${w.kind===v?' checked':''}><span class="ic">${i}</span><b>${t}</b><small>${d}</small></label>`).join('')}</div>
+    <p class="hint">L'application va chercher le cadastre, le PLU, l'altimétrie et les bâtiments existants, puis dessine toutes les pièces. Vous pourrez tout affiner ensuite dans le mode complet.</p>`}
+  if(k==='terrain'){const ok=!S.demo&&T.parcels.length;h=`<button class="btn primary wz-big" type="button" id="wzGeo">📍 Je suis sur le terrain : me localiser</button>
+    <div class="wz-or"><span>ou par l'adresse</span></div>
+    <label class="f">Adresse du terrain<input type="text" id="wzAddr" autocomplete="off" placeholder="ex. 12 route de Périgueux, Bassillac" value="${esc(ok?adresseTerrain():'')}"></label><div class="sugg" id="wzSugg" hidden></div><div class="wz-msg" id="wzAddrMsg" hidden></div>
+    <div class="wz-card ${ok?'ok':''}">${ok?`<b>✓ Terrain choisi</b>${esc(adresseTerrain())}<br>Parcelle${T.parcels.length>1?'s':''} ${esc(parcelRefs())} · ${fmt(parcelArea(),0)} m²${T.zone?` · zone ${esc(T.zone.libelle)} du ${esc(T.zone.doc)}`:''}<br><span class="hint">${esc($('#stTerrain').textContent)}</span>`:'<b>Aucun terrain choisi</b>Localisez-vous sur place, ou saisissez l\'adresse.'}</div>
+    <div class="btns">${ok?'<button class="btn sm" type="button" id="wzRepick">Modifier la sélection sur la carte</button>':''}<button class="btn sm" type="button" id="wzMapOnly">Chercher sur la carte</button></div>`}
+  if(k==='maison'){const sf=surfaces();h=`<div class="wz-split"><div>
     <label class="f">Surface totale de la maison (garage compris) : <b id="wzSurfV">${w.surf} m²</b><input type="range" min="40" max="220" step="5" id="wzSurf" value="${w.surf}"></label>
-    <div class="seg2 wz-seg"><label><input type="radio" name="wzNiv" value="1"${+w.niv===1?' checked':''}> Plain-pied</label><label><input type="radio" name="wzNiv" value="2"${+w.niv===2?' checked':''}> Avec étage (R+1)</label></div>
-    <label class="toggle"><input type="checkbox" id="wzGar"${w.garage?' checked':''}> Garage intégré</label>
-    <div class="wz-styles">${Object.entries(STYLES).map(([k,v])=>`<label class="${w.style===k?'on':''}"><input type="radio" name="wzStyle" value="${k}"${w.style===k?' checked':''}><span class="sw" style="background:linear-gradient(135deg,${v.p.couvCouleur} 0 45%,${v.p.facadeCouleur} 45% 80%,${v.p.menuisCouleur} 80%)"></span><b>${v.n}</b><small>${v.d}</small></label>`).join('')}</div>
+    <div class="wz-seg"><label><input type="radio" name="wzNiv" value="1"${+w.niv===1?' checked':''}> Plain-pied</label><label><input type="radio" name="wzNiv" value="2"${+w.niv===2?' checked':''}> Avec étage (R+1)</label></div>
+    <label class="toggle"><input type="checkbox" id="wzGar"${w.garage?' checked':''}> Garage intégré</label>${wzStylesHTML()}
     </div><div class="wz-prev">${wzPreview3d()}<p class="hint">${fmt(p.L,1)} × ${fmt(p.W,1)} m · ${p.niveaux===1?'plain-pied':'R+'+(p.niveaux-1)} · environ ${fmt(sf.sdp,0)} m² de surface de plancher${sf.sdp>150?' · <b>au-delà de 150 m² : architecte obligatoire</b>':''}</p></div></div>`}
-  if(st===3){const R=S.regles,pl=WZ.plu;const f=(k,l,u)=>`<label class="f">${l}<div class="rangev"><input type="number" step="0.5" min="0" data-b="regles.${k}" value="${R[k]??''}"><span class="hint">${u}</span></div></label>`;
-    let pluBox='';if(!reglementUrl(T.zone))pluBox=`<div class="wz-card">Aucun règlement en ligne pour cette zone : saisissez les règles de votre PLU (demandez-les en mairie si besoin).</div>`;
+  if(k==='garage'){const em=p.L*p.W;h=`<div class="wz-split"><div>
+    <label class="f">Surface du garage : <b id="wzSurfV">${w.gsurf} m²</b><input type="range" min="8" max="60" step="1" id="wzSurf" value="${w.gsurf}"></label>${wzStylesHTML()}
+    </div><div class="wz-prev">${wzPreview3d()}<p class="hint">${fmt(p.L,1)} × ${fmt(p.W,1)} m · emprise ${fmt(em,0)} m²</p></div></div>
+    <div class="wz-card">${em<=20?'<b>Jusqu\'à 20 m² : une déclaration préalable suffit</b>Les pièces graphiques produites ici (plans, façades, insertion, photos) sont les mêmes ; le formulaire est le cerfa 16702.':em<=40?'<b>De 20 à 40 m²</b>En zone urbaine d\'un PLU, une déclaration préalable suffit (sauf si la surface totale de la maison dépasse alors 150 m²) ; ailleurs, permis de construire.':'<b>Plus de 40 m² : permis de construire</b>'}</div>`}
+  if(k==='portail'){const c=S.clo.find(o=>o.kind==='portail')||{};h=`<div class="wz-split"><div>
+    <div class="grid2"><label class="f">Largeur de passage (m)<input type="number" step="0.1" min="0.8" max="8" id="wzPW" value="${c.w??3.5}"></label><label class="f">Hauteur (m)<input type="number" step="0.05" min="0.8" max="2.5" id="wzPH" value="${c.h??1.6}"></label></div>
+    <label class="f">Ouverture<select id="wzPO">${Object.entries(PORT_OUV).map(([v,l])=>`<option value="${v}"${c.ouv===v?' selected':''}>${l}</option>`).join('')}</select></label>
+    <label class="f">Aspect<select id="wzPS">${Object.entries(PORT_STYLES).map(([v,l])=>`<option value="${v}"${c.style===v?' selected':''}>${l}</option>`).join('')}</select></label>
+    <label class="f">Matériau<select id="wzPM">${['Aluminium','Acier','Bois','PVC','Fer forgé'].map(v=>`<option${c.mat===v?' selected':''}>${v}</option>`).join('')}</select></label>
+    <div class="wz-cols">${Object.entries(PORT_COLS).map(([v,l])=>`<label title="${l}"><input type="radio" name="wzPC" value="${v}"${(c.col||'').toUpperCase()===v?' checked':''}><span style="background:${v}"></span>${l}</label>`).join('')}</div>
+    <label class="toggle"><input type="checkbox" id="wzPil"${c.pil!==false?' checked':''}> Piliers maçonnés</label>
+    <label class="toggle"><input type="checkbox" id="wzPortillon"${S.clo.some(o=>o.kind==='portillon')?' checked':''}> Ajouter un portillon à côté</label>
+    </div><div class="wz-prev" id="wzPElev">${wzPortElev()}</div></div>`}
+  if(k==='implant'){const R=S.regles,pl=WZ.plu;const f=(kk,l,u)=>`<label class="f">${l}<div class="rangev"><input type="number" step="0.5" min="0" data-b="regles.${kk}" value="${R[kk]??''}"><span class="hint">${u}</span></div></label>`;
+    let pluBox='';if(!port){if(!reglementUrl(T.zone))pluBox=`<div class="wz-card">Aucun règlement en ligne pour cette zone : saisissez les règles de votre PLU (demandez-les en mairie si besoin).</div>`;
     else if(!pl)pluBox=`<div class="wz-card">Zone ${esc(T.zone.libelle)} du ${esc(T.zone.doc)}. <button class="btn sm primary" type="button" id="wzPluGo">Lire le règlement automatiquement</button></div>`;
     else if(pl.busy)pluBox=`<div class="wz-card"><b id="wzPluMsg">${esc(pl.msg||'Lecture…')}</b>Un règlement de plusieurs centaines de pages peut demander une minute. Vous pouvez continuer en attendant.</div>`;
     else if(pl.err||pl.none)pluBox=`<div class="wz-card">Lecture automatique impossible${pl.err?' ('+esc(pl.err)+')':''}. <a href="${esc(reglementUrl(T.zone))}" target="_blank" rel="noopener">Ouvrir le règlement</a> et saisissez les valeurs.</div>`;
-    else{const fd=pl.found||{};const lbl={reculVoie:'Recul / voie',reculLim:'Recul / limites',hMax:'Hauteur max.',ces:'Emprise au sol'};const keys=Object.keys(fd);
-      pluBox=`<div class="wz-card ok"><b>Règlement lu : zone ${esc(pl.label)}, pages ${pl.pages[0]} à ${pl.pages[1]}</b>${keys.length?`Valeurs trouvées : ${keys.map(k=>`${lbl[k]} ${fmt(fd[k],k==='ces'?0:1)}${k==='ces'?' %':' m'}`).join(' · ')}<div class="btns" style="margin-top:6px"><button class="btn sm primary" type="button" id="wzPluApply">Utiliser ces valeurs</button></div><span class="hint">À vérifier : la lecture automatique peut se tromper (cas particuliers, secteurs).</span>`:'Aucune valeur chiffrée trouvée : saisissez les règles.'}</div>`}
-    h=`<div class="wz-split"><div>${pluBox}<div class="grid2">${f('reculVoie','Recul min. / voie','m')}${f('reculLim','Recul min. / limites','m')}${f('hMax','Hauteur max.','m')}${f('ces','Emprise max.','%')}</div>
-      <div class="btns"><button class="btn primary sm" type="button" id="wzPlace">Placer automatiquement</button></div><p class="hint">La maison est placée au recul de la voie, parallèle à la rue. Pour une implantation au centimètre, utilisez « Implantation par rapport aux limites » du mode complet.</p>
+    else{const fd=pl.found||{};const lbl={reculVoie:'Recul / voie',reculLim:'Recul / limites',hMax:'Hauteur max.',ces:'Emprise au sol'};const ks=Object.keys(fd);
+      pluBox=`<div class="wz-card ok"><b>Règlement lu : zone ${esc(pl.label)}, pages ${pl.pages[0]} à ${pl.pages[1]}</b>${ks.length?`Valeurs trouvées : ${ks.map(x=>`${lbl[x]} ${fmt(fd[x],x==='ces'?0:1)}${x==='ces'?' %':' m'}`).join(' · ')}<div class="btns" style="margin-top:6px"><button class="btn sm primary" type="button" id="wzPluApply">Utiliser ces valeurs</button></div><span class="hint">À vérifier : la lecture automatique peut se tromper.</span>`:'Aucune valeur chiffrée trouvée : saisissez les règles.'}</div>`}}
+    const placed=S.onsite&&S.onsite.placed;
+    const cam=`<button class="btn primary wz-big" type="button" id="wzCam">📷 ${placed?'Reprendre la photo sur place':'Je suis sur place : placer avec une photo'}</button>
+      ${placed?`<div class="wz-card ok"><b>✓ ${port?'Portail placé':'Projet placé'} depuis votre photo</b>La photo sert aussi pour ${port?'DP7 et l\'insertion DP6':'PCMI7 et l\'insertion PCMI6'}.<img class="wz-shot" src="${esc(S.photos.insImg||'')}" alt=""></div>`:`<p class="hint">Debout dans la rue, visez l'emplacement : vous touchez la photo là où ${port?'sera le portail':'sera le projet'}, il s'y dessine en perspective.</p>`}`;
+    if(port){const c=S.clo.find(o=>o.kind==='portail');const L=limits();const l=c?cloLimit(c):null;
+      h=`<div class="wz-split"><div>${cam}${l?`<label class="f">Limite<select id="wzPL">${L.map((e,j)=>`<option value="${j}"${e===l?' selected':''}>${esc(edgeLabel(e))} · ${fmt(e.len,1)} m</option>`).join('')}</select></label>
+        <label class="f">Position le long de la limite : <b id="wzPPv">${fmt(c.pos,1)} m</b><input type="range" id="wzPP" min="0" max="${l.len.toFixed(1)}" step="0.1" value="${c.pos}"></label>`:''}
+        <div class="grid2">${f('hClo','Hauteur max. des clôtures','m')}</div></div><div class="wz-prev wz-masse">${wzMasse()}</div></div>`}
+    else h=`<div class="wz-split"><div>${cam}${pluBox}<div class="grid2">${f('reculVoie','Recul min. / voie','m')}${f('reculLim','Recul min. / limites','m')}${f('hMax','Hauteur max.','m')}${f('ces','Emprise max.','%')}</div>
+      <div class="btns"><button class="btn sm" type="button" id="wzPlace">Placer automatiquement (recul de la voie)</button></div>
       <div id="wzChk">${wzChecksMini()}</div></div><div class="wz-prev wz-masse">${wzMasse()}</div></div>`}
-  if(st===4){const sd=sidesDef();const W=203,H=88;const sc=Math.max(...sd.map(s=>facadeSVG(s,W,H).sc));
-    h=`<p>Les ouvertures sont placées automatiquement : entrée${w.garage?' et garage':''} côté rue, baies côté jardin et au sud. Vous pouvez les régénérer ou les modifier.</p>
+  if(k==='apercu'){const sd=sidesDef();const W=203,H=88;const sc=Math.max(...sd.map(s=>facadeSVG(s,W,H).sc));
+    h=`<p>Les ouvertures sont placées automatiquement : ${w.kind==='garage'?'porte de garage côté rue':'entrée'+(w.garage?' et garage':'')+' côté rue, baies côté jardin et au sud'}. Vous pouvez les modifier.</p>
     <div class="btns"><button class="btn sm" type="button" id="wzOuv">Régénérer les ouvertures</button><button class="btn sm" type="button" id="wzStyleBack">Changer de style</button></div>
     <div class="wz-facs">${[sd[2],sd[0],sd[1],sd[3]].map(s=>`<figure><figcaption>${esc(sideName(s))}</figcaption>${facadeSVG(s,W,H,sc).svg.replace(/width="[\d.]+mm" height="[\d.]+mm"/,'')}<input type="text" data-b="projet.ouv.${s.id}" value="${esc((p.ouv||{})[s.id]||'')}" aria-label="Ouvertures ${esc(sideName(s))}"></figure>`).join('')}</div>
     <p class="hint">Codes : F fenêtre, FE petite fenêtre, PF porte-fenêtre, B baie, P porte, G garage ; « / » sépare les niveaux.</p>`}
-  if(st===5){const ph=S.photos;const card=(k,t,d)=>`<div class="wz-ph ${ph[k]?'ok':''}"><div class="th">${ph[k]?`<img src="${ph[k]}" alt="">`:'<span>📷</span>'}</div><div><b>${t}</b><span class="hint">${d}</span>
-      <label class="btn sm ${ph[k]?'':'primary'}">${ph[k]?'Remplacer':'Prendre ou choisir la photo'}<input type="file" accept="image/*,.heic,.heif" capture="environment" data-wzph="${k}" hidden></label></div></div>`;
-    h=`<p>Trois photos prises sur place suffisent. Les points de vue sont placés automatiquement sur le plan de masse.</p>
-      ${card('p7','Environnement proche (PCMI7)','Depuis la rue, face au terrain, à quelques mètres.')}
-      ${card('p8','Environnement lointain (PCMI8)','Plus loin dans la rue, pour situer le terrain dans le paysage.')}
-      ${card('ins','Photo pour l\'insertion (PCMI6)','Le terrain vu depuis la rue, à hauteur d\'homme : la maison y sera incrustée en perspective.')}
-      <p class="hint">Pas de photo maintenant ? Continuez : une vue de principe est générée, et vous ajouterez les photos plus tard.</p>`}
-  if(st===6){const D=S.dem;const i=(k,l,t='text',ac='')=>`<label class="f">${l}<input type="${t}" data-b="dem.${k}" value="${esc(D[k]||'')}" ${ac}></label>`;
+  if(k==='photos'){const ph=S.photos;const tag=port?'DP':'PCMI';const fromSite=S.onsite&&S.onsite.placed&&S.onsite.shot&&ph.p7===S.onsite.shot.img;
+    const card=(kk,t,d)=>{const has=kk==='ins'?(ph.insMode==='image'?ph.insImg:ph.ins):ph[kk];return`<div class="wz-ph ${has?'ok':''}"><div class="th">${has?`<img src="${has}" alt="">`:'<span>📷</span>'}</div><div><b>${t}</b><span class="hint">${d}</span>
+      <div class="btns"><button class="btn sm ${has?'':'primary'}" type="button" data-wzcam="${kk}">${has?'Reprendre sur place':'Prendre sur place'}</button><label class="btn sm">Choisir une photo<input type="file" accept="image/*,.heic,.heif" data-wzph="${kk}" hidden></label></div></div></div>`};
+    h=`<p>Les photos prises depuis l'application placent automatiquement leur point de vue sur le plan de masse (position GPS et boussole).</p>
+      ${fromSite?`<div class="wz-card ok"><b>✓ Photo proche (${tag}7) et insertion (${tag}6) faites à l'étape Implantation</b></div>`:card('p7',`Environnement proche (${tag}7)`,'Depuis la rue, face au terrain, à quelques mètres.')}
+      ${card('p8',`Environnement lointain (${tag}8)`,'Plus loin dans la rue, pour situer le terrain dans le paysage.')}
+      ${fromSite?'':card('ins',`Photo pour l'insertion (${tag}6)`,'Le terrain vu depuis la rue : le projet y sera incrusté. Astuce : « Je suis sur place » à l\'étape Implantation fait tout d\'un coup.')}
+      <p class="hint">Pas de photo maintenant ? Continuez : une vue de principe est générée, vous ajouterez les photos plus tard.</p>`}
+  if(k==='vous'){const D=S.dem;const i=(kk,l,t='text',ac='')=>`<label class="f">${l}<input type="${t}" data-b="dem.${kk}" value="${esc(D[kk]||'')}" ${ac}></label>`;
     h=`<p>L'identité du demandeur figure sur chaque planche et dans le récapitulatif du cerfa.</p>
       <div class="grid3"><label class="f">Civilité<select data-b="dem.civ"><option${D.civ==='M.'?' selected':''}>M.</option><option${D.civ==='Mme'?' selected':''}>Mme</option></select></label>${i('nom','Nom','text','autocomplete="family-name"').replace('<label class="f">','<label class="f" style="grid-column:span 2">')}</div>
       <div class="grid2">${i('prenom','Prénom','text','autocomplete="given-name"')}${i('tel','Téléphone','tel','autocomplete="tel"')}</div>
       ${i('adresse','Adresse','text','autocomplete="street-address"')}<div class="grid2">${i('cp','Code postal','text','autocomplete="postal-code"')}${i('ville','Localité','text','autocomplete="address-level2"')}</div>${i('email','Courriel','email','autocomplete="email"')}`}
-  if(st===7){const C=checks();const nb=C.filter(c=>c.lvl==='bad'),nw=C.filter(c=>c.lvl==='warn');const sh=activeSheets();
+  if(k==='fin'){const C=checks();const nb=C.filter(c=>c.lvl==='bad'),nw=C.filter(c=>c.lvl==='warn');const sh=activeSheets();
     h=`<div class="wz-card ${nb.length?'bad':'ok'}"><b>${nb.length?`${nb.length} point${nb.length>1?'s':''} à corriger avant dépôt`:'Dossier cohérent'}</b>Temps passé : ${wzTime()}.${nw.length?` ${nw.length} élément${nw.length>1?'s':''} à compléter.`:''}</div>
       ${nb.concat(nw).slice(0,6).map(c=>`<div class="ck ${c.lvl}"><div class="ic">${c.lvl==='bad'?'×':'!'}</div><div><b>${c.t}</b><span>${c.s}</span></div></div>`).join('')}
       <div class="wz-pieces">${sh.map(s=>`<span class="${sheetReady(s.id)?'ok':'warn'}">${esc(s.code)}</span>`).join('')}</div>
       <div class="btns wz-final"><button class="btn primary" type="button" id="wzPrint">Imprimer le dossier en PDF</button><button class="btn" type="button" id="wzSee">Voir les planches</button><button class="btn" type="button" id="wzSaveP">Enregistrer le projet</button></div>
-      <p class="hint">Restent à joindre par vous : l'attestation RE2020 (PCMI14-1, bureau d'études thermiques)${S.projet.assain==='individuel'?' et l\'attestation du SPANC':''}. Le formulaire cerfa 13406 se remplit avec les données du récapitulatif.</p>`}
+      <p class="hint">${port?'Le formulaire cerfa 16702 se remplit avec les données du récapitulatif.':`Restent à joindre par vous : l'attestation RE2020 (PCMI14-1)${w.kind==='garage'?' si le garage est chauffé':''}${S.projet.assain==='individuel'?' et l\'attestation du SPANC':''}. Le formulaire cerfa se remplit avec les données du récapitulatif.`}</p>`}
   $('#wzBody').innerHTML=h;
-  $('#wzPrev').hidden=st===0;$('#wzNext').hidden=st===WSTEPS.length-1;$('#wzNext').textContent=st===0?'Commencer':'Continuer';$('#wzNext').disabled=!wzCanNext();
+  $('#wzPrev').hidden=st===0;$('#wzNext').hidden=st===keys.length-1;$('#wzNext').textContent=st===0?'Commencer':'Continuer';$('#wzNext').disabled=!wzCanNext();
   wzBind()}
+function wzStylesHTML(){const w=wzState();return`<div class="wz-styles">${Object.entries(STYLES).filter(([kk])=>!(w.kind==='garage'&&kk==='ardoise')).map(([kk,v])=>`<label class="${w.style===kk?'on':''}"><input type="radio" name="wzStyle" value="${kk}"${w.style===kk?' checked':''}><span class="sw" style="background:linear-gradient(135deg,${v.p.couvCouleur} 0 45%,${v.p.facadeCouleur} 45% 80%,${v.p.menuisCouleur} 80%)"></span><b>${v.n}</b><small>${v.d}</small></label>`).join('')}</div>`}
+function wzPortElev(){const c=S.clo.find(o=>o.kind==='portail');if(!c)return'';const svg=cloElevSVG(c,180,70,50);return svg?svg.replace(/width="[\d.]+mm" height="[\d.]+mm"/,''):''}
 function wzChecksMini(){return checks().filter(c=>/Recul|Hauteur|Emprise|dépasse|entièrement|chevauche/.test(c.t)).map(c=>`<div class="ck ${c.lvl}"><div class="ic">${{ok:'✓',warn:'!',bad:'×',info:'i'}[c.lvl]}</div><div><b>${c.t}</b></div></div>`).join('')}
-function wzRefresh(part){if(part==='prev'){const pv=$('.wz-prev');if(pv&&WZ.step===2){pv.querySelector('svg').outerHTML=wzPreview3d()}}
-  if(WZ.step===3){const m=$('.wz-masse');if(m)m.innerHTML=wzMasse();const c=$('#wzChk');if(c)c.innerHTML=wzChecksMini()}}
-function wzBind(){const st=WZ.step,w=wzState();
-  if(st===1){addrSearch($('#wzAddr'),$('#wzSugg'),f=>openPicker({lonlat:f.geometry.coordinates,zoom:19,addr:f.properties,preselectAt:f.geometry.coordinates}),(m,k)=>{const e=$('#wzAddrMsg');if(!e)return;e.hidden=!m;e.textContent=m;e.className='wz-msg '+(k||'')});
-    $('#wzMapOnly').onclick=()=>openPicker({lonlat:[2.45,46.6],zoom:6});
-    const rp=$('#wzRepick');if(rp)rp.onclick=()=>$('#bPick').click()}
-  if(st===2){const upd=()=>{sizeFromSurface();Object.assign(S.projet,STYLES[w.style].p);autoImplant();autoOuvertures();save();wzRender()};
-    $('#wzSurf').oninput=e=>{w.surf=+e.target.value;$('#wzSurfV').textContent=w.surf+' m²'};$('#wzSurf').onchange=upd;
-    $$('input[name=wzNiv]').forEach(r=>r.onchange=()=>{w.niv=+r.value;upd()});$('#wzGar').onchange=e=>{w.garage=e.target.checked;upd()};
+function wzRefresh(){if(wzKey()==='implant'){const m=$('.wz-masse');if(m)m.innerHTML=wzMasse();const c=$('#wzChk');if(c)c.innerHTML=wzChecksMini()}}
+function wzMsg(m,kd){const e=$('#wzAddrMsg');if(!e)return;e.hidden=!m;e.textContent=m;e.className='wz-msg '+(kd||'')}
+function wzBind(){const k=wzKey(),w=wzState();
+  if(k==='welcome')$$('input[name=wzKind]').forEach(r=>r.onchange=()=>{w.kind=r.value;if(mode()!==wzWantMode())setMode(wzWantMode());if(!S.demo)wzDefaults();save();wzRender()});
+  if(k==='terrain'){addrSearch($('#wzAddr'),$('#wzSugg'),f=>openPicker({lonlat:f.geometry.coordinates,zoom:19,addr:f.properties,preselectAt:f.geometry.coordinates}),wzMsg);
+    $('#wzMapOnly').onclick=()=>{if(!S.demo&&S.terrain.parcels.length)$('#bPick').click();else openPicker({lonlat:[2.45,46.6],zoom:6})};const rp=$('#wzRepick');if(rp)rp.onclick=()=>$('#bPick').click();
+    $('#wzGeo').onclick=async()=>{const b=$('#wzGeo');b.disabled=true;try{await locateOnSite(wzMsg)}catch(e){wzMsg('Localisation impossible : '+e.message+'. Saisissez l\'adresse à la place.','err')}finally{b.disabled=false}}}
+  if(k==='maison'||k==='garage'){const upd=()=>{sizeFromSurface();wzApplyStyle();if(!(S.onsite&&S.onsite.placed))autoImplant();autoOuvertures();save();wzRender()};const key=k==='garage'?'gsurf':'surf';
+    $('#wzSurf').oninput=e=>{w[key]=+e.target.value;$('#wzSurfV').textContent=w[key]+' m²'};$('#wzSurf').onchange=upd;
+    $$('input[name=wzNiv]').forEach(r=>r.onchange=()=>{w.niv=+r.value;upd()});const g=$('#wzGar');if(g)g.onchange=e=>{w.garage=e.target.checked;upd()};
     $$('input[name=wzStyle]').forEach(r=>r.onchange=()=>{w.style=r.value;upd()})}
-  if(st===3){const g=$('#wzPluGo');if(g)g.onclick=wzReadPLU;const a=$('#wzPluApply');if(a)a.onclick=()=>{Object.assign(S.regles,WZ.plu.found);autoImplant();save();wzRender();toast('Règles appliquées et maison replacée.')};
-    $('#wzPlace').onclick=()=>{autoImplant();save();wzRefresh()};$$('#wzBody [data-b^="regles."]').forEach(i=>i.addEventListener('change',()=>setTimeout(wzRefresh,120)))}
-  if(st===4){$('#wzOuv').onclick=()=>{autoOuvertures();save();wzRender()};$('#wzStyleBack').onclick=()=>wzGo(2);$$('#wzBody [data-b^="projet.ouv"]').forEach(i=>i.addEventListener('change',()=>setTimeout(wzRender,150)))}
-  if(st===5){$$('[data-wzph]').forEach(inp=>inp.onchange=async()=>{const k=inp.dataset.wzph;await setPhoto(k,inp.files[0]);
-      if(k==='p7'||k==='p8'){if(!S.photos[k+'pos'])$(`[data-placepv="${k}"]`).click()}if(k==='ins'&&!S.photos.pv6pos)$('[data-placepv="pv6"]').click();
-      S.photos.insMode='auto';save();wzRender()})}
-  if(st===7){$('#wzPrint').onclick=()=>{wzClose();$('#bPrint').click()};$('#wzSee').onclick=()=>{wzClose();if(isMobile())setView('sheets');goTab('pcmi2')};$('#wzSaveP').onclick=()=>$('#bSave').click()}}
-$('#wzNext').onclick=()=>{const st=WZ.step;
-  if(st===1&&!S.demo){/* première fois : maison par défaut, implantée et dessinée */const w=wzState();if(!w.done){sizeFromSurface();Object.assign(S.projet,STYLES[w.style].p);w.done=true}autoImplant();autoOuvertures();
-    if(reglementUrl(S.terrain.zone)&&!WZ.plu)wzReadPLU()}
-  if(st===4){for(const k of['p7','p8'])if(!S.photos[k+'pos'])$(`[data-placepv="${k}"]`).click();if(!S.photos.pv6pos)$('[data-placepv="pv6"]').click();S.ui.tab='pcmi2'}
-  save();wzGo(st+1)};
+  if(k==='portail'){const c=()=>S.clo.find(o=>o.kind==='portail');const up=()=>{renderClo();save();const e=$('#wzPElev');if(e)e.innerHTML=wzPortElev()};
+    $('#wzPW').oninput=e=>{c().w=+e.target.value;up()};$('#wzPH').oninput=e=>{c().h=+e.target.value;up()};$('#wzPO').onchange=e=>{c().ouv=e.target.value;up()};$('#wzPS').onchange=e=>{c().style=e.target.value;up()};$('#wzPM').onchange=e=>{c().mat=e.target.value;up()};
+    $$('input[name=wzPC]').forEach(r=>r.onchange=()=>{c().col=r.value;up()});$('#wzPil').onchange=e=>{c().pil=e.target.checked;up()};
+    $('#wzPortillon').onchange=e=>{if(e.target.checked){addClo('portillon',true);const pi=S.clo[S.clo.length-1],po=c();pi.lim=po.lim;pi.pos=Math.round(((+po.pos||0)+(+po.w||3.5)/2+1.2)*10)/10;pi.col=po.col;pi.mat=po.mat;pi.style=po.style}else S.clo=S.clo.filter(o=>o.kind!=='portillon');up()}}
+  if(k==='implant'){const g=$('#wzPluGo');if(g)g.onclick=wzReadPLU;const a=$('#wzPluApply');if(a)a.onclick=()=>{Object.assign(S.regles,WZ.plu.found);if(!(S.onsite&&S.onsite.placed))autoImplant();save();wzRender();toast('Règles appliquées.')};
+    const pb=$('#wzPlace');if(pb)pb.onclick=()=>{autoImplant();if(S.onsite)S.onsite.placed=false;save();wzRender()};
+    $$('#wzBody [data-b^="regles."]').forEach(i=>i.addEventListener('change',()=>setTimeout(wzRefresh,120)));
+    $('#wzCam').onclick=async()=>{const ok=await onsiteFlow();if(ok){S.onsite.placed=true;if(wzKind()!=='portail')autoOuvertures();save()}wzRender()};
+    const pl=$('#wzPL');if(pl){const c=S.clo.find(o=>o.kind==='portail');pl.onchange=e=>{const l=limits()[+e.target.value];c.lim=toLL(...l.mid);c.pos=Math.round(l.len/2*10)/10;if(S.onsite)S.onsite.placed=false;save();wzRender()};
+      $('#wzPP').oninput=e=>{c.pos=+e.target.value;$('#wzPPv').textContent=fmt(c.pos,1)+' m';const m=$('.wz-masse');if(m)m.innerHTML=wzMasse()};$('#wzPP').onchange=()=>{if(S.onsite)S.onsite.placed=false;save()}}}
+  if(k==='apercu'){$('#wzOuv').onclick=()=>{autoOuvertures();save();wzRender()};$('#wzStyleBack').onclick=()=>wzGo(2);$$('#wzBody [data-b^="projet.ouv"]').forEach(i=>i.addEventListener('change',()=>setTimeout(wzRender,150)))}
+  if(k==='photos'){$$('[data-wzph]').forEach(inp=>inp.onchange=async()=>{const kk=inp.dataset.wzph;await setPhoto(kk,inp.files[0]);
+      if(kk==='p7'||kk==='p8'){if(!S.photos[kk+'pos'])$(`[data-placepv="${kk}"]`).click()}if(kk==='ins'){S.photos.insMode='auto';if(!S.photos.pv6pos)$('[data-placepv="pv6"]').click()}save();wzRender()});
+    $$('[data-wzcam]').forEach(b=>b.onclick=async()=>{const kk=b.dataset.wzcam;if(kk==='ins'){wzGo(wzKeys().indexOf('implant'));$('#wzCam').click();return}await onsitePhoto(kk);wzRender()})}
+  if(k==='fin'){$('#wzPrint').onclick=()=>{wzClose();$('#bPrint').click()};$('#wzSee').onclick=()=>{wzClose();if(isMobile())setView('sheets');goTab('pcmi2')};$('#wzSaveP').onclick=()=>$('#bSave').click()}}
+$('#wzNext').onclick=async()=>{const k=wzKey();
+  if(k==='terrain'&&!S.demo){const w=wzState();if(!w.done){wzDefaults();w.done=true}else if(w.kind!=='portail'){if(!(S.onsite&&S.onsite.placed))autoImplant();autoOuvertures()}
+    if(w.kind!=='portail'&&reglementUrl(S.terrain.zone)&&!WZ.plu)wzReadPLU()}
+  if(k==='implant'||k==='apercu'){await onsiteRefresh();const ph=S.photos;for(const kk of['p7','p8'])if(!ph[kk+'pos'])$(`[data-placepv="${kk}"]`).click();if(!ph.pv6pos)$('[data-placepv="pv6"]').click();S.ui.tab='pcmi2'}
+  save();wzGo(WZ.step+1)};
 $('#wzPrev').onclick=()=>wzGo(WZ.step-1);$('#wzClose').onclick=wzClose;$('#bExpress').onclick=wzOpen;
 // le terrain validé sur la carte fait avancer l'assistant
-$('#pkOk').addEventListener('click',()=>{if($('#wiz').hidden)return;const t=setInterval(()=>{if(!S.demo&&S.terrain.parcels.length){clearInterval(t);wzRender();setTimeout(wzRender,2500);setTimeout(wzRender,6000)}},400);setTimeout(()=>clearInterval(t),15000)});
+$('#pkOk').addEventListener('click',()=>{if($('#wiz').hidden)return;const t=setInterval(()=>{if(!S.demo&&S.terrain.parcels.length){clearInterval(t);if(S.wz)S.wz.done=false;if(S.onsite)S.onsite.placed=false;wzRender();setTimeout(wzRender,2500);setTimeout(wzRender,6000)}},400);setTimeout(()=>clearInterval(t),15000)});
 document.addEventListener('input',e=>{if($('#wiz').hidden)return;if(e.target.closest('#wzBody [data-b^="regles."]'))setTimeout(wzRefresh,150)});
 
 // première ouverture : proposer le mode express
