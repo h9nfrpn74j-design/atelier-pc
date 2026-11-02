@@ -414,7 +414,7 @@ body[data-mode="dp-facade"] .pc-only,body[data-mode="dp-toiture"] .pc-only{displ
 .pl-top{padding:max(10px,env(safe-area-inset-top)) 14px 10px;font-size:14px;background:#1b2421}
 .pl-photo{position:relative;min-height:0;display:grid;place-items:center;overflow:hidden}
 #plSvg{width:100%;height:100%;touch-action:none;cursor:crosshair;display:block}
-.pl-ctl{background:var(--panel);color:var(--ink);padding:10px 14px max(10px,env(safe-area-inset-bottom));display:grid;gap:8px;max-height:46vh;overflow:auto}
+.pl-ctl{background:var(--panel);color:var(--ink);padding:8px 12px max(8px,env(safe-area-inset-bottom));display:grid;gap:6px;max-height:40vh;overflow:auto}
 .pl-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;font-size:13px}.pl-row input{width:100%;accent-color:var(--accent)}.pl-row b{font:600 12px var(--f-mono);min-width:44px;text-align:right}
 #plPort.pl-row{grid-template-columns:auto 1fr auto 1fr}
 .pl-adv summary{font-size:13px;color:var(--muted);cursor:pointer;padding:4px 0}.pl-adv{display:grid;gap:6px}
@@ -452,8 +452,8 @@ body[data-mode="dp-facade"] .pc-only,body[data-mode="dp-toiture"] .pc-only{displ
 .pl-mtools{position:absolute;right:8px;top:8px;display:grid;gap:6px;justify-items:end}
 .pl-mtools button{width:42px;height:42px;border-radius:10px;border:1px solid rgba(0,0,0,.15);background:rgba(255,255,255,.95);font:600 20px var(--f-ui);cursor:pointer;color:var(--ink);box-shadow:0 2px 6px rgba(0,0,0,.2)}
 .pl-mtools button.wide{width:auto;height:34px;padding:0 10px;font-size:12px}.pl-mtools button.wide.on{background:var(--accent);color:#fff}
-.pl-move{display:grid;grid-template-columns:1fr repeat(4,48px);gap:6px;align-items:center;font-size:13px;color:var(--muted)}
-.pl-move button{height:44px;border:1px solid var(--line);border-radius:10px;background:#fff;font:600 20px var(--f-ui);cursor:pointer}
+.pl-move{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted)}.pl-move .sep{flex:1}.pl-move b{font:600 12px var(--f-mono);min-width:38px;text-align:right;color:var(--ink)}
+.pl-move button{width:46px;height:46px;border:1px solid var(--line);border-radius:10px;background:#fff;font:600 20px var(--f-ui);cursor:pointer;flex:none}
 .pl-move button:active{background:var(--accent-soft)}
 .here{position:fixed;inset:0;z-index:62;background:var(--panel);display:grid;grid-template-rows:auto 1fr auto}
 .here-top{display:flex;align-items:center;justify-content:space-between;padding:max(12px,env(safe-area-inset-top)) 16px 12px;border-bottom:1px solid var(--line)}
@@ -803,9 +803,9 @@ body[data-mode="dp-facade"] .pc-only,body[data-mode="dp-toiture"] .pc-only{displ
     <div class="pl-mtools" id="plMapTools"><button type="button" id="plZin" aria-label="Zoom avant">+</button><button type="button" id="plZout" aria-label="Zoom arrière">−</button><button type="button" id="plZfit" aria-label="Recentrer">⤢</button><button type="button" id="plTOrtho" class="on wide">Vue aérienne</button></div></div>
   <div class="pl-ctl">
     <div class="pl-dist" id="plDist"></div>
-    <div class="pl-move" id="plMove"><span>Déplacer de 25 cm</span><button type="button" data-plmv="0,1" aria-label="Vers le nord">↑</button><button type="button" data-plmv="-1,0" aria-label="Vers l'ouest">←</button><button type="button" data-plmv="1,0" aria-label="Vers l'est">→</button><button type="button" data-plmv="0,-1" aria-label="Vers le sud">↓</button></div>
-    <div id="plRotRow" class="pl-row"><button class="btn sm" type="button" id="plRm" aria-label="Tourner à gauche">↺ 5°</button><input type="range" id="plRot" min="-180" max="180" step="0.5" aria-label="Orientation"><button class="btn sm" type="button" id="plRp" aria-label="Tourner à droite">↻ 5°</button><b id="plRotV"></b></div>
-    <div id="plSnap" class="btns"><button class="btn sm" type="button" id="plFace">Façade avant vers la rue</button><button class="btn sm" type="button" id="plStreet">Parallèle à la rue</button><button class="btn sm" type="button" id="plLim">Parallèle à la limite proche</button></div>
+    <div class="pl-move" id="plMove"><button type="button" data-plmv="-1,0" aria-label="Vers l'ouest">←</button><button type="button" data-plmv="0,1" aria-label="Vers le nord">↑</button><button type="button" data-plmv="0,-1" aria-label="Vers le sud">↓</button><button type="button" data-plmv="1,0" aria-label="Vers l'est">→</button><span class="sep"></span><button type="button" id="plRm" aria-label="Tourner à gauche">↺</button><button type="button" id="plRp" aria-label="Tourner à droite">↻</button><b id="plRotV"></b></div>
+    <input type="range" id="plRot" min="-180" max="180" step="0.5" aria-label="Orientation" hidden><span id="plRotRow" hidden></span>
+    <details id="plSnap" class="pl-adv"><summary>Aligner automatiquement</summary><div class="btns"><button class="btn sm" type="button" id="plFace">Façade avant vers la rue</button><button class="btn sm" type="button" id="plStreet">Parallèle à la rue</button><button class="btn sm" type="button" id="plLim">Parallèle à la limite proche</button></div></details>
     <div id="plPort" class="pl-row4" hidden><span>Largeur</span><input type="range" id="plPortW" min="1" max="7" step="0.1"><span>Hauteur</span><input type="range" id="plPortH" min="0.8" max="2.4" step="0.05"></div>
     <details class="pl-adv" id="plAdv"><summary>Réglages fins de la prise de vue</summary>
       <div class="pl-row"><span>Direction</span><input type="range" id="plDh" min="-40" max="40" step="0.5"><b id="plDhV"></b></div>
@@ -2675,6 +2675,15 @@ async function onsiteHere(){if(S.demo){toast('Choisissez d\'abord votre terrain.
   S.onsite=Object.assign(S.onsite||{},{here:r.lonlat,acc:r.acc,placed:true});save();toast(`Position enregistrée (± ${Math.round(r.acc)} m). Ajustez si besoin sur le plan.`);
   await placeOnPlan();return true}
 
+/* ===== ancrage : le pied de la façade avant posé là où on touche la photo ===== */
+function anchorWorld(){if(isPortail()){const c=cloCenter()||[S.projet.x,S.projet.y];return[c[0],c[1],zRelAt(...c)]}const f=frontPt();return[f[0],f[1],Math.max(zRelAt(...f),heights().zb??-9)]}
+function shotProject(sh,W){const {G,V}=shotView(sh);const b=toBld(W[0],W[1]);const c=V.cam([b[0],b[1],W[2]]);if(c[2]<0.3)return null;const q=V.P([b[0],b[1],W[2]]);const s=(sh.w/2)/V.W;
+  let x=q[0]*s,y=-q[1]*s;const r=G.r*D2R;return[sh.w/2+x*Math.cos(r)-y*Math.sin(r),sh.h/2+x*Math.sin(r)+y*Math.cos(r)]}
+function anchorTo(px,py){const sh=PL.sh;const P=sh.pose;const W=anchorWorld();const cx=sh.w/2,cy=sh.h/2;
+  const unroll=(x,y)=>{const r=-shotGeom(sh).r*D2R;const dx=x-cx,dy=y-cy;return[dx*Math.cos(r)-dy*Math.sin(r),dx*Math.sin(r)+dy*Math.cos(r)]};const t=unroll(px,py);
+  for(let it=0;it<6;it++){const a=shotProject(sh,W);const f=shotGeom(sh).fpx;if(!a){P.dp=(+P.dp||0)-10;continue}const q=unroll(a[0],a[1]);
+    P.dh=(+P.dh||0)-(Math.atan(t[0]/f)-Math.atan(q[0]/f))/D2R;P.dp=(+P.dp||0)+(Math.atan(t[1]/f)-Math.atan(q[1]/f))/D2R}
+  P.dh=Math.round(clamp(P.dh,-60,60)*100)/100;P.dp=Math.round(clamp(P.dp,-40,40)*100)/100;sh.anch=[px,py]}
 /* ===== repères projetés sur la photo ===== */
 function shotGuides(V){let o='';const P=v=>v[0].toFixed(3)+','+(-v[1]).toFixed(3);
   const line=(A,B,attr)=>{const n=Math.max(1,Math.ceil(Math.hypot(B[0]-A[0],B[1]-A[1])/3));const pts=[];for(let i=0;i<=n;i++){const t=i/n;const x=A[0]+(B[0]-A[0])*t,y=A[1]+(B[1]-A[1])*t;const b=toBld(x,y);pts.push([b[0],b[1],zRelAt(x,y)+0.03])}
@@ -2694,11 +2703,11 @@ function plRender(){const sh=PL.sh;const port=isPortail();const photo=PL.view===
   $('#plTools').hidden=!photo;$('#plTGuide').classList.toggle('on',PL.guides);$('#plMapTools').hidden=!!photo;$('#plTOrtho').classList.toggle('on',PL.ortho);
   if(photo){const svg=$('#plSvg');svg.removeAttribute('hidden');$('#plMap').setAttribute('hidden','');svg.setAttribute('viewBox',`0 0 ${sh.w} ${sh.h}`);
     const {G,V}=shotView(sh);const s=(sh.w/2)/V.W;const cx=sh.w/2,cy=sh.h/2;const tr=`rotate(${G.r.toFixed(2)} ${cx} ${cy}) translate(${cx} ${cy}) scale(${s.toFixed(4)})`;
-    svg.innerHTML=`<image href="${sh.img}" x="0" y="0" width="${sh.w}" height="${sh.h}" preserveAspectRatio="none"/>`+(PL.guides?`<g transform="${tr}">${shotGuides(V)}</g>`:'')+`<g opacity="${PL.op}">${shotOverlay(sh)}</g>`}
+    svg.innerHTML=`<image href="${sh.img}" x="0" y="0" width="${sh.w}" height="${sh.h}" preserveAspectRatio="none"/>`+(PL.guides?`<g transform="${tr}">${shotGuides(V)}</g>`:'')+`<g opacity="${PL.op}">${shotOverlay(sh)}</g>`+(()=>{const a=shotProject(sh,anchorWorld());if(!a)return'';const r=sh.w/60;return`<g pointer-events="none"><circle cx="${a[0].toFixed(1)}" cy="${a[1].toFixed(1)}" r="${r.toFixed(1)}" fill="none" stroke="#ff5a4a" stroke-width="${(r/4).toFixed(1)}"/><circle cx="${a[0].toFixed(1)}" cy="${a[1].toFixed(1)}" r="${(r/4).toFixed(1)}" fill="#ff5a4a"/></g>`})()}
   else{$('#plSvg').setAttribute('hidden','');const m=$('#plMap');m.removeAttribute('hidden');m.innerHTML=plMapSVG();m.setAttribute('viewBox',PL.mapVB.join(' '))}
-  $('#plMsg').innerHTML=photo?'<b>Calez la photo</b> : faites glisser pour que les pointillés jaunes (limites du terrain) tombent sur les clôtures, bordures ou murs. Pincez pour le zoom. Le projet suit.':
+  $('#plMsg').innerHTML=photo?(PL.sh.anch?'✓ Posé au sol. Touchez à nouveau pour corriger, ou validez.':`<b>Touchez sur la photo le pied ${isPortail()?'du futur portail (au milieu, au sol)':'de la future façade avant (au milieu, au sol)'}</b> : ${isPortail()?'le portail':'la maison'} vient s'y poser.`):
     port?'Glissez le portail le long de la limite, ou utilisez les flèches.':'Glissez la maison au doigt, tournez-la avec la poignée ronde ou les boutons. Les distances aux limites s\'affichent.';
-  $('#plMove').hidden=!!photo;$('#plRotRow').hidden=port||!!photo;$('#plSnap').hidden=port||!!photo;$('#plAdv').hidden=!photo;
+  $('#plMove').hidden=!!photo;$('#plRm').hidden=$('#plRp').hidden=$('#plRotV').hidden=port;$('#plSnap').hidden=port||!!photo;$('#plAdv').hidden=!photo;
   $('#plRot').value=S.projet.rot;$('#plRotV').textContent=Math.round(S.projet.rot)+'°';
   if(sh){const P=sh.pose,G=shotGeom(sh);$('#plDh').value=P.dh||0;$('#plDp').value=P.dp||0;$('#plFov').value=P.fov||66;$('#plDhV').textContent=(P.dh>0?'+':'')+(+P.dh||0).toFixed(1)+'°';$('#plDpV').textContent=(P.dp>0?'+':'')+(+P.dp||0).toFixed(1)+'°';$('#plFovV').textContent=Math.round(P.fov||66)+'°';
     $('#plInfo').textContent=`Prise de vue : cap ${Math.round(G.h)}°${P.hSrc==='estime'?' (estimé, pas de boussole)':''} · inclinaison ${Math.round(G.p)}°${P.acc?` · GPS ± ${Math.round(P.acc)} m`:''}`}
@@ -2741,11 +2750,12 @@ function plMapSVG(){const {rings,E}=boundary();const sh=PL.sh;const G=sh?shotGeo
 function svgPt(svg,e){const m=svg.getScreenCTM().inverse();const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(m);return[p.x,p.y]}
 function ptrDown(e,which){e.preventDefault();const el=e.currentTarget;try{el.setPointerCapture(e.pointerId)}catch(_){}PL.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(PL.ptrs.size===2){const [a,b]=[...PL.ptrs.values()];PL.g={two:true,ang:Math.atan2(b.y-a.y,b.x-a.x),dist:Math.hypot(b.x-a.x,b.y-a.y),rot:S.projet.rot,fov:PL.sh?+PL.sh.pose.fov||66:66,bb:PL.zoomBB&&PL.zoomBB.slice()};return}
-  if(which==='photo'){PL.g={cal:true,x:e.clientX,y:e.clientY,dh:+PL.sh.pose.dh||0,dp:+PL.sh.pose.dp||0};return}
+  if(which==='photo'){PL.g={anchor:true,id:e.pointerId};const [px,py]=svgPt($('#plSvg'),e);anchorTo(px,py);plRender();return}
   const [x,y]=svgPt($('#plMap'),e);const w=[x,-y];
   if(e.target.closest('[data-plh]')){PL.g={handle:true};return}
   if(isPortail()){placeAt(w);PL.g={pmove:true,off:[0,0]};plRender();return}
-  if(e.target.closest('[data-plp]')){const f=frontPt();PL.g={pmove:true,off:[f[0]-w[0],f[1]-w[1]]};return}
+  const nb=(()=>{const c=toBld(w[0],w[1]);const p=S.projet;return Math.abs(c[0])<p.L/2+3&&Math.abs(c[1])<p.W/2+3})();
+  if(e.target.closest('[data-plp]')||nb){const f=frontPt();PL.g={pmove:true,off:[f[0]-w[0],f[1]-w[1]]};return}
   PL.g={pan:true,x:e.clientX,y:e.clientY,bb:PL.zoomBB.slice()}}
 function ptrMove(e,which){if(!PL.ptrs.has(e.pointerId))return;PL.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});const g=PL.g;if(!g)return;
   const now=performance.now();if(PL.lt&&now-PL.lt<30)return;PL.lt=now;
@@ -2753,6 +2763,7 @@ function ptrMove(e,which){if(!PL.ptrs.has(e.pointerId))return;PL.ptrs.set(e.poin
     if(which==='photo')PL.sh.pose.fov=clamp(g.fov*g.dist/dist,30,100);
     else if(g.bb){const k=g.dist/dist;const c=[(g.bb[0]+g.bb[2])/2,(g.bb[1]+g.bb[3])/2];const hw=clamp((g.bb[2]-g.bb[0])/2*k,8,150),hh=hw*(g.bb[3]-g.bb[1])/(g.bb[2]-g.bb[0]);PL.zoomBB=[c[0]-hw,c[1]-hh,c[0]+hw,c[1]+hh]}
     plRender();return}
+  if(g.anchor){const [px,py]=svgPt($('#plSvg'),e);anchorTo(px,py);plRender();return}
   if(g.cal){const svg=$('#plSvg');const G=shotGeom(PL.sh);const k=PL.sh.w/svg.getBoundingClientRect().width/G.fpx/D2R;
     PL.sh.pose.dh=Math.round((g.dh-(e.clientX-g.x)*k)*10)/10;PL.sh.pose.dp=Math.round((g.dp+(e.clientY-g.y)*k)*10)/10;plRender();return}
   if(g.pan){const r=$('#plMap').getBoundingClientRect();const s=Math.max((g.bb[2]-g.bb[0])/r.width,(g.bb[3]-g.bb[1])/r.height);const dx=(e.clientX-g.x)*s,dy=(e.clientY-g.y)*s;PL.zoomBB=[g.bb[0]-dx,g.bb[1]+dy,g.bb[2]-dx,g.bb[3]+dy];plRender();return}
@@ -2772,7 +2783,7 @@ $$('[data-plmv]').forEach(b=>b.onclick=()=>{const [dx,dy]=b.dataset.plmv.split('
 $('#plRot').oninput=e=>{rotAbout(+e.target.value);plRender()};$('#plRm').onclick=()=>{rotAbout(S.projet.rot+5);plRender()};$('#plRp').onclick=()=>{rotAbout(S.projet.rot-5);plRender()};
 $('#plFace').onclick=()=>{faceStreet();plRender()};$('#plStreet').onclick=()=>{alignStreet();plRender()};$('#plLim').onclick=()=>{alignNearest();plRender()};
 for(const[k,id]of[['dh','#plDh'],['dp','#plDp'],['fov','#plFov']])$(id).oninput=e=>{PL.sh.pose[k]=+e.target.value;plRender()};
-$('#plCalReset').onclick=()=>{Object.assign(PL.sh.pose,{dh:0,dp:0,fov:66});plRender()};
+$('#plCalReset').onclick=()=>{Object.assign(PL.sh.pose,{dh:0,dp:0,fov:66});PL.sh.anch=null;plRender()};
 for(const[k,id]of[['w','#plPortW'],['h','#plPortH']])$(id).oninput=e=>{const c=S.clo.find(o=>o.kind==='portail');if(c){c[k]=+e.target.value;plRender()}};
 function plClose(v){const f=PL.done;PL.done=null;$('#place').hidden=true;if(v!=='ok'&&PL.backup){S.projet.x=PL.backup.x;S.projet.y=PL.backup.y;S.projet.rot=PL.backup.rot;S.clo=PL.backup.clo}f&&f(v)}
 $('#plRetake').onclick=()=>plClose('retake');$('#plCancel').onclick=()=>plClose(null);$('#plOk').onclick=()=>plClose('ok');
