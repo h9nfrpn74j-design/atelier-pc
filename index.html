@@ -412,7 +412,10 @@ body[data-mode="dp-facade"] .pc-only,body[data-mode="dp-toiture"] .pc-only{displ
 .cam-shut:active{background:#fff}
 .place{position:fixed;inset:0;z-index:61;background:#111;color:#fff;display:grid;grid-template-rows:auto 1fr auto}
 .pl-top{padding:max(10px,env(safe-area-inset-top)) 14px 10px;font-size:14px;background:#1b2421}
-.pl-photo{position:relative;min-height:0;display:grid;place-items:center;overflow:hidden}
+.pl-photo{position:relative;min-height:0;display:grid;place-items:center;overflow:hidden}.pl-photo.split{grid-template-rows:1fr 1fr;place-items:stretch}.pl-photo.split #plSvg{border-bottom:2px solid #F2C14E}
+@media (min-width:900px){.pl-photo.split{grid-template-rows:none;grid-template-columns:1fr 1fr}.pl-photo.split #plSvg{border-bottom:0;border-right:2px solid #F2C14E}}
+.pl-seg3{grid-template-columns:auto auto auto!important}
+.pl-photo.split .pl-tools{bottom:auto;top:8px;left:8px;right:auto;justify-content:flex-start}.pl-photo.split .pl-mtools{top:auto;bottom:6px;right:6px}.pl-photo.split .pl-mtools button{width:34px;height:34px;font-size:16px}.pl-photo.split #plTOrtho,.pl-photo.split #plZfit{display:none}
 #plSvg{width:100%;height:100%;touch-action:none;cursor:crosshair;display:block}
 .pl-ctl{background:var(--panel);color:var(--ink);padding:8px 12px max(8px,env(safe-area-inset-bottom));display:grid;gap:6px;max-height:40vh;overflow:auto}
 .pl-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;font-size:13px}.pl-row input{width:100%;accent-color:var(--accent)}.pl-row b{font:600 12px var(--f-mono);min-width:44px;text-align:right}
@@ -807,7 +810,7 @@ body[data-mode="dp-facade"] .pc-only,body[data-mode="dp-toiture"] .pc-only{displ
   <div class="cam-bar"><button type="button" id="camCancel">Annuler</button><button class="cam-shut" type="button" id="camShot" aria-label="Prendre la photo"></button><label class="cam-gal">Galerie<input type="file" accept="image/*,.heic,.heif" id="camFile" hidden></label></div>
 </div>
 <div class="place" id="place" hidden role="dialog" aria-modal="true" aria-label="Placer le projet">
-  <div class="pl-top"><div class="pl-seg" id="plSeg"><button type="button" id="plVPhoto">Photo</button><button type="button" id="plVPlan" class="on">Plan</button></div><span id="plMsg"></span></div>
+  <div class="pl-top"><div class="pl-seg pl-seg3" id="plSeg"><button type="button" id="plVPhoto">Photo</button><button type="button" id="plVSplit">Photo + plan</button><button type="button" id="plVPlan" class="on">Plan</button></div><span id="plMsg"></span></div>
   <div class="pl-photo"><svg id="plSvg" preserveAspectRatio="xMidYMid meet" hidden></svg><svg id="plMap" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="pl-tools" id="plTools" hidden><button type="button" id="plTGuide" class="on">Limites</button><button type="button" id="plTSee">👁 Maintenir : photo seule</button></div>
     <div class="pl-mtools" id="plMapTools"><button type="button" id="plZin" aria-label="Zoom avant">+</button><button type="button" id="plZout" aria-label="Zoom arrière">−</button><button type="button" id="plZhouse" aria-label="Zoomer sur le projet">🎯</button><button type="button" id="plZfit" aria-label="Tout le terrain">⤢</button><button type="button" id="plTOrtho" class="on wide">Aérien</button></div>
@@ -2693,7 +2696,7 @@ function shotProject(sh,W){const {G,V}=shotView(sh);const b=toBld(W[0],W[1]);con
 function anchorTo(px,py){const sh=PL.sh;const P=sh.pose;const W=anchorWorld();const cx=sh.w/2,cy=sh.h/2;
   const unroll=(x,y)=>{const r=-shotGeom(sh).r*D2R;const dx=x-cx,dy=y-cy;return[dx*Math.cos(r)-dy*Math.sin(r),dx*Math.sin(r)+dy*Math.cos(r)]};const t=unroll(px,py);
   for(let it=0;it<6;it++){const a=shotProject(sh,W);const f=shotGeom(sh).fpx;if(!a){P.dp=(+P.dp||0)-10;continue}const q=unroll(a[0],a[1]);
-    P.dh=(+P.dh||0)-(Math.atan(t[0]/f)-Math.atan(q[0]/f))/D2R;P.dp=(+P.dp||0)+(Math.atan(t[1]/f)-Math.atan(q[1]/f))/D2R}
+    P.dp=(+P.dp||0)+(Math.atan(t[1]/f)-Math.atan(q[1]/f))/D2R}
   P.dh=Math.round(clamp(P.dh,-60,60)*100)/100;P.dp=Math.round(clamp(P.dp,-40,40)*100)/100;sh.anch=[px,py]}
 /* ===== repères projetés sur la photo ===== */
 function shotGuides(V){let o='';const P=v=>v[0].toFixed(3)+','+(-v[1]).toFixed(3);
@@ -2709,23 +2712,25 @@ function shotGuides(V){let o='';const P=v=>v[0].toFixed(3)+','+(-v[1]).toFixed(3
 
 /* ===== fenêtre de placement : plan aérien (placement) / photo (calage de l'insertion) ===== */
 const PL={sh:null,done:null,view:'plan',ptrs:new Map(),g:null,guides:true,op:1,ortho:true,fine:false,snap:null,edit:null};
-function plRender(){const sh=PL.sh;const port=isPortail();const photo=PL.view==='photo'&&sh;
-  $('#plSeg').hidden=!sh;$('#plVPhoto').classList.toggle('on',!!photo);$('#plVPlan').classList.toggle('on',!photo);
-  $('#plTools').hidden=!photo;$('#plTGuide').classList.toggle('on',PL.guides);$('#plMapTools').hidden=!!photo;$('#plTOrtho').classList.toggle('on',PL.ortho);$('#plFine').classList.toggle('on',PL.fine);
-  if(photo){const svg=$('#plSvg');svg.removeAttribute('hidden');$('#plMap').setAttribute('hidden','');svg.setAttribute('viewBox',`0 0 ${sh.w} ${sh.h}`);
+function plRender(){const sh=PL.sh;const port=isPortail();const split=PL.view==='split'&&sh;const photo=(PL.view==='photo'||split)&&sh;const plan=!photo||split;
+  $('#plSeg').hidden=!sh;$('#plVPhoto').classList.toggle('on',PL.view==='photo');$('#plVSplit').classList.toggle('on',!!split);$('#plVPlan').classList.toggle('on',!photo);$('.pl-photo').classList.toggle('split',!!split);
+  $('#plTools').hidden=!photo;$('#plTGuide').classList.toggle('on',PL.guides);$('#plMapTools').hidden=!plan;$('#plTOrtho').classList.toggle('on',PL.ortho);$('#plFine').classList.toggle('on',PL.fine);
+  if(!photo)$('#plSvg').setAttribute('hidden','');if(!plan)$('#plMap').setAttribute('hidden','');
+  if(photo){const svg=$('#plSvg');svg.removeAttribute('hidden');svg.setAttribute('viewBox',`0 0 ${sh.w} ${sh.h}`);
     const {G,V}=shotView(sh);const s=(sh.w/2)/V.W;const cx=sh.w/2,cy=sh.h/2;const tr=`rotate(${G.r.toFixed(2)} ${cx} ${cy}) translate(${cx} ${cy}) scale(${s.toFixed(4)})`;
     svg.innerHTML=`<image href="${sh.img}" x="0" y="0" width="${sh.w}" height="${sh.h}" preserveAspectRatio="none"/>`+(PL.guides?`<g transform="${tr}">${shotGuides(V)}</g>`:'')+`<g opacity="${PL.op}">${shotOverlay(sh)}</g>`+(()=>{const a=shotProject(sh,anchorWorld());if(!a)return'';const r=sh.w/60;return`<g pointer-events="none"><circle cx="${a[0].toFixed(1)}" cy="${a[1].toFixed(1)}" r="${r.toFixed(1)}" fill="none" stroke="#ff5a4a" stroke-width="${(r/4).toFixed(1)}"/><circle cx="${a[0].toFixed(1)}" cy="${a[1].toFixed(1)}" r="${(r/4).toFixed(1)}" fill="#ff5a4a"/></g>`})()}
-  else{$('#plSvg').setAttribute('hidden','');const m=$('#plMap');m.removeAttribute('hidden');m.innerHTML=plMapSVG();m.setAttribute('viewBox',PL.mapVB.join(' '))}
-  $('#plMsg').innerHTML=photo?(PL.sh.anch?'✓ Posé au sol. Touchez à nouveau pour corriger, ou validez.':`<b>Touchez sur la photo le pied ${port?'du futur portail (au milieu, au sol)':'de la future façade avant (au milieu, au sol)'}</b> : ${port?'le portail':'la maison'} vient s'y poser.`):
-    port?'Glissez le doigt n\'importe où pour faire coulisser le portail. Deux doigts : zoom.':'Glissez le doigt <b>n\'importe où</b> : la maison suit sans être cachée. Deux doigts : zoom. <b>Touchez une cote</b> pour saisir la distance exacte.';
-  $('#plMove').hidden=!!photo;$('#plDial').hidden=port||!!photo;$('#plSnap').hidden=port||!!photo;$('#plAdv').hidden=!photo;
+  if(plan){const m=$('#plMap');m.removeAttribute('hidden');m.innerHTML=plMapSVG();m.setAttribute('viewBox',PL.mapVB.join(' '))}
+  $('#plMsg').innerHTML=split?'<b>En bas</b> : glissez 📷 là où vous étiez et tournez le cône (rond jaune) vers ce que vous visiez : la maison se recale en direct. <b>En haut</b> : touchez le pied de la façade pour la poser au sol.':
+    photo?(PL.sh.anch?'✓ Posé au sol. Touchez à nouveau pour corriger, ou validez.':`<b>Touchez sur la photo le pied ${port?'du futur portail (au milieu, au sol)':'de la future façade avant (au milieu, au sol)'}</b> : ${port?'le portail':'la maison'} vient se poser au sol.`):
+    port?'Glissez le doigt n\'importe où pour faire coulisser le portail. Deux doigts : zoom.':PL.sh?'Glissez 📷 et son cône pour indiquer d\'où la photo a été prise. Ailleurs, le doigt déplace la maison.':'Glissez le doigt <b>n\'importe où</b> : la maison suit sans être cachée. Deux doigts : zoom. <b>Touchez une cote</b> pour saisir la distance exacte.';
+  $('#plMove').hidden=!plan||!!split;$('#plDial').hidden=port||!plan||!!split;$('#plSnap').hidden=port||!plan||!!split;$('#plAdv').hidden=!photo;
   const sa=streetAngle();$('#plRotV').textContent=sa==null?Math.round(S.projet.rot)+'°':`${fmt(relAngle(),1)}°`;$('#plDialTicks').style.backgroundPositionX=(-S.projet.rot*4)+'px';
   $('#plSnapLbl').textContent=PL.snap||'';$('#plSnapLbl').hidden=!PL.snap;
   if(sh){const P=sh.pose,G=shotGeom(sh);$('#plDh').value=P.dh||0;$('#plDp').value=P.dp||0;$('#plFov').value=P.fov||66;$('#plDhV').textContent=(P.dh>0?'+':'')+(+P.dh||0).toFixed(1)+'°';$('#plDpV').textContent=(P.dp>0?'+':'')+(+P.dp||0).toFixed(1)+'°';$('#plFovV').textContent=Math.round(P.fov||66)+'°';
     $('#plInfo').textContent=`Prise de vue : cap ${Math.round(G.h)}°${P.hSrc==='estime'?' (estimé, pas de boussole)':''} · inclinaison ${Math.round(G.p)}°${P.acc?` · GPS ± ${Math.round(P.acc)} m`:''}`}
   if(port){const c=S.clo.find(o=>o.kind==='portail');if(c){$('#plPort').hidden=false;$('#plPortW').value=c.w;$('#plPortH').value=c.h}}else $('#plPort').hidden=true;
-  $('#plDist').innerHTML=!port&&!photo?plDistTxt():'';$('#plOk').textContent=photo?'Valider la photo':'Valider l\'emplacement';
-  const ed=PL.edit;$('#plEdit').hidden=!ed||!!photo;if(ed&&!photo){$('#plEditLbl').textContent=ed.label;if(document.activeElement!==$('#plEditV'))$('#plEditV').value=ed.val.toFixed(2)}}
+  $('#plDist').innerHTML=!port&&plan?plDistTxt():'';$('#plOk').textContent=photo?'Valider la photo':'Valider l\'emplacement';
+  const ed=PL.edit;$('#plEdit').hidden=!ed||!plan;if(ed&&plan){$('#plEditLbl').textContent=ed.label;if(document.activeElement!==$('#plEditV'))$('#plEditV').value=ed.val.toFixed(2)}}
 /* angles : orientation relative à la rue */
 function streetAngle(){const ve=voieMain();return ve?Math.atan2(ve.b[1]-ve.a[1],ve.b[0]-ve.a[0])/D2R:null}
 function relAngle(){const sa=streetAngle();let d=((S.projet.rot-sa)%90+90)%90;if(d>45)d-=90;return d}
@@ -2766,8 +2771,11 @@ function plMapSVG(){const {rings,E}=boundary();const sh=PL.sh;const G=sh?shotGeo
   for(const e of E)o+=L(e.a,e.b,`stroke="${e.voie?'#5ec2ff':ort?'#FFD84D':'#1E5A56'}" stroke-width="${(e.voie?0.7:0.55)*k}" stroke-dasharray="${2*k} ${k}"`);
   const ve=voieMain();if(ve)o+=T([ve.mid[0]+ve.n[0]*3*k,ve.mid[1]+ve.n[1]*3*k],'RUE',`font-size="${2.8*k}" text-anchor="middle" fill="#fff" font-weight="700" paint-order="stroke" stroke="#2b7bb9" stroke-width="${0.5*k}" dominant-baseline="middle"`);
   for(const e of exKept())o+=`<polygon points="${exRing(e).map(P).join(' ')}" fill="${ort?'rgba(255,255,255,.25)':'#ddd'}" stroke="${ort?'#fff':'#888'}" stroke-width="${0.25*k}"/>`;
-  if(G){const a1=(G.h-G.hfovW/D2R/2)*D2R,a2=(G.h+G.hfovW/D2R/2)*D2R,R=Math.max(w,h)*0.45;o+=`<polygon points="${P(G.cw)} ${P([G.cw[0]+Math.sin(a1)*R,G.cw[1]+Math.cos(a1)*R])} ${P([G.cw[0]+Math.sin(a2)*R,G.cw[1]+Math.cos(a2)*R])}" fill="rgba(242,193,78,.18)" stroke="#E0A92A" stroke-width="${0.2*k}"/>`}
-  if(S.onsite&&S.onsite.here){const q=M(toLocal(...S.onsite.here));o+=`<circle cx="${q[0]}" cy="${-q[1]}" r="${Math.max(0.6,S.onsite.acc||3)}" fill="rgba(66,133,244,.15)" stroke="#4285F4" stroke-width="${0.15*k}"/><circle cx="${q[0]}" cy="${-q[1]}" r="${0.8*k}" fill="#4285F4" stroke="#fff" stroke-width="${0.3*k}"/>`}
+  if(S.onsite&&S.onsite.here){const q=M(toLocal(...S.onsite.here));o+=`<circle pointer-events="none" cx="${q[0]}" cy="${-q[1]}" r="${Math.max(0.6,S.onsite.acc||3)}" fill="rgba(66,133,244,.15)" stroke="#4285F4" stroke-width="${0.15*k}"/><circle pointer-events="none" cx="${q[0]}" cy="${-q[1]}" r="${0.8*k}" fill="#4285F4" stroke="#fff" stroke-width="${0.3*k}"/>`}
+  if(G){const a1=(G.h-G.hfovW/D2R/2)*D2R,a2=(G.h+G.hfovW/D2R/2)*D2R,R=Math.max(w,h)*0.45;o+=`<polygon points="${P(G.cw)} ${P([G.cw[0]+Math.sin(a1)*R,G.cw[1]+Math.cos(a1)*R])} ${P([G.cw[0]+Math.sin(a2)*R,G.cw[1]+Math.cos(a2)*R])}" fill="rgba(242,193,78,.2)" stroke="#E0A92A" stroke-width="${0.25*k}" pointer-events="none"/>`;
+    const hd=[G.cw[0]+Math.sin(G.h*D2R)*R*0.55,G.cw[1]+Math.cos(G.h*D2R)*R*0.55];o+=L(G.cw,hd,`stroke="#E0A92A" stroke-width="${0.35*k}" stroke-dasharray="${k} ${0.6*k}" pointer-events="none"`);
+    const mh=M(hd),mc=M(G.cw);o+=`<circle cx="${mh[0].toFixed(2)}" cy="${(-mh[1]).toFixed(2)}" r="${2.6*k}" fill="#F2C14E" stroke="#fff" stroke-width="${0.5*k}" data-camh="1" style="cursor:grab"/><text x="${mh[0].toFixed(2)}" y="${(-mh[1]+1*k).toFixed(2)}" font-size="${2.6*k}" text-anchor="middle" pointer-events="none">↻</text>`;
+    o+=`<circle cx="${mc[0].toFixed(2)}" cy="${(-mc[1]).toFixed(2)}" r="${3.2*k}" fill="#18211F" stroke="#F2C14E" stroke-width="${0.6*k}" data-cam="1" style="cursor:grab"/><text x="${mc[0].toFixed(2)}" y="${(-mc[1]+1.1*k).toFixed(2)}" font-size="${3*k}" text-anchor="middle" pointer-events="none">📷</text>`}
   if(isPortail()){for(const c of S.clo){const g=cloSeg(c);if(g)o+=L(g.p0,g.p1,`stroke="#ff5a4a" stroke-width="${1.4*k}"`)}}
   else{o+=`<polygon points="${B.corners.map(P).join(' ')}" fill="rgba(255,90,74,.38)" stroke="#ff5a4a" stroke-width="${0.4*k}"/>`;
     const f=frontPt(),n=frontNormal(),fs=frontSide();const t=[-n[1],n[0]];const hl=fs.len/2;o+=L([f[0]-t[0]*hl,f[1]-t[1]*hl],[f[0]+t[0]*hl,f[1]+t[1]*hl],`stroke="#ff5a4a" stroke-width="${1.1*k}"`);
@@ -2785,7 +2793,10 @@ function moveBy(d){if(isPortail()){const c=S.clo.find(o=>o.kind==='portail');con
 function ptrDown(e,which){e.preventDefault();const el=e.currentTarget;try{el.setPointerCapture(e.pointerId)}catch(_){}PL.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(PL.ptrs.size===2){const [a,b]=[...PL.ptrs.values()];PL.g={two:true,dist:Math.hypot(b.x-a.x,b.y-a.y),mid:[(a.x+b.x)/2,(a.y+b.y)/2],fov:PL.sh?+PL.sh.pose.fov||66:66,bb:PL.zoomBB&&PL.zoomBB.slice()};return}
   if(which==='photo'){PL.g={anchor:true};const [px,py]=svgPtOf($('#plSvg'),e);anchorTo(px,py);plRender();return}
+  if(PL.sh&&e.target.closest('[data-cam]')){PL.g={cam:true};return}
+  if(PL.sh&&e.target.closest('[data-camh]')){PL.g={camh:true};return}
   const dl=e.target.closest('[data-dist]');if(dl){const d=PL.dl[+dl.dataset.dist];PL.edit={e:d.e,val:d.d,label:d.e.voie?'Distance à la rue':'Distance à la limite'};PL.g=null;plRender();setTimeout(()=>{const i=$('#plEditV');i.focus();i.select()},50);return}
+  if(PL.view==='split'){PL.g={pan:true,x:e.clientX,y:e.clientY,bb:PL.zoomBB.slice()};return}
   PL.g={move:true,x:e.clientX,y:e.clientY,acc:[0,0]}}
 function ptrMove(e,which){if(!PL.ptrs.has(e.pointerId))return;PL.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});const g=PL.g;if(!g)return;
   const now=performance.now();if(PL.lt&&now-PL.lt<25)return;PL.lt=now;
@@ -2796,11 +2807,14 @@ function ptrMove(e,which){if(!PL.ptrs.has(e.pointerId))return;PL.ptrs.set(e.poin
       PL.zoomBB=[c[0]-hw-px,c[1]-hh+py,c[0]+hw-px,c[1]+hh+py]}
     plRender();return}
   if(g.anchor){const [px,py]=svgPtOf($('#plSvg'),e);anchorTo(px,py);plRender();return}
+  if(g.cam||g.camh){const [x,y]=svgPtOf($('#plMap'),e);const w=mRot([x,-y],-(PL.th||0));const P=PL.sh.pose;
+    if(g.cam){P.lonlat=toLL(...w);P.acc=null}else{const cw=shotGeom(PL.sh).cw;P.h=bearing(w[0]-cw[0],w[1]-cw[1]);P.dh=0;P.hSrc='manuel'}plRender();return}
+  if(g.pan){const r=$('#plMap').getBoundingClientRect();const sc=Math.max((g.bb[2]-g.bb[0])/r.width,(g.bb[3]-g.bb[1])/r.height);const dx=(e.clientX-g.x)*sc,dy=(e.clientY-g.y)*sc;PL.zoomBB=[g.bb[0]-dx,g.bb[1]+dy,g.bb[2]-dx,g.bb[3]+dy];plRender();return}
   if(g.move){const k=PL.fine?0.2:1;const d=scrToWorld((e.clientX-g.x)*k,(e.clientY-g.y)*k);g.x=e.clientX;g.y=e.clientY;moveBy(d);PL.edit=null;plRender()}}
 function ptrUp(e){PL.ptrs.delete(e.pointerId);if(PL.ptrs.size<2&&PL.g&&PL.g.two)PL.g=null;if(!PL.ptrs.size)PL.g=null}
 for(const[id,w]of[['#plSvg','photo'],['#plMap','plan']]){const el=$(id);el.addEventListener('pointerdown',e=>ptrDown(e,w));el.addEventListener('pointermove',e=>ptrMove(e,w));el.addEventListener('pointerup',ptrUp);el.addEventListener('pointercancel',ptrUp)}
 $('#plMap').addEventListener('wheel',e=>{e.preventDefault();plZoom(e.deltaY>0?1.15:0.87)},{passive:false});
-$('#plVPhoto').onclick=()=>{PL.view='photo';plRender()};$('#plVPlan').onclick=()=>{PL.view='plan';plRender()};
+$('#plVPhoto').onclick=()=>{PL.view='photo';plRender()};$('#plVSplit').onclick=()=>{PL.view='split';plFitCam();plRender()};$('#plVPlan').onclick=()=>{PL.view='plan';plRender()};
 $('#plTGuide').onclick=()=>{PL.guides=!PL.guides;plRender()};$('#plTOrtho').onclick=()=>{PL.ortho=!PL.ortho;plRender()};$('#plFine').onclick=()=>{PL.fine=!PL.fine;plRender()};
 $('#plZin').onclick=()=>plZoom(0.7);$('#plZout').onclick=()=>plZoom(1.4);$('#plZfit').onclick=()=>{PL.zoomBB=null;plRender()};
 $('#plZhouse').onclick=()=>{const c=mRot(isPortail()?(cloCenter()||[S.projet.x,S.projet.y]):[S.projet.x,S.projet.y],PL.th||0);const r=isPortail()?8:Math.max(S.projet.L,S.projet.W)*0.9+4;PL.zoomBB=[c[0]-r,c[1]-r,c[0]+r,c[1]+r];plRender()};
@@ -2825,7 +2839,8 @@ $('#plRetake').onclick=()=>plClose('retake');$('#plCancel').onclick=()=>plClose(
 function plOpen(sh,view){PL.sh=sh;PL.view=view;PL.ptrs.clear();PL.g=null;PL.zoomBB=null;PL.edit=null;PL.snap=null;PL.backup={x:S.projet.x,y:S.projet.y,rot:S.projet.rot,clo:JSON.parse(JSON.stringify(S.clo))};
   if(isPortail()&&!S.clo.some(o=>o.kind==='portail'))addClo('portail',true);$('#plRetake').hidden=!sh;$('#place').hidden=false;plRender();return new Promise(r=>PL.done=r)}
 async function placeOnPlan(){const r=await plOpen(null,'plan');if(r==='ok'){S.onsite=Object.assign(S.onsite||{},{placed:true});if(S.onsite.shot)await onsiteApply();save();return true}return false}
-function calibratePhoto(sh){return plOpen(sh,'photo')}
+function plFitCam(){if(!PL.sh)return;const th=mapTheta();const G=shotGeom(PL.sh);const pts=bat().corners.concat([G.cw]);if(isPortail()){const c=cloCenter();if(c)pts.push(c)}PL.zoomBB=bbox(pts.map(q=>mRot(q,th)),5)}
+function calibratePhoto(sh){const p=plOpen(sh,'split');plFitCam();plRender();return p}
 
 /* ---------- Parcours complet : photo + placement + pièces graphiques ---------- */
 async function onsiteFlow(){if(S.demo){toast('Choisissez d\'abord votre terrain.');return false}
