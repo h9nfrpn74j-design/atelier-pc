@@ -417,11 +417,12 @@ body[data-mode="dp-facade"] .pc-only,body[data-mode="dp-toiture"] .pc-only{displ
 .pl-seg3{grid-template-columns:auto auto auto!important}
 .pl-photo.split .pl-tools{bottom:auto;top:8px;left:8px;right:auto;justify-content:flex-start}.pl-photo.split .pl-mtools{top:auto;bottom:6px;right:6px}.pl-photo.split .pl-mtools button{width:34px;height:34px;font-size:16px}.pl-photo.split #plTOrtho,.pl-photo.split #plZfit{display:none}.pl-photo.split #plTVeg{width:34px;padding:0}.pl-photo.split #plTVeg span{display:none}
 #plSvg{width:100%;height:100%;touch-action:none;cursor:crosshair;display:block}
-.pl-ctl{background:var(--panel);color:var(--ink);padding:8px 12px max(8px,env(safe-area-inset-bottom));display:grid;gap:6px;max-height:40vh;overflow:auto}
+.pl-ctl{background:var(--panel);color:var(--ink);padding:8px 12px max(8px,env(safe-area-inset-bottom));display:grid;gap:6px;max-height:42vh;overflow:auto}
+.pl-adv-row{display:flex;gap:14px;flex-wrap:wrap}
 .pl-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;font-size:13px}.pl-row input{width:100%;accent-color:var(--accent)}.pl-row b{font:600 12px var(--f-mono);min-width:44px;text-align:right}
 #plPort.pl-row{grid-template-columns:auto 1fr auto 1fr}
 .pl-adv summary{font-size:13px;color:var(--muted);cursor:pointer;padding:4px 0}.pl-adv{display:grid;gap:6px}
-.pl-bar{display:flex;gap:8px;flex-wrap:wrap}.pl-bar .btn{min-height:44px;flex:1}.pl-bar #plOk{flex:2}
+.pl-bar{display:flex;gap:6px}.pl-bar .btn{padding:6px 8px;white-space:nowrap}.pl-bar .btn{min-height:44px;flex:1}.pl-bar #plOk{flex:2}
 .wz-big{width:100%;min-height:52px;font-size:15px!important;font-weight:600}
 .wz-or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px}.wz-or::before,.wz-or::after{content:"";flex:1;border-top:1px solid var(--line)}
 .wz-kinds{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
@@ -487,21 +488,24 @@ body[data-mode="dp-facade"] .pc-only,body[data-mode="dp-toiture"] .pc-only{displ
 .pl-loupe{position:absolute;width:120px;height:120px;border-radius:50%;overflow:hidden;border:3px solid #fff;box-shadow:0 6px 18px rgba(0,0,0,.45);pointer-events:none;z-index:3;background:#000}.pl-loupe svg{width:100%;height:100%;display:block}
 .pl-pz{position:absolute;right:8px;top:8px;display:grid;gap:6px;z-index:2}.pl-pz button{width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.3);background:rgba(20,28,26,.78);color:#fff;font:600 19px var(--f-ui);cursor:pointer}
 .pl-side{display:none}
-@media (orientation:landscape) and (max-height:560px){
-  .place{grid-template-columns:minmax(0,1fr) min(300px,38vw);grid-template-rows:auto 1fr}
-  .pl-top{grid-column:2;grid-row:1;padding:max(6px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) 6px 8px;font-size:11.5px;line-height:1.35;gap:6px}
-  .pl-top .pl-seg button{padding:5px 9px;font-size:12px}
-  .pl-photo{grid-column:1;grid-row:1/3;padding-left:env(safe-area-inset-left)}
-  .pl-ctl{grid-column:2;grid-row:2;max-height:none;overflow:auto;padding:6px 8px max(6px,env(safe-area-inset-bottom)) 8px;align-content:start}
-  .pl-side{display:grid;gap:6px}
-  .pl-side .pl-tools,.pl-side .pl-pz,.pl-side .pl-mtools{position:static;display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-start;pointer-events:auto}
-  .pl-side .pl-tools button,.pl-side .pl-tools select{padding:6px 9px;font-size:12px}
-  .pl-side .pl-pz button,.pl-side .pl-mtools button{width:36px;height:36px;font-size:16px}.pl-side .pl-mtools button.wide{width:auto;height:36px}
-  .pl-side [hidden]{display:none!important}
-  .cam-tip{display:none}.cam-top b{flex:0 0 auto;font-size:13px}.cam-top{padding-top:6px;padding-bottom:6px;font-size:11px}
-  .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1fr;grid-template-rows:1fr auto 1fr;justify-items:center;background:linear-gradient(90deg,transparent,rgba(0,0,0,.6))}.cam-bar>button:first-child,.cam-gal{justify-self:center}
-  .pl-bar .btn{min-height:38px}.pl-move button,.pl-dial>button{width:38px;height:38px}.pl-dial .dial{height:38px}
-}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+/* outils de placement : jamais sur la photo */
+.pl-side{display:grid;gap:6px}
+.pl-side .pl-tools,.pl-side .pl-pz,.pl-side .pl-mtools{position:static;display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-start;pointer-events:auto}
+.pl-side .pl-tools button,.pl-side .pl-tools select{padding:6px 10px;font-size:12px;background:#fff;color:var(--ink);border:1px solid var(--line)}
+.pl-side .pl-tools button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pl-side .pl-pz button,.pl-side .pl-mtools button{width:36px;height:36px;font-size:16px;background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:none}
+.pl-side .pl-mtools button.wide{width:auto;height:36px}.pl-side .pl-mtools button.wide.on,.pl-side .pl-mtools button.vegon{background:var(--accent);color:#fff}
+.pl-side [hidden]{display:none!important}.pl-side .pl-row1{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+#plMsg{font-size:13px;line-height:1.35}#plMsg .more{color:#8FC7C0;cursor:pointer;margin-left:4px;font-weight:600}
+.place.land{grid-template-columns:minmax(0,1fr) min(300px,40vw);grid-template-rows:auto 1fr}
+.place.land .pl-top{grid-column:2;grid-row:1;padding:max(6px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) 6px 8px;font-size:11.5px;gap:6px}
+.place.land .pl-top .pl-seg button{padding:5px 9px;font-size:12px}.place.land #plMsg{font-size:11.5px}
+.place.land .pl-photo{grid-column:1;grid-row:1/3;padding-left:env(safe-area-inset-left)}
+.place.land .pl-ctl{grid-column:2;grid-row:2;max-height:none;overflow:auto;padding:6px 8px max(6px,env(safe-area-inset-bottom)) 8px;align-content:start}
+.place.land .pl-bar .btn{min-height:38px}.place.land .pl-move button,.place.land .pl-dial>button{width:38px;height:38px}.place.land .pl-dial .dial{height:38px}
+body.land .cam-tip{display:none}body.land .cam-top b{flex:0 0 auto;font-size:13px}body.land .cam-top{padding-top:6px;padding-bottom:6px;font-size:11px}
+body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1fr;grid-template-rows:1fr auto 1fr;justify-items:center;background:linear-gradient(90deg,transparent,rgba(0,0,0,.6))}body.land .cam-bar>button:first-child,body.land .cam-gal{justify-self:center}
 .pl-edit{position:absolute;left:8px;right:8px;top:8px;display:flex;gap:8px;align-items:center;background:#fff;border-radius:12px;padding:10px;box-shadow:0 6px 20px rgba(0,0,0,.3);font-size:14px;color:var(--ink)}
 .pl-edit input{width:90px;padding:8px;border:1px solid var(--line);border-radius:8px;font:600 16px var(--f-mono)}.pl-edit #plEditLbl{flex:1;font-weight:600}
 </style>
@@ -842,7 +846,7 @@ body[data-mode="dp-facade"] .pc-only,body[data-mode="dp-toiture"] .pc-only{displ
     <div class="pl-dist" id="plDist"></div>
     <div class="pl-move" id="plNudge" hidden><span id="plNudgeL">Coin</span><button type="button" data-nudge="-1,0" aria-label="Gauche">←</button><button type="button" data-nudge="0,-1" aria-label="Haut">↑</button><button type="button" data-nudge="0,1" aria-label="Bas">↓</button><button type="button" data-nudge="1,0" aria-label="Droite">→</button></div>
     <div class="pl-veg" id="plVeg" hidden><span>Touchez le plan :</span><button type="button" data-veg="arbre">🌳 Arbre</button><button type="button" data-veg="arbuste">🌿 Arbuste</button><button type="button" data-veg="haie">▬ Haie (2 points)</button><button type="button" data-veg="del">Supprimer</button><button type="button" data-veg="">OK</button></div>
-    <details class="pl-adv" id="plRender"><summary>Rendu : soleil, couleurs, contours</summary>
+    <details class="pl-adv" id="plRender"><summary>Rendu (soleil, couleurs)</summary>
       <div class="pl-row"><span>Soleil</span><select id="plSun"><option value="photo">Comme à l'heure de la photo</option><option value="couvert">Temps couvert (ombres douces)</option><option value="manuel">Réglage manuel</option></select><b id="plSunV"></b></div>
       <div class="pl-row" id="plSunAzR"><span>Direction</span><input type="range" id="plSunAz" min="0" max="359" step="1"><b id="plSunAzV"></b></div>
       <div class="pl-row" id="plSunElR"><span>Hauteur</span><input type="range" id="plSunEl" min="5" max="70" step="1"><b id="plSunElV"></b></div>
@@ -852,13 +856,13 @@ body[data-mode="dp-facade"] .pc-only,body[data-mode="dp-toiture"] .pc-only{displ
     <div class="pl-dial" id="plDial"><button type="button" id="plRm" aria-label="Tourner à gauche">↺</button><div class="dial" aria-label="Molette de rotation : glissez"><i id="plDialTicks"></i><span>⇠ glissez pour tourner ⇢</span></div><button type="button" id="plRp" aria-label="Tourner à droite">↻</button><b id="plRotV"></b><em id="plSnapLbl" hidden></em></div>
     <details id="plSnap" class="pl-adv"><summary>Aligner automatiquement</summary><div class="btns"><button class="btn sm" type="button" id="plFace">Façade avant vers la rue</button><button class="btn sm" type="button" id="plStreet">Parallèle à la rue</button><button class="btn sm" type="button" id="plLim">Parallèle à la limite proche</button></div></details>
     <div id="plPort" class="pl-row4" hidden><span>Largeur</span><input type="range" id="plPortW" min="1" max="7" step="0.1"><span>Hauteur</span><input type="range" id="plPortH" min="0.8" max="2.4" step="0.05"></div>
-    <details class="pl-adv" id="plAdv"><summary>Réglages fins de la prise de vue</summary>
+    <details class="pl-adv" id="plAdv"><summary>Prise de vue</summary>
       <div class="pl-row"><span>Direction</span><input type="range" id="plDh" min="-40" max="40" step="0.5"><b id="plDhV"></b></div>
       <div class="pl-row"><span>Inclinaison</span><input type="range" id="plDp" min="-20" max="20" step="0.25"><b id="plDpV"></b></div>
       <div class="pl-row"><span>Champ de vue</span><input type="range" id="plFov" min="30" max="100" step="1"><b id="plFovV"></b></div>
       <div class="btns"><button class="btn sm" type="button" id="plCalReset">Réinitialiser</button></div>
       <p class="hint" id="plInfo"></p></details>
-    <div class="pl-bar"><button class="btn" type="button" id="plCancel">Annuler</button><button class="btn" type="button" id="plRetake">Reprendre la photo</button><button class="btn primary" type="button" id="plOk">Valider l'emplacement</button></div>
+    <div class="pl-bar"><button class="btn" type="button" id="plCancel">Annuler</button><button class="btn" type="button" id="plRetake">Refaire la photo</button><button class="btn primary" type="button" id="plOk">Valider l'emplacement</button></div>
   </div>
 </div>
 <div class="here" id="here" hidden role="dialog" aria-modal="true" aria-labelledby="hrTitle">
@@ -2883,7 +2887,7 @@ function plRender(){const sh=PL.sh;const port=isPortail();const split=PL.view===
     const {G,V}=shotView(sh);const s=(sh.w/2)/V.W;const cx=sh.w/2,cy=sh.h/2;const tr=`rotate(${G.r.toFixed(2)} ${cx} ${cy}) translate(${cx} ${cy}) scale(${s.toFixed(4)})`;
     svg.innerHTML=`<image href="${sh.img}" x="0" y="0" width="${sh.w}" height="${sh.h}" preserveAspectRatio="none"/>`+(PL.guides?`<g transform="${tr}">${shotGuides(V)}</g>`:'')+`<g opacity="${PL.op}">${shotOverlay(sh)}</g>`+`<g id="plVis" pointer-events="none">${PL.tool==='brush'||PL.tool==='erase'?maskVis(sh):''}</g>`+(PL.tool==='anchor'?`<g id="plCorners">${cornersSVG(sh)}</g>`:'')+(()=>{return'';const a=shotProject(sh,anchorWorld());if(!a)return'';const r=sh.w/60;return`<g pointer-events="none"><circle cx="${a[0].toFixed(1)}" cy="${a[1].toFixed(1)}" r="${r.toFixed(1)}" fill="none" stroke="#ff5a4a" stroke-width="${(r/4).toFixed(1)}"/><circle cx="${a[0].toFixed(1)}" cy="${a[1].toFixed(1)}" r="${(r/4).toFixed(1)}" fill="#ff5a4a"/></g>`})()}
   if(plan){const m=$('#plMap');m.removeAttribute('hidden');m.innerHTML=plMapSVG();m.setAttribute('viewBox',PL.mapVB.join(' '))}
-  const cm=PL.cmode==='4'?(port?'<b>Tirez les 4 ronds</b> sur les coins du futur portail.':'<b>Tirez les 4 ronds</b> sur les 4 angles de la maison au pied des murs.'):(port?'<b>Tirez les 2 ronds rouges</b> sur les deux bas du futur portail, au sol.':'<b>Tirez les 2 ronds rouges</b> sur les 2 angles de la façade avant, au pied des murs : la taille et la perspective se règlent seules.')+' Pincez pour zoomer la photo ; touchez un rond puis les flèches pour l\'ajuster au pixel.';
+  const cm=(PL.cmode==='4'?(port?'Tirez les 4 ronds sur les coins du portail.':'Tirez les 4 ronds sur les angles de la maison, au pied des murs.'):(port?'Tirez les 2 ronds rouges sur le bas du portail, au sol.':'Tirez les 2 ronds rouges sur les angles de la façade avant, au pied des murs.'))+(PL.msgMore?' La taille et la perspective se règlent seules. Pincez pour zoomer la photo ; touchez un rond puis les flèches pour l\'ajuster au pixel. <span class="more" data-msgless>moins</span>':' <span class="more" data-msgmore>ⓘ</span>');
   $('#plMsg').innerHTML=photo&&PL.tool==='brush'?'<b>Peignez au doigt</b> ce qui doit rester <b>devant</b> la maison (haie, arbre, clôture, voiture) : ces zones repassent au premier plan. Zone peinte en bleu.':
     photo&&PL.tool==='erase'?'<b>Gomme</b> : repassez sur une zone peinte pour la retirer.':
     split?cm+' En bas : d\'où la photo a été prise (📷).':photo?cm:
@@ -2894,7 +2898,7 @@ function plRender(){const sh=PL.sh;const port=isPortail();const split=PL.view===
   if(sh){const P=sh.pose,G=shotGeom(sh);$('#plDh').value=P.dh||0;$('#plDp').value=P.dp||0;$('#plFov').value=P.fov||66;$('#plDhV').textContent=(P.dh>0?'+':'')+(+P.dh||0).toFixed(1)+'°';$('#plDpV').textContent=(P.dp>0?'+':'')+(+P.dp||0).toFixed(1)+'°';$('#plFovV').textContent=Math.round(P.fov||66)+'°';
     $('#plInfo').textContent=`Prise de vue : cap ${Math.round(G.h)}°${P.hSrc==='estime'?' (estimé, pas de boussole)':''} · inclinaison ${Math.round(G.p)}°${P.acc?` · GPS ± ${Math.round(P.acc)} m`:''}`}
   if(port){const c=S.clo.find(o=>o.kind==='portail');if(c){$('#plPort').hidden=false;$('#plPortW').value=c.w;$('#plPortH').value=c.h}}else $('#plPort').hidden=true;
-  $('#plDist').innerHTML=!port&&plan?plDistTxt():'';$('#plOk').textContent=photo?'Valider la photo':'Valider l\'emplacement';
+  $('#plDist').innerHTML=!port&&plan?plDistTxt():'';$('#plOk').textContent='Valider';
   const ed=PL.edit;$('#plEdit').hidden=!ed||!plan;if(ed&&plan){$('#plEditLbl').textContent=ed.label;if(document.activeElement!==$('#plEditV'))$('#plEditV').value=ed.val.toFixed(2)}}
 /* angles : orientation relative à la rue */
 function streetAngle(){const ve=voieMain();return ve?Math.atan2(ve.b[1]-ve.a[1],ve.b[0]-ve.a[0])/D2R:null}
@@ -2998,6 +3002,7 @@ $('#plMap').addEventListener('wheel',e=>{e.preventDefault();plZoom(e.deltaY>0?1.
 $('#plVPhoto').onclick=()=>{PL.view='photo';plRender()};
 function plMaskLive(){const sh=PL.sh;const m=$('#plSvg').querySelector('mask[id$="fg"]');if(m)m.innerHTML=maskInner(sh);const v=$('#plVis');if(v)v.innerHTML=maskVis(sh)}
 $('#plTAnchor').onclick=()=>{PL.tool='anchor';plRender()};
+$('#plMsg').addEventListener('click',e=>{if(e.target.closest('[data-msgmore]')){PL.msgMore=true;plRender()}else if(e.target.closest('[data-msgless]')){PL.msgMore=false;plRender()}});
 $('#plCMode').onclick=()=>{PL.cmode=PL.cmode==='4'?'2':'4';PL.selC=null;plRender()};$('#plPFine').onclick=()=>{PL.pfine=!PL.pfine;plRender()};
 function pzZoom(f){const sh=PL.sh;const vb=PL.pz||[0,0,sh.w,sh.h];let c=[vb[0]+vb[2]/2,vb[1]+vb[3]/2];if(f<1&&PL.selC!=null){const px=cornerPix(sh);if(px&&px[PL.selC])c=px[PL.selC]}
   const w=clamp(vb[2]*f,sh.w*0.08,sh.w),h=w*sh.h/sh.w;PL.pz=w>=sh.w*0.999?null:[clamp(c[0]-w/2,0,sh.w-w),clamp(c[1]-h/2,0,sh.h-h),w,h];plRender()}
@@ -3031,9 +3036,9 @@ $('#plCalReset').onclick=()=>{Object.assign(PL.sh.pose,{dh:0,dp:0,fov:66});PL.sh
 for(const[k,id]of[['w','#plPortW'],['h','#plPortH']])$(id).oninput=e=>{const c=S.clo.find(o=>o.kind==='portail');if(c){c[k]=+e.target.value;plRender()}};
 function plClose(v){const f=PL.done;PL.done=null;$('#place').hidden=true;if(v!=='ok'&&PL.backup){S.projet.x=PL.backup.x;S.projet.y=PL.backup.y;S.projet.rot=PL.backup.rot;S.clo=PL.backup.clo}f&&f(v)}
 $('#plRetake').onclick=()=>plClose('retake');$('#plCancel').onclick=()=>plClose(null);$('#plOk').onclick=()=>plClose('ok');
-const PL_MQ=matchMedia('(orientation:landscape) and (max-height:560px)');
-function plLayout(){const side=PL_MQ.matches;const host=side?$('#plSide'):$('.pl-photo');for(const id of['#plTools','#plPz','#plMapTools']){const el=$(id);if(el&&el.parentNode!==host)host.appendChild(el)}}
-try{PL_MQ.addEventListener('change',()=>{plLayout();if(!$('#place').hidden)plRender()})}catch(e){PL_MQ.addListener&&PL_MQ.addListener(()=>{plLayout();if(!$('#place').hidden)plRender()})}
+function isLand(){return innerWidth>innerHeight&&innerHeight<=620}
+function plLayout(){const land=isLand();$('#place').classList.toggle('land',land);document.body.classList.toggle('land',land);const host=$('#plSide');for(const id of['#plTools','#plPz','#plMapTools']){const el=$(id);if(el&&el.parentNode!==host)host.appendChild(el)}}
+addEventListener('resize',()=>{plLayout();if(!$('#place').hidden)plRender()});addEventListener('orientationchange',()=>setTimeout(()=>{plLayout();if(!$('#place').hidden)plRender()},250));plLayout();
 function plOpen(sh,view){plLayout();PL.sh=sh;PL.view=view;PL.ptrs.clear();PL.g=null;PL.zoomBB=null;PL.edit=null;PL.snap=null;PL.tool='anchor';PL.cmode=PL.cmode||'2';PL.selC=null;PL.pz=null;PL.veg=null;PL.vegA=null;PL.backup={x:S.projet.x,y:S.projet.y,rot:S.projet.rot,clo:JSON.parse(JSON.stringify(S.clo))};
   if(isPortail()&&!S.clo.some(o=>o.kind==='portail'))addClo('portail',true);$('#plRetake').hidden=!sh;$('#place').hidden=false;plRender();return new Promise(r=>PL.done=r)}
 async function placeOnPlan(){const r=await plOpen(null,'plan');if(r==='ok'){S.onsite=Object.assign(S.onsite||{},{placed:true});if(S.onsite.shot)await onsiteApply();save();return true}return false}
