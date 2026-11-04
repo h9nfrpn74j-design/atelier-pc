@@ -415,7 +415,7 @@ body[data-mode="dp-facade"] .pc-only,body[data-mode="dp-toiture"] .pc-only{displ
 .pl-photo{position:relative;min-height:0;display:grid;place-items:center;overflow:hidden}.pl-photo.split{grid-template-rows:1fr 1fr;place-items:stretch}.pl-photo.split #plSvg{border-bottom:2px solid #F2C14E}
 @media (min-width:900px){.pl-photo.split{grid-template-rows:none;grid-template-columns:1fr 1fr}.pl-photo.split #plSvg{border-bottom:0;border-right:2px solid #F2C14E}}
 .pl-seg3{grid-template-columns:auto auto auto!important}
-.pl-photo.split .pl-tools{bottom:auto;top:8px;left:8px;right:auto;justify-content:flex-start}.pl-photo.split .pl-mtools{top:auto;bottom:6px;right:6px}.pl-photo.split .pl-mtools button{width:34px;height:34px;font-size:16px}.pl-photo.split #plTOrtho,.pl-photo.split #plZfit{display:none}
+.pl-photo.split .pl-tools{bottom:auto;top:8px;left:8px;right:auto;justify-content:flex-start}.pl-photo.split .pl-mtools{top:auto;bottom:6px;right:6px}.pl-photo.split .pl-mtools button{width:34px;height:34px;font-size:16px}.pl-photo.split #plTOrtho,.pl-photo.split #plZfit{display:none}.pl-photo.split #plTVeg{width:34px;padding:0}.pl-photo.split #plTVeg span{display:none}
 #plSvg{width:100%;height:100%;touch-action:none;cursor:crosshair;display:block}
 .pl-ctl{background:var(--panel);color:var(--ink);padding:8px 12px max(8px,env(safe-area-inset-bottom));display:grid;gap:6px;max-height:40vh;overflow:auto}
 .pl-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;font-size:13px}.pl-row input{width:100%;accent-color:var(--accent)}.pl-row b{font:600 12px var(--f-mono);min-width:44px;text-align:right}
@@ -480,6 +480,10 @@ body[data-mode="dp-facade"] .pc-only,body[data-mode="dp-toiture"] .pc-only{displ
 .pl-dial .dial span{position:relative;font-size:11px;color:var(--muted);background:rgba(255,255,255,.85);padding:1px 6px;border-radius:6px;pointer-events:none}
 .pl-dial b{font:600 12px var(--f-mono);min-width:44px;text-align:right}
 .pl-dial em{position:absolute;right:56px;top:-10px;font:600 11px var(--f-ui);font-style:normal;background:var(--ok);color:#fff;padding:2px 8px;border-radius:99px}
+.pl-tools select{width:auto!important;pointer-events:auto;background:rgba(20,28,26,.78);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:99px;padding:6px 8px;font:600 12px var(--f-ui)}
+.pl-veg{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px;color:var(--muted);background:#EEF7F1;border-radius:10px;padding:6px}
+.pl-veg button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:7px 11px;font:600 13px var(--f-ui);cursor:pointer}.pl-veg button.on{background:var(--ok);color:#fff;border-color:var(--ok)}
+.pl-mtools button.wide.vegon{background:var(--ok);color:#fff}
 .pl-edit{position:absolute;left:8px;right:8px;top:8px;display:flex;gap:8px;align-items:center;background:#fff;border-radius:12px;padding:10px;box-shadow:0 6px 20px rgba(0,0,0,.3);font-size:14px;color:var(--ink)}
 .pl-edit input{width:90px;padding:8px;border:1px solid var(--line);border-radius:8px;font:600 16px var(--f-mono)}.pl-edit #plEditLbl{flex:1;font-weight:600}
 </style>
@@ -812,11 +816,18 @@ body[data-mode="dp-facade"] .pc-only,body[data-mode="dp-toiture"] .pc-only{displ
 <div class="place" id="place" hidden role="dialog" aria-modal="true" aria-label="Placer le projet">
   <div class="pl-top"><div class="pl-seg pl-seg3" id="plSeg"><button type="button" id="plVPhoto">Photo</button><button type="button" id="plVSplit">Photo + plan</button><button type="button" id="plVPlan" class="on">Plan</button></div><span id="plMsg"></span></div>
   <div class="pl-photo"><svg id="plSvg" preserveAspectRatio="xMidYMid meet" hidden></svg><svg id="plMap" preserveAspectRatio="xMidYMid meet"></svg>
-    <div class="pl-tools" id="plTools" hidden><button type="button" id="plTGuide" class="on">Limites</button><button type="button" id="plTSee">👁 Maintenir : photo seule</button></div>
-    <div class="pl-mtools" id="plMapTools"><button type="button" id="plZin" aria-label="Zoom avant">+</button><button type="button" id="plZout" aria-label="Zoom arrière">−</button><button type="button" id="plZhouse" aria-label="Zoomer sur le projet">🎯</button><button type="button" id="plZfit" aria-label="Tout le terrain">⤢</button><button type="button" id="plTOrtho" class="on wide">Aérien</button></div>
+    <div class="pl-tools" id="plTools" hidden><button type="button" id="plTAnchor" class="on">📌 Poser au sol</button><button type="button" id="plTBrush">🖌 Premier plan</button><button type="button" id="plTErase">Gomme</button><select id="plBSize" aria-label="Taille du pinceau"><option value="12">Fin</option><option value="28" selected>Moyen</option><option value="60">Large</option></select><button type="button" id="plTClear">Effacer</button><button type="button" id="plTGuide" class="on">Limites</button><button type="button" id="plTSee">👁 Photo seule</button></div>
+    <div class="pl-mtools" id="plMapTools"><button type="button" id="plZin" aria-label="Zoom avant">+</button><button type="button" id="plZout" aria-label="Zoom arrière">−</button><button type="button" id="plZhouse" aria-label="Zoomer sur le projet">🎯</button><button type="button" id="plZfit" aria-label="Tout le terrain">⤢</button><button type="button" id="plTOrtho" class="on wide">Aérien</button><button type="button" id="plTVeg" class="wide">🌳<span> Végétation</span></button></div>
     <div class="pl-edit" id="plEdit" hidden><span id="plEditLbl"></span><input type="text" inputmode="decimal" id="plEditV"><span>m</span><button class="btn primary sm" type="button" id="plEditOk">OK</button><button class="btn sm" type="button" id="plEditX" aria-label="Fermer">×</button></div></div>
   <div class="pl-ctl">
     <div class="pl-dist" id="plDist"></div>
+    <div class="pl-veg" id="plVeg" hidden><span>Touchez le plan :</span><button type="button" data-veg="arbre">🌳 Arbre</button><button type="button" data-veg="arbuste">🌿 Arbuste</button><button type="button" data-veg="haie">▬ Haie (2 points)</button><button type="button" data-veg="del">Supprimer</button><button type="button" data-veg="">OK</button></div>
+    <details class="pl-adv" id="plRender"><summary>Rendu : soleil, couleurs, contours</summary>
+      <div class="pl-row"><span>Soleil</span><select id="plSun"><option value="photo">Comme à l'heure de la photo</option><option value="couvert">Temps couvert (ombres douces)</option><option value="manuel">Réglage manuel</option></select><b id="plSunV"></b></div>
+      <div class="pl-row" id="plSunAzR"><span>Direction</span><input type="range" id="plSunAz" min="0" max="359" step="1"><b id="plSunAzV"></b></div>
+      <div class="pl-row" id="plSunElR"><span>Hauteur</span><input type="range" id="plSunEl" min="5" max="70" step="1"><b id="plSunElV"></b></div>
+      <div class="pl-row"><span>Accord avec la photo</span><input type="range" id="plMatch" min="0" max="100" step="5"><b id="plMatchV"></b></div>
+      <label class="toggle"><input type="checkbox" id="plLines"> Traits de contour (aspect dessin)</label></details>
     <div class="pl-move" id="plMove"><button type="button" data-plmv="-1,0" aria-label="Gauche">←</button><button type="button" data-plmv="0,1" aria-label="Haut">↑</button><button type="button" data-plmv="0,-1" aria-label="Bas">↓</button><button type="button" data-plmv="1,0" aria-label="Droite">→</button><span class="sep"></span><button type="button" id="plFine" class="fine">Précis</button></div>
     <div class="pl-dial" id="plDial"><button type="button" id="plRm" aria-label="Tourner à gauche">↺</button><div class="dial" aria-label="Molette de rotation : glissez"><i id="plDialTicks"></i><span>⇠ glissez pour tourner ⇢</span></div><button type="button" id="plRp" aria-label="Tourner à droite">↻</button><b id="plRotV"></b><em id="plSnapLbl" hidden></em></div>
     <details id="plSnap" class="pl-adv"><summary>Aligner automatiquement</summary><div class="btns"><button class="btn sm" type="button" id="plFace">Façade avant vers la rue</button><button class="btn sm" type="button" id="plStreet">Parallèle à la rue</button><button class="btn sm" type="button" id="plLim">Parallèle à la limite proche</button></div></details>
@@ -1110,8 +1121,8 @@ function sunLocal(){const az=205*D2R,el=38*D2R;const w=[Math.sin(az)*Math.cos(el
 function renderBuilding(f2,pitch,opt={}){
   const p=S.projet,M=model(),V=opt.V||view(f2[0],f2[1],pitch),h=M.h;const sw=opt.sw||0.03;const render=opt.mode==='render';const id='b'+(++UID);
   // lumière placée derrière l'observateur, décalée à gauche et en hauteur : la face vue est toujours éclairée
-  const la=Math.atan2(-f2[1],-f2[0])+0.75,el=0.72;const Ls=[Math.cos(la)*Math.cos(el),Math.sin(la)*Math.cos(el),Math.sin(el)];
-  const lit=n=>render?0.7+0.42*Math.max(0,dot(n,Ls)):1;
+  const la=Math.atan2(-f2[1],-f2[0])+0.75,el=0.72;const Ls=opt.sun||[Math.cos(la)*Math.cos(el),Math.sin(la)*Math.cos(el),Math.sin(el)];
+  const lit=n=>!render?1:opt.soft?0.84+0.16*Math.max(0,dot(n,[0.3*Ls[0],0.3*Ls[1],0.9])):opt.sun?0.62+0.55*Math.max(0,dot(n,Ls)):0.7+0.42*Math.max(0,dot(n,Ls));
   const ink=opt.lines===false?'none':render?'#2a2d2c':'#111';const shK=opt.shadowK==null?1:opt.shadowK;const pts2=[];
   const P2=q=>{const v=V.P(q);pts2.push(v);return v[0].toFixed(3)+','+(-v[1]).toFixed(3)};
   const poly=(pts,fill,extra='')=>`<polygon points="${pts.map(P2).join(' ')}" fill="${fill}" stroke="${ink}" ${/stroke-width=/.test(extra)?'':`stroke-width="${sw}"`} stroke-linejoin="round" ${extra}/>`;
@@ -1457,6 +1468,7 @@ function svgMasse(){
   { const R=implRefs(); [[R.A,'1'],[R.B,'2'],...(R.P&&R.P!==R.A&&R.P!==R.B?[[R.P,'∥']]:[])].forEach(([e,l])=>{if(!e)return;o+=lineS(e.a,e.b,`stroke="rgba(30,90,86,.35)" stroke-width="${1.6*k}" stroke-linecap="round" pointer-events="none"`);
       const m=[e.mid[0]+e.n[0]*2.4*k,e.mid[1]+e.n[1]*2.4*k];o+=`<g pointer-events="none"><circle cx="${m[0].toFixed(3)}" cy="${(-m[1]).toFixed(3)}" r="${1.5*k}" fill="#1E5A56"/>${textS(m,l,1.9*k,'text-anchor="middle" dominant-baseline="central" fill="#fff" font-weight="700"')}</g>`});
     if(S.ui.sel==='bat')o+=polyS(B.corners,`fill="none" stroke="#1E5A56" stroke-width="${0.6*k}" stroke-dasharray="${1.2*k} ${0.6*k}" pointer-events="none"`); }
+  o+=`<g pointer-events="none">${vegeMasse(k)}</g>`;
   // nord + échelle
   o+=northArrow(vx+vw-7*k,vy+vh-10*k,k)+scaleBar(vx+5*k,vy+4*k,k,vw);
   void pc;void A;
@@ -1732,7 +1744,7 @@ ${demTxt}<p>Le projet consiste en ${natTxt}, de ${fmt(P.L)} m × ${fmt(P.W)} m, 
 <h3>d) Matériaux et couleurs des constructions</h3>
 <p>Façades : ${esc(P.facade)}. Couverture : ${esc(P.toit==='plat'?'toiture-terrasse, étanchéité':P.couv)}. Menuiseries extérieures : ${esc(P.menuis)}.${hasG?' La porte de garage est de même teinte que les menuiseries.':''}</p>
 <h3>e) Traitement des espaces libres, notamment les plantations</h3>
-<p>${P.plantations?esc(P.plantations):'<span class="todo">[Décrire les espaces verts et les plantations prévues.]</span>'}</p>
+<p>${P.plantations?esc(P.plantations):vegeTxt()?'':'<span class="todo">[Décrire les espaces verts et les plantations prévues.]</span>'}${vegeTxt()?' '+esc(vegeTxt()):''}</p>
 <h3>f) Organisation et aménagement des accès au terrain, aux constructions et aux aires de stationnement</h3>
 <p>L'accès au terrain se fait depuis ${esc(T.street||'la voie publique')}. ${P.park>0?`${P.park} place${P.park>1?'s':''} de stationnement ${P.park>1?'sont aménagées':'est aménagée'} sur la parcelle, à proximité de l'accès.`:''} La construction est raccordée aux réseaux publics d'eau potable, d'électricité et de télécommunication existant sous la voie. ${P.assain==='collectif'?'Les eaux usées sont raccordées au réseau public d\'assainissement collectif.':'Les eaux usées sont traitées par un dispositif d\'assainissement non collectif, conformément à l\'avis du SPANC.'} Les eaux pluviales sont gérées sur la parcelle <span class="todo">[infiltration / cuve de récupération]</span>.</p>`;
 }
@@ -2617,9 +2629,9 @@ function poseNow(src){const g=GPS.best&&Date.now()-GPS.best.t<60000?GPS.best:GPS
 function shrinkCanvas(cv,maxPx=1800){const k=Math.min(1,maxPx/Math.max(cv.width,cv.height));if(k>=1)return cv;const c2=document.createElement('canvas');c2.width=Math.round(cv.width*k);c2.height=Math.round(cv.height*k);c2.getContext('2d').drawImage(cv,0,0,c2.width,c2.height);return c2}
 $('#camShot').onclick=()=>{const v=$('#camV');if(!v.videoWidth){toast('La caméra n\'est pas prête.');return}
   const cv=document.createElement('canvas');cv.width=v.videoWidth;cv.height=v.videoHeight;cv.getContext('2d').drawImage(v,0,0);const c2=shrinkCanvas(cv);
-  const pose=poseNow('live');closeCamera({img:c2.toDataURL('image/jpeg',0.85),w:c2.width,h:c2.height,pose})};
+  const pose=poseNow('live');closeCamera({img:c2.toDataURL('image/jpeg',0.85),w:c2.width,h:c2.height,pose,t:Date.now()})};
 $('#camFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const pose=poseNow('file');
-  try{const url=await importImage(f,1800);const im=await loadImg(url);closeCamera({img:url,w:im.naturalWidth,h:im.naturalHeight,pose})}catch(err){toast('Image illisible : '+err.message)}};
+  try{const url=await importImage(f,1800);const im=await loadImg(url);closeCamera({img:url,w:im.naturalWidth,h:im.naturalHeight,pose,t:f.lastModified||Date.now()})}catch(err){toast('Image illisible : '+err.message)}};
 $('#camCancel').onclick=()=>closeCamera(null);
 function loadImg(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('image illisible'));i.src=src})}
 
@@ -2639,10 +2651,70 @@ function shotGround(sh,px,py){const G=shotGeom(sh);const cx=sh.w/2,cy=sh.h/2;con
   const rr=[f[1],-f[0],0];const l=Math.hypot(rr[0],rr[1])||1;const r=[rr[0]/l,rr[1]/l,0];const u=[r[1]*f[2]-r[2]*f[1],r[2]*f[0]-r[0]*f[2],r[0]*f[1]-r[1]*f[0]];
   const ray=[f[0]+x*r[0]+y*u[0],f[1]+x*r[1]+y*u[1],f[2]+x*r[2]+y*u[2]];if(ray[2]>-0.004)return null;const t=G.eye/(-ray[2]);
   const d=Math.hypot(ray[0]*t,ray[1]*t);if(d>150)return null;return[G.cw[0]+ray[0]*t,G.cw[1]+ray[1]*t]}
-function shotOverlay(sh,opts={}){const {G,V}=shotView(sh);const s=(sh.w/2)/V.W;const cx=sh.w/2,cy=sh.h/2;let inner='';
+/* ================= Rendu réaliste de l'insertion : soleil, accord photo, premier plan, végétation ================= */
+function sunPos(date,lat,lon){const r=D2R;const d=date/86400000+2440587.5-2451545.0;const g=(357.529+0.98560028*d)*r;const q=280.459+0.98564736*d;
+  const L=(q+1.915*Math.sin(g)+0.020*Math.sin(2*g))*r;const e=(23.439-0.00000036*d)*r;const RA=Math.atan2(Math.cos(e)*Math.sin(L),Math.cos(L));const dec=Math.asin(Math.sin(e)*Math.sin(L));
+  const GMST=((18.697374558+24.06570982441908*d)%24+24)%24;const H=(GMST*15+lon)*r-RA;const la=lat*r;
+  const el=Math.asin(Math.sin(la)*Math.sin(dec)+Math.cos(la)*Math.cos(dec)*Math.cos(H));const az=Math.atan2(-Math.sin(H),Math.cos(la)*Math.tan(dec)-Math.sin(la)*Math.cos(H));
+  return{az:nAng(az/r),el:el/r}}
+/* soleil de la prise de vue (ou réglé à la main) */
+function sunFor(sh){const s=sh&&sh.sun||{};const o=S.terrain.o||[2.3,46.6];let az,el,soft=s.mode==='couvert';
+  if(s.mode==='manuel'){az=+s.az;el=+s.el}else{const t=new Date(sh&&sh.t||Date.now());const sp=sunPos(t.getTime(),o[1],o[0]);az=sp.az;el=sp.el;if(el<8){const n=new Date(t);n.setHours(15,0,0,0);const s2=sunPos(n.getTime(),o[1],o[0]);az=s2.az;el=Math.max(12,s2.el)}}
+  el=clamp(el,4,80);const w=[Math.sin(az*D2R)*Math.cos(el*D2R),Math.cos(az*D2R)*Math.cos(el*D2R),Math.sin(el*D2R)];const B=bat();
+  return{az,el,soft,world:w,bld:[w[0]*B.U[0]+w[1]*B.U[1],w[0]*B.V[0]+w[1]*B.V[1],w[2]]}}
+/* couleurs moyennes de la photo */
+function photoStats(sh){if(sh.stats||sh.statsBusy)return;sh.statsBusy=true;loadImg(sh.img).then(im=>{const c=document.createElement('canvas');c.width=48;c.height=48;const g=c.getContext('2d');g.drawImage(im,0,0,48,48);
+  const d=g.getImageData(0,0,48,48).data;let r=0,gg=0,b=0,n=0;for(let i=0;i<d.length;i+=4){r+=d[i];gg+=d[i+1];b+=d[i+2];n++}sh.stats={r:r/n/255,g:gg/n/255,b:b/n/255};sh.statsBusy=false;if(!$('#place').hidden)plRender()}).catch(()=>{sh.statsBusy=false})}
+function matchMatrix(sh){const st=sh.stats;const k=(sh.match??70)/100;if(!st||!k)return null;const avg=(st.r+st.g+st.b)/3||0.5;const lum=0.299*st.r+0.587*st.g+0.114*st.b;
+  const br=clamp(1+k*(lum-0.47)*0.8,0.68,1.2);const t=c=>clamp(1+k*0.35*(c/avg-1),0.9,1.1)*br;return[t(st.r),t(st.g),t(st.b)]}
+/* masque du premier plan peint au doigt */
+function maskInner(sh){const m=sh.mask||[];return`<rect x="0" y="0" width="${sh.w}" height="${sh.h}" fill="#fff"/>`+m.map(s=>s.pts.length?`<path d="M${s.pts.map(p=>p[0].toFixed(0)+' '+p[1].toFixed(0)).join(' L')}${s.pts.length===1?' l0.1 0':''}" fill="none" stroke="${s.e?'#fff':'#000'}" stroke-width="${(s.r*2).toFixed(0)}" stroke-linecap="round" stroke-linejoin="round"/>`:'').join('')}
+function maskVis(sh){const m=sh.mask||[];if(!m.some(s=>!s.e))return'';
+  return`<mask id="plVisM"><rect x="0" y="0" width="${sh.w}" height="${sh.h}" fill="#000"/>${m.map(s=>`<path d="M${s.pts.map(p=>p[0].toFixed(0)+' '+p[1].toFixed(0)).join(' L')}${s.pts.length===1?' l0.1 0':''}" fill="none" stroke="${s.e?'#000':'#fff'}" stroke-width="${(s.r*2).toFixed(0)}" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}</mask><rect x="0" y="0" width="${sh.w}" height="${sh.h}" fill="#3EC6FF" fill-opacity=".38" mask="url(#plVisM)"/>`}
+
+/* ---------- végétation du projet (S.vege) ---------- */
+const VEGE={arbre:{n:'Arbre de haute tige',h:6,r:2.2},arbuste:{n:'Arbuste',h:2,r:0.9},haie:{n:'Haie',h:1.6,e:0.8}};
+function vegeList(){return(S.vege=S.vege||[])}
+function vegeLocal(v){return{...v,p:toLocal(...v.p),p2:v.p2?toLocal(...v.p2):null}}
+function vegeTxt(){const L=vegeList();if(!L.length)return'';const na=L.filter(v=>v.k==='arbre').length,nb=L.filter(v=>v.k==='arbuste').length;
+  const lh=L.filter(v=>v.k==='haie').reduce((s,v)=>{const a=toLocal(...v.p),b=toLocal(...v.p2);return s+Math.hypot(b[0]-a[0],b[1]-a[1])},0);
+  const parts=[];if(na)parts.push(`${na} arbre${na>1?'s':''} de haute tige`);if(nb)parts.push(`${nb} arbuste${nb>1?'s':''}`);if(lh>0.5)parts.push(`${fmt(lh,0)} m de haie d'essences locales`);
+  return parts.length?`Plantations projetées, reportées au plan de masse : ${parts.join(', ')}.`:''}
+function vegeMasse(k){let o='';for(const v0 of vegeList()){const v=vegeLocal(v0);if(v.k==='haie'&&v.p2){o+=lineS(v.p,v.p2,`stroke="#4f7a3a" stroke-width="${(VEGE.haie.e)}" stroke-linecap="round" opacity=".75"`)+lineS(v.p,v.p2,`stroke="#2f5222" stroke-width="${0.12*k}" stroke-dasharray="${0.6*k} ${0.4*k}"`)}
+    else{const r=VEGE[v.k].r;o+=`<circle cx="${v.p[0].toFixed(3)}" cy="${(-v.p[1]).toFixed(3)}" r="${r}" fill="rgba(95,140,70,.35)" stroke="#2f5222" stroke-width="${0.15*k}" stroke-dasharray="${0.5*k} ${0.25*k}"/><circle cx="${v.p[0].toFixed(3)}" cy="${(-v.p[1]).toFixed(3)}" r="${0.12*k+0.05}" fill="#2f5222"/>`}}
+  return o}
+/* rendu 3D d'un végétal dans la vue V (repère de la construction) */
+function vegeRender(v,V,sun,uid){const p=v.p;const b=toBld(...p);const z0=zRelAt(...p);const P=q=>{const t=V.P(q);return[t[0],-t[1]]};let o='';const Ls=sun.bld;
+  const green=['#4e7a35','#5d8a3f','#6b9a48','#43692d'];const sh=Ls[2]>0.05&&!sun.soft;
+  if(v.k==='haie'&&v.p2){const b2=toBld(...v.p2);const d=[b2[0]-b[0],b2[1]-b[1]];const l=Math.hypot(...d)||1;const n=[-d[1]/l*VEGE.haie.e/2,d[0]/l*VEGE.haie.e/2];const h=VEGE.haie.h;const zb=Math.min(z0,zRelAt(...v.p2));
+    const c=[[b[0]+n[0],b[1]+n[1]],[b2[0]+n[0],b2[1]+n[1]],[b2[0]-n[0],b2[1]-n[1]],[b[0]-n[0],b[1]-n[1]]];
+    if(sh){const s=c.map(q=>[q[0]-Ls[0]*h/Ls[2],q[1]-Ls[1]*h/Ls[2]]);o+=`<polygon points="${hull2(c.concat(s)).map(q=>P([q[0],q[1],zb+0.02]).map(x=>x.toFixed(3)).join(',')).join(' ')}" fill="rgba(25,35,25,.28)" filter="url(#${uid}vb)"/>`}
+    const faces=[[0,1],[1,2],[2,3],[3,0]].map(([i,j])=>{const A=c[i],B2=c[j];const nn=[B2[1]-A[1],-(B2[0]-A[0])];const q=[[A[0],A[1],zb],[B2[0],B2[1],zb],[B2[0],B2[1],zb+h],[A[0],A[1],zb+h]];return{q,nn,dd:q.reduce((s2,x)=>s2+V.depth(x),0)/4}})
+      .filter(f=>V.side([f.nn[0],f.nn[1],0],f.q[0])<0).sort((x,y)=>y.dd-x.dd);
+    for(const f of faces){const ln=Math.hypot(...f.nn)||1;const k=0.75+0.35*Math.max(0,(f.nn[0]*Ls[0]+f.nn[1]*Ls[1])/ln);const pts=V.clip(f.q);if(pts.length>2)o+=`<polygon points="${pts.map(t=>t[0].toFixed(3)+','+(-t[1]).toFixed(3)).join(' ')}" fill="${shade(green[1],k)}" filter="url(#${uid}lf)"/>`}
+    const top=c.map(q=>[q[0],q[1],zb+h]);const tp=V.clip(top);if(tp.length>2)o+=`<polygon points="${tp.map(t=>t[0].toFixed(3)+','+(-t[1]).toFixed(3)).join(' ')}" fill="${shade(green[2],1.08)}" filter="url(#${uid}lf)"/>`;
+    return o}
+  const T=VEGE[v.k];const h=T.h,r=T.r;const cz=z0+h*(v.k==='arbre'?0.62:0.5);const cam=V.cam([b[0],b[1],cz]);if(cam[2]<0.6)return'';const pr=r*V.D/cam[2];const C=P([b[0],b[1],cz]);const base=P([b[0],b[1],z0]);
+  if(sh){const off=[-Ls[0]*cz/Ls[2],-Ls[1]*cz/Ls[2]];const pts=[];for(let i=0;i<24;i++){const a=i/24*2*Math.PI;pts.push(P([b[0]+off[0]+Math.cos(a)*r*0.9,b[1]+off[1]+Math.sin(a)*r*0.9,z0+0.02]))}o+=`<polygon points="${pts.map(t=>t.map(x=>x.toFixed(3)).join(',')).join(' ')}" fill="rgba(25,35,25,.3)" filter="url(#${uid}vb)"/>`}
+  if(v.k==='arbre'){const tw=0.22*V.D/cam[2];o+=`<path d="M${(base[0]-tw).toFixed(3)} ${base[1].toFixed(3)} L${(C[0]-tw*0.5).toFixed(3)} ${C[1].toFixed(3)} L${(C[0]+tw*0.5).toFixed(3)} ${C[1].toFixed(3)} L${(base[0]+tw).toFixed(3)} ${base[1].toFixed(3)}Z" fill="#5a4636"/>`}
+  const lx=Ls[0]*V.r[0]+Ls[1]*V.r[1],ly=Ls[2];let sd=(Math.round((p[0]*7+p[1]*13)*100)%997+997)%997;const rnd=()=>(sd=(sd*16807+11)%2147483647)/2147483647;
+  const g=`${uid}c${Math.round(Math.abs(p[0]*100+p[1]*7))}`;o+=`<radialGradient id="${g}" cx="${(0.5+lx*0.25).toFixed(2)}" cy="${(0.5-ly*0.25).toFixed(2)}" r="0.75"><stop offset="0" stop-color="${shade(green[2],1.15)}"/><stop offset=".65" stop-color="${green[0]}"/><stop offset="1" stop-color="${shade(green[3],0.75)}"/></radialGradient>`;
+  for(let i=0;i<7;i++){const a=rnd()*2*Math.PI,d=rnd()*0.45;const rr=pr*(0.45+rnd()*0.3);o+=`<ellipse cx="${(C[0]+Math.cos(a)*pr*d).toFixed(3)}" cy="${(C[1]+Math.sin(a)*pr*d*0.8).toFixed(3)}" rx="${rr.toFixed(3)}" ry="${(rr*0.92).toFixed(3)}" fill="url(#${g})" filter="url(#${uid}lf)"/>`}
+  return o}
+/* ---------- insertion complète sur la photo ---------- */
+function shotOverlay(sh,opts={}){const {G,V}=shotView(sh);const s=(sh.w/2)/V.W;const cx=sh.w/2,cy=sh.h/2;const sun=sunFor(sh);const uid='ov'+(++UID);
+  let defs=`<filter id="${uid}vb" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="0.25"/></filter><filter id="${uid}lf" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="3.2" numOctaves="2" seed="4" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 1.15" result="a"/><feComposite in="SourceGraphic" in2="a" operator="in" result="c"/><feComponentTransfer in="n" result="sh"><feFuncA type="table" tableValues="0 .45"/></feComponentTransfer><feComposite in="sh" in2="c" operator="in" result="d"/><feBlend in="c" in2="d" mode="multiply"/></filter>`;
+  let inner='';
   if(mode()==='dp-cloture'){inner=cloInsertion(V).sort((a,b)=>b.d-a.d).map(o=>o.svg).join('')}
-  else{const R=renderBuilding([V.f[0],V.f[1]],0,{V,mode:'render',sw:0.03,shadow:true,blur:0.22,lines:true,shadowK:0.8});inner=R.svg}
-  return`<g transform="rotate(${G.r.toFixed(2)} ${cx} ${cy}) translate(${cx} ${cy}) scale(${s.toFixed(4)})"${opts.op?` opacity="${opts.op}"`:''}>${inner}</g>`}
+  else{const R=renderBuilding([V.f[0],V.f[1]],0,{V,mode:'render',sw:0.02,shadow:true,blur:sun.soft?0.7:0.14,lines:sh.lines===true,shadowK:sun.soft?0.4:0.85,sun:sun.bld,soft:sun.soft});
+    const bd=V.depth([0,0,1.5]);const ve=vegeList().map(vegeLocal).map(v=>({v,d:V.depth([...toBld(...v.p),1])}));
+    inner=ve.filter(x=>x.d>bd).sort((a,b)=>b.d-a.d).map(x=>vegeRender(x.v,V,sun,uid)).join('')+R.svg+ve.filter(x=>x.d<=bd).sort((a,b)=>b.d-a.d).map(x=>vegeRender(x.v,V,sun,uid)).join('')}
+  const geo=`<g transform="rotate(${G.r.toFixed(2)} ${cx} ${cy}) translate(${cx} ${cy}) scale(${s.toFixed(4)})">${inner}</g>`;
+  const mm=matchMatrix(sh);const blur=Math.max(0.25,sh.w/2600);
+  defs+=`<filter id="${uid}ph" x="0" y="0" width="100%" height="100%" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">${mm?`<feColorMatrix type="matrix" values="${mm[0].toFixed(3)} 0 0 0 0  0 ${mm[1].toFixed(3)} 0 0 0  0 0 ${mm[2].toFixed(3)} 0 0  0 0 0 1 0" result="m"/>`:'<feOffset result="m"/>'}<feGaussianBlur in="m" stdDeviation="${blur.toFixed(2)}" result="b"/><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="1" seed="7" result="n"/><feColorMatrix in="n" type="saturate" values="0" result="ng"/><feComposite in="ng" in2="b" operator="in" result="gi"/><feComponentTransfer in="gi" result="gs"><feFuncA type="linear" slope="0.07"/></feComponentTransfer><feBlend in="gs" in2="b" mode="overlay"/></filter>`;
+  defs+=`<mask id="${uid}fg" maskUnits="userSpaceOnUse" x="0" y="0" width="${sh.w}" height="${sh.h}">${maskInner(sh)}</mask>`;
+  return`<defs>${defs}</defs><g mask="url(#${uid}fg)"${opts.op?` opacity="${opts.op}"`:''}><g filter="url(#${uid}ph)">${geo}</g></g>`}
+
 async function shotComposite(sh){const im=await loadImg(sh.img);const cv=document.createElement('canvas');cv.width=sh.w;cv.height=sh.h;const g=cv.getContext('2d');g.drawImage(im,0,0,sh.w,sh.h);
   const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${sh.w}" height="${sh.h}" viewBox="0 0 ${sh.w} ${sh.h}">${shotOverlay(sh)}</svg>`;
   const ov=await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg));g.drawImage(ov,0,0);return cv.toDataURL('image/jpeg',0.86)}
@@ -2714,13 +2786,19 @@ function shotGuides(V){let o='';const P=v=>v[0].toFixed(3)+','+(-v[1]).toFixed(3
 const PL={sh:null,done:null,view:'plan',ptrs:new Map(),g:null,guides:true,op:1,ortho:true,fine:false,snap:null,edit:null};
 function plRender(){const sh=PL.sh;const port=isPortail();const split=PL.view==='split'&&sh;const photo=(PL.view==='photo'||split)&&sh;const plan=!photo||split;
   $('#plSeg').hidden=!sh;$('#plVPhoto').classList.toggle('on',PL.view==='photo');$('#plVSplit').classList.toggle('on',!!split);$('#plVPlan').classList.toggle('on',!photo);$('.pl-photo').classList.toggle('split',!!split);
-  $('#plTools').hidden=!photo;$('#plTGuide').classList.toggle('on',PL.guides);$('#plMapTools').hidden=!plan;$('#plTOrtho').classList.toggle('on',PL.ortho);$('#plFine').classList.toggle('on',PL.fine);
+  $('#plTools').hidden=!photo;for(const[id,t]of[['#plTAnchor','anchor'],['#plTBrush','brush'],['#plTErase','erase']])$(id).classList.toggle('on',PL.tool===t);$('#plBSize').hidden=$('#plTClear').hidden=PL.tool==='anchor';
+  $('#plRender').hidden=!photo;$('#plVeg').hidden=!plan||PL.veg==null;$('#plTVeg').classList.toggle('vegon',PL.veg!=null);$$('[data-veg]').forEach(b=>b.classList.toggle('on',b.dataset.veg!==''&&b.dataset.veg===PL.veg));
+  if(sh){photoStats(sh);const su=sh.sun||{mode:'photo'};const sf=sunFor(sh);$('#plSun').value=su.mode||'photo';$('#plSunAzR').hidden=$('#plSunElR').hidden=su.mode!=='manuel';$('#plSunAz').value=Math.round(sf.az);$('#plSunEl').value=Math.round(sf.el);
+    $('#plSunAzV').textContent=Math.round(sf.az)+'°';$('#plSunElV').textContent=Math.round(sf.el)+'°';$('#plSunV').textContent=su.mode==='couvert'?'':`${['N','NE','E','SE','S','SO','O','NO'][Math.round(sf.az/45)%8]} ${Math.round(sf.el)}°`;
+    $('#plMatch').value=sh.match??70;$('#plMatchV').textContent=(sh.match??70)+' %';$('#plLines').checked=sh.lines===true}$('#plTGuide').classList.toggle('on',PL.guides);$('#plMapTools').hidden=!plan;$('#plTOrtho').classList.toggle('on',PL.ortho);$('#plFine').classList.toggle('on',PL.fine);
   if(!photo)$('#plSvg').setAttribute('hidden','');if(!plan)$('#plMap').setAttribute('hidden','');
   if(photo){const svg=$('#plSvg');svg.removeAttribute('hidden');svg.setAttribute('viewBox',`0 0 ${sh.w} ${sh.h}`);
     const {G,V}=shotView(sh);const s=(sh.w/2)/V.W;const cx=sh.w/2,cy=sh.h/2;const tr=`rotate(${G.r.toFixed(2)} ${cx} ${cy}) translate(${cx} ${cy}) scale(${s.toFixed(4)})`;
-    svg.innerHTML=`<image href="${sh.img}" x="0" y="0" width="${sh.w}" height="${sh.h}" preserveAspectRatio="none"/>`+(PL.guides?`<g transform="${tr}">${shotGuides(V)}</g>`:'')+`<g opacity="${PL.op}">${shotOverlay(sh)}</g>`+(()=>{const a=shotProject(sh,anchorWorld());if(!a)return'';const r=sh.w/60;return`<g pointer-events="none"><circle cx="${a[0].toFixed(1)}" cy="${a[1].toFixed(1)}" r="${r.toFixed(1)}" fill="none" stroke="#ff5a4a" stroke-width="${(r/4).toFixed(1)}"/><circle cx="${a[0].toFixed(1)}" cy="${a[1].toFixed(1)}" r="${(r/4).toFixed(1)}" fill="#ff5a4a"/></g>`})()}
+    svg.innerHTML=`<image href="${sh.img}" x="0" y="0" width="${sh.w}" height="${sh.h}" preserveAspectRatio="none"/>`+(PL.guides?`<g transform="${tr}">${shotGuides(V)}</g>`:'')+`<g opacity="${PL.op}">${shotOverlay(sh)}</g>`+`<g id="plVis" pointer-events="none">${PL.tool==='brush'||PL.tool==='erase'?maskVis(sh):''}</g>`+(()=>{if(PL.tool!=='anchor')return'';const a=shotProject(sh,anchorWorld());if(!a)return'';const r=sh.w/60;return`<g pointer-events="none"><circle cx="${a[0].toFixed(1)}" cy="${a[1].toFixed(1)}" r="${r.toFixed(1)}" fill="none" stroke="#ff5a4a" stroke-width="${(r/4).toFixed(1)}"/><circle cx="${a[0].toFixed(1)}" cy="${a[1].toFixed(1)}" r="${(r/4).toFixed(1)}" fill="#ff5a4a"/></g>`})()}
   if(plan){const m=$('#plMap');m.removeAttribute('hidden');m.innerHTML=plMapSVG();m.setAttribute('viewBox',PL.mapVB.join(' '))}
   $('#plMsg').innerHTML=split?'<b>En bas</b> : glissez 📷 là où vous étiez et tournez le cône (rond jaune) vers ce que vous visiez : la maison se recale en direct. <b>En haut</b> : touchez le pied de la façade pour la poser au sol.':
+    photo&&PL.tool==='brush'?'<b>Peignez au doigt</b> ce qui doit rester <b>devant</b> la maison (haie, arbre, clôture, voiture) : ces zones repassent au premier plan. Zone peinte en bleu.':
+    photo&&PL.tool==='erase'?'<b>Gomme</b> : repassez sur une zone peinte pour la retirer.':
     photo?(PL.sh.anch?'✓ Posé au sol. Touchez à nouveau pour corriger, ou validez.':`<b>Touchez sur la photo le pied ${port?'du futur portail (au milieu, au sol)':'de la future façade avant (au milieu, au sol)'}</b> : ${port?'le portail':'la maison'} vient se poser au sol.`):
     port?'Glissez le doigt n\'importe où pour faire coulisser le portail. Deux doigts : zoom.':PL.sh?'Glissez 📷 et son cône pour indiquer d\'où la photo a été prise. Ailleurs, le doigt déplace la maison.':'Glissez le doigt <b>n\'importe où</b> : la maison suit sans être cachée. Deux doigts : zoom. <b>Touchez une cote</b> pour saisir la distance exacte.';
   $('#plMove').hidden=!plan||!!split;$('#plDial').hidden=port||!plan||!!split;$('#plSnap').hidden=port||!plan||!!split;$('#plAdv').hidden=!photo;
@@ -2776,6 +2854,8 @@ function plMapSVG(){const {rings,E}=boundary();const sh=PL.sh;const G=sh?shotGeo
     const hd=[G.cw[0]+Math.sin(G.h*D2R)*R*0.55,G.cw[1]+Math.cos(G.h*D2R)*R*0.55];o+=L(G.cw,hd,`stroke="#E0A92A" stroke-width="${0.35*k}" stroke-dasharray="${k} ${0.6*k}" pointer-events="none"`);
     const mh=M(hd),mc=M(G.cw);o+=`<circle cx="${mh[0].toFixed(2)}" cy="${(-mh[1]).toFixed(2)}" r="${2.6*k}" fill="#F2C14E" stroke="#fff" stroke-width="${0.5*k}" data-camh="1" style="cursor:grab"/><text x="${mh[0].toFixed(2)}" y="${(-mh[1]+1*k).toFixed(2)}" font-size="${2.6*k}" text-anchor="middle" pointer-events="none">↻</text>`;
     o+=`<circle cx="${mc[0].toFixed(2)}" cy="${(-mc[1]).toFixed(2)}" r="${3.2*k}" fill="#18211F" stroke="#F2C14E" stroke-width="${0.6*k}" data-cam="1" style="cursor:grab"/><text x="${mc[0].toFixed(2)}" y="${(-mc[1]+1.1*k).toFixed(2)}" font-size="${3*k}" text-anchor="middle" pointer-events="none">📷</text>`}
+  for(const v0 of vegeList()){const v=vegeLocal(v0);if(v.k==='haie'&&v.p2)o+=L(v.p,v.p2,`stroke="#5d8a3f" stroke-width="${VEGE.haie.e}" stroke-linecap="round" opacity=".9"`);else{const m=M(v.p);o+=`<circle cx="${m[0].toFixed(2)}" cy="${(-m[1]).toFixed(2)}" r="${VEGE[v.k].r}" fill="rgba(93,138,63,.75)" stroke="#2f5222" stroke-width="${0.2*k}"/>`}}
+  if(PL.vegA){const m=M(PL.vegA);o+=`<circle cx="${m[0].toFixed(2)}" cy="${(-m[1]).toFixed(2)}" r="${0.8*k}" fill="#5d8a3f" stroke="#fff" stroke-width="${0.3*k}"/>`}
   if(isPortail()){for(const c of S.clo){const g=cloSeg(c);if(g)o+=L(g.p0,g.p1,`stroke="#ff5a4a" stroke-width="${1.4*k}"`)}}
   else{o+=`<polygon points="${B.corners.map(P).join(' ')}" fill="rgba(255,90,74,.38)" stroke="#ff5a4a" stroke-width="${0.4*k}"/>`;
     const f=frontPt(),n=frontNormal(),fs=frontSide();const t=[-n[1],n[0]];const hl=fs.len/2;o+=L([f[0]-t[0]*hl,f[1]-t[1]*hl],[f[0]+t[0]*hl,f[1]+t[1]*hl],`stroke="#ff5a4a" stroke-width="${1.1*k}"`);
@@ -2792,7 +2872,12 @@ function moveBy(d){if(isPortail()){const c=S.clo.find(o=>o.kind==='portail');con
   else{S.projet.x+=d[0];S.projet.y+=d[1]}}
 function ptrDown(e,which){e.preventDefault();const el=e.currentTarget;try{el.setPointerCapture(e.pointerId)}catch(_){}PL.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(PL.ptrs.size===2){const [a,b]=[...PL.ptrs.values()];PL.g={two:true,dist:Math.hypot(b.x-a.x,b.y-a.y),mid:[(a.x+b.x)/2,(a.y+b.y)/2],fov:PL.sh?+PL.sh.pose.fov||66:66,bb:PL.zoomBB&&PL.zoomBB.slice()};return}
+  if(which==='photo'&&(PL.tool==='brush'||PL.tool==='erase')){const [px,py]=svgPtOf($('#plSvg'),e);const r=+$('#plBSize').value*PL.sh.w/$('#plSvg').getBoundingClientRect().width;PL.sh.mask=PL.sh.mask||[];const st={e:PL.tool==='erase'?1:0,r:Math.round(r),pts:[[px,py]]};PL.sh.mask.push(st);PL.g={stroke:st};plMaskLive();return}
   if(which==='photo'){PL.g={anchor:true};const [px,py]=svgPtOf($('#plSvg'),e);anchorTo(px,py);plRender();return}
+  if(PL.veg!=null&&PL.veg!==''){const [x,y]=svgPtOf($('#plMap'),e);const w=mRot([x,-y],-(PL.th||0));const L=vegeList();
+    if(PL.veg==='del'){let bi=-1,bd=3;L.forEach((v,i)=>{const a=toLocal(...v.p);let d=Math.hypot(a[0]-w[0],a[1]-w[1]);if(v.p2){const q=pSeg(w,a,toLocal(...v.p2));d=q.d}if(d<bd){bd=d;bi=i}});if(bi>=0)L.splice(bi,1)}
+    else if(PL.veg==='haie'){if(PL.vegA){L.push({k:'haie',p:toLL(...PL.vegA),p2:toLL(...w)});PL.vegA=null}else{PL.vegA=w;toast('Touchez la fin de la haie.')}}
+    else L.push({k:PL.veg,p:toLL(...w)});save();PL.g=null;plRender();return}
   if(PL.sh&&e.target.closest('[data-cam]')){PL.g={cam:true};return}
   if(PL.sh&&e.target.closest('[data-camh]')){PL.g={camh:true};return}
   const dl=e.target.closest('[data-dist]');if(dl){const d=PL.dl[+dl.dataset.dist];PL.edit={e:d.e,val:d.d,label:d.e.voie?'Distance à la rue':'Distance à la limite'};PL.g=null;plRender();setTimeout(()=>{const i=$('#plEditV');i.focus();i.select()},50);return}
@@ -2806,15 +2891,23 @@ function ptrMove(e,which){if(!PL.ptrs.has(e.pointerId))return;PL.ptrs.set(e.poin
       const r=$('#plMap').getBoundingClientRect();const s=Math.max((g.bb[2]-g.bb[0])/r.width,(g.bb[3]-g.bb[1])/r.height);const mid=[(a.x+b.x)/2,(a.y+b.y)/2];const px=(mid[0]-g.mid[0])*s,py=(mid[1]-g.mid[1])*s;
       PL.zoomBB=[c[0]-hw-px,c[1]-hh+py,c[0]+hw-px,c[1]+hh+py]}
     plRender();return}
+  if(g.stroke){const [px,py]=svgPtOf($('#plSvg'),e);const L=g.stroke.pts[g.stroke.pts.length-1];if(Math.hypot(px-L[0],py-L[1])>g.stroke.r*0.25){g.stroke.pts.push([Math.round(px),Math.round(py)]);plMaskLive()}return}
   if(g.anchor){const [px,py]=svgPtOf($('#plSvg'),e);anchorTo(px,py);plRender();return}
   if(g.cam||g.camh){const [x,y]=svgPtOf($('#plMap'),e);const w=mRot([x,-y],-(PL.th||0));const P=PL.sh.pose;
     if(g.cam){P.lonlat=toLL(...w);P.acc=null}else{const cw=shotGeom(PL.sh).cw;P.h=bearing(w[0]-cw[0],w[1]-cw[1]);P.dh=0;P.hSrc='manuel'}plRender();return}
   if(g.pan){const r=$('#plMap').getBoundingClientRect();const sc=Math.max((g.bb[2]-g.bb[0])/r.width,(g.bb[3]-g.bb[1])/r.height);const dx=(e.clientX-g.x)*sc,dy=(e.clientY-g.y)*sc;PL.zoomBB=[g.bb[0]-dx,g.bb[1]+dy,g.bb[2]-dx,g.bb[3]+dy];plRender();return}
   if(g.move){const k=PL.fine?0.2:1;const d=scrToWorld((e.clientX-g.x)*k,(e.clientY-g.y)*k);g.x=e.clientX;g.y=e.clientY;moveBy(d);PL.edit=null;plRender()}}
-function ptrUp(e){PL.ptrs.delete(e.pointerId);if(PL.ptrs.size<2&&PL.g&&PL.g.two)PL.g=null;if(!PL.ptrs.size)PL.g=null}
+function ptrUp(e){if(PL.g&&PL.g.stroke){PL.g=null;PL.ptrs.delete(e.pointerId);plRender();return}PL.ptrs.delete(e.pointerId);if(PL.ptrs.size<2&&PL.g&&PL.g.two)PL.g=null;if(!PL.ptrs.size)PL.g=null}
 for(const[id,w]of[['#plSvg','photo'],['#plMap','plan']]){const el=$(id);el.addEventListener('pointerdown',e=>ptrDown(e,w));el.addEventListener('pointermove',e=>ptrMove(e,w));el.addEventListener('pointerup',ptrUp);el.addEventListener('pointercancel',ptrUp)}
 $('#plMap').addEventListener('wheel',e=>{e.preventDefault();plZoom(e.deltaY>0?1.15:0.87)},{passive:false});
-$('#plVPhoto').onclick=()=>{PL.view='photo';plRender()};$('#plVSplit').onclick=()=>{PL.view='split';plFitCam();plRender()};$('#plVPlan').onclick=()=>{PL.view='plan';plRender()};
+$('#plVPhoto').onclick=()=>{PL.view='photo';plRender()};
+function plMaskLive(){const sh=PL.sh;const m=$('#plSvg').querySelector('mask[id$="fg"]');if(m)m.innerHTML=maskInner(sh);const v=$('#plVis');if(v)v.innerHTML=maskVis(sh)}
+$('#plTAnchor').onclick=()=>{PL.tool='anchor';plRender()};$('#plTBrush').onclick=()=>{PL.tool='brush';plRender()};$('#plTErase').onclick=()=>{PL.tool='erase';plRender()};
+$('#plTClear').onclick=()=>{if(PL.sh){PL.sh.mask=[];plRender()}};
+$('#plTVeg').onclick=()=>{PL.veg=PL.veg==null?'arbre':null;PL.vegA=null;plRender()};$$('[data-veg]').forEach(b=>b.onclick=()=>{PL.veg=b.dataset.veg===''?null:b.dataset.veg;PL.vegA=null;plRender()});
+$('#plSun').onchange=e=>{const sh=PL.sh;const sf=sunFor(sh);sh.sun={mode:e.target.value,az:Math.round(sf.az),el:Math.round(sf.el)};plRender()};
+$('#plSunAz').oninput=e=>{PL.sh.sun={...(PL.sh.sun||{}),mode:'manuel',az:+e.target.value};plRender()};$('#plSunEl').oninput=e=>{PL.sh.sun={...(PL.sh.sun||{}),mode:'manuel',el:+e.target.value};plRender()};
+$('#plMatch').oninput=e=>{PL.sh.match=+e.target.value;plRender()};$('#plLines').onchange=e=>{PL.sh.lines=e.target.checked;plRender()};$('#plVSplit').onclick=()=>{PL.view='split';plFitCam();plRender()};$('#plVPlan').onclick=()=>{PL.view='plan';plRender()};
 $('#plTGuide').onclick=()=>{PL.guides=!PL.guides;plRender()};$('#plTOrtho').onclick=()=>{PL.ortho=!PL.ortho;plRender()};$('#plFine').onclick=()=>{PL.fine=!PL.fine;plRender()};
 $('#plZin').onclick=()=>plZoom(0.7);$('#plZout').onclick=()=>plZoom(1.4);$('#plZfit').onclick=()=>{PL.zoomBB=null;plRender()};
 $('#plZhouse').onclick=()=>{const c=mRot(isPortail()?(cloCenter()||[S.projet.x,S.projet.y]):[S.projet.x,S.projet.y],PL.th||0);const r=isPortail()?8:Math.max(S.projet.L,S.projet.W)*0.9+4;PL.zoomBB=[c[0]-r,c[1]-r,c[0]+r,c[1]+r];plRender()};
@@ -2836,7 +2929,7 @@ $('#plCalReset').onclick=()=>{Object.assign(PL.sh.pose,{dh:0,dp:0,fov:66});PL.sh
 for(const[k,id]of[['w','#plPortW'],['h','#plPortH']])$(id).oninput=e=>{const c=S.clo.find(o=>o.kind==='portail');if(c){c[k]=+e.target.value;plRender()}};
 function plClose(v){const f=PL.done;PL.done=null;$('#place').hidden=true;if(v!=='ok'&&PL.backup){S.projet.x=PL.backup.x;S.projet.y=PL.backup.y;S.projet.rot=PL.backup.rot;S.clo=PL.backup.clo}f&&f(v)}
 $('#plRetake').onclick=()=>plClose('retake');$('#plCancel').onclick=()=>plClose(null);$('#plOk').onclick=()=>plClose('ok');
-function plOpen(sh,view){PL.sh=sh;PL.view=view;PL.ptrs.clear();PL.g=null;PL.zoomBB=null;PL.edit=null;PL.snap=null;PL.backup={x:S.projet.x,y:S.projet.y,rot:S.projet.rot,clo:JSON.parse(JSON.stringify(S.clo))};
+function plOpen(sh,view){PL.sh=sh;PL.view=view;PL.ptrs.clear();PL.g=null;PL.zoomBB=null;PL.edit=null;PL.snap=null;PL.tool='anchor';PL.veg=null;PL.vegA=null;PL.backup={x:S.projet.x,y:S.projet.y,rot:S.projet.rot,clo:JSON.parse(JSON.stringify(S.clo))};
   if(isPortail()&&!S.clo.some(o=>o.kind==='portail'))addClo('portail',true);$('#plRetake').hidden=!sh;$('#place').hidden=false;plRender();return new Promise(r=>PL.done=r)}
 async function placeOnPlan(){const r=await plOpen(null,'plan');if(r==='ok'){S.onsite=Object.assign(S.onsite||{},{placed:true});if(S.onsite.shot)await onsiteApply();save();return true}return false}
 function plFitCam(){if(!PL.sh)return;const th=mapTheta();const G=shotGeom(PL.sh);const pts=bat().corners.concat([G.cw]);if(isPortail()){const c=cloCenter();if(c)pts.push(c)}PL.zoomBB=bbox(pts.map(q=>mRot(q,th)),5)}
@@ -2852,7 +2945,7 @@ async function onsiteApply(){const sh=S.onsite&&S.onsite.shot;if(!sh)return;cons
   ph.p7=sh.img;ph.p7pos=toLL(...G.cw);ph.p7dir=Math.round(G.h);ph.pv6pos=toLL(...G.cw);
   try{ph.insImg=await shotComposite(sh);ph.insMode='image';ph.insFit='contain'}catch(e){ph.ins=sh.img;ph.insMode='auto'}
   S.onsite.composedFor=onsiteKey();fillInputs();renderAll();save()}
-function onsiteKey(){const p=S.projet;return JSON.stringify([p.x,p.y,p.rot,p.L,p.W,p.niveaux,p.toit,p.pente,p.ouv,p.facadeCouleur,p.couvCouleur,S.clo])}
+function onsiteKey(){const p=S.projet;return JSON.stringify([p.x,p.y,p.rot,p.L,p.W,p.niveaux,p.toit,p.pente,p.ouv,p.facadeCouleur,p.couvCouleur,S.clo,S.vege||[]])}
 async function onsiteRefresh(){const o=S.onsite;if(!o||!o.shot||S.photos.p7!==o.shot.img)return;if(o.composedFor===onsiteKey())return;
   try{S.photos.insImg=await shotComposite(o.shot);S.photos.insMode='image';o.composedFor=onsiteKey();save()}catch(e){}}
 /* photo d'environnement avec position et direction automatiques */
