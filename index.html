@@ -536,6 +536,9 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
 .dos-it .ac{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}
 @media (max-width:820px){.dos{padding:0;place-items:stretch}.dos-box{border-radius:0;height:100dvh;max-height:none}.dos-it{grid-template-columns:60px 1fr}.dos-it .ac{grid-column:1/-1;justify-content:flex-start}.dos-head{padding-top:max(14px,env(safe-area-inset-top))}}
 @media print{.dos{display:none!important}}
+.am-step{border:1px solid var(--line);border-radius:10px;padding:10px;margin:0 0 12px;display:grid;gap:8px}.am-step h4{margin:0;font-size:13px}
+.am-list{display:grid;gap:10px}.am-it{border:1px solid var(--line);border-radius:10px;padding:10px;display:grid;gap:8px;background:#fff}.am-h{display:flex;justify-content:space-between;align-items:center}
+.am-it input[type=number],.am-it select{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px}
 .pl-edit{position:absolute;left:8px;right:8px;top:8px;display:flex;gap:8px;align-items:center;background:#fff;border-radius:12px;padding:10px;box-shadow:0 6px 20px rgba(0,0,0,.3);font-size:14px;color:var(--ink)}
 .pl-edit input{width:90px;padding:8px;border:1px solid var(--line);border-radius:8px;font:600 16px var(--f-mono)}.pl-edit #plEditLbl{flex:1;font-weight:600}
 </style>
@@ -576,6 +579,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
       <div class="modes" role="radiogroup" aria-label="Type de dossier">
         <label><input type="radio" name="dmode" value="pc" class="dmode"><b>Permis de construire</b><span>Maison neuve, extension, annexe · cerfa 13406</span></label>
         <label><input type="radio" name="dmode" value="dp-facade" class="dmode"><b>Modifier une façade</b><span>Ravalement, couleurs, menuiseries, ouvertures · DP cerfa 16702</span></label>
+        <label><input type="radio" name="dmode" value="dp-piscine" class="dmode"><b>Piscine</b><span>Bassin de 10 à 100 m², non couvert · DP cerfa 16702</span></label>
         <label><input type="radio" name="dmode" value="dp-toiture" class="dmode"><b>Modifier une toiture</b><span>Couverture, fenêtres de toit, panneaux solaires · DP cerfa 16702</span></label>
         <label><input type="radio" name="dmode" value="dp-cloture" class="dmode"><b>Clôture et portail</b><span>Portail, portillon, clôture, mur · DP cerfa 16702</span></label>
       </div>
@@ -670,6 +674,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
         </div>
         <p class="hint">Chaque élément se place sur une limite de propriété : position mesurée depuis le début de la limite (repère ▸ sur le plan de masse).</p>
       </div>
+      <div id="amStep" class="am-step"><h4>Terrasse et piscine</h4><div id="amEditor"></div></div>
       <div id="projBody">
       <label class="f pc-only">Nature du projet
         <select data-b="projet.nature"><option value="maison">Construction d'une maison individuelle</option><option value="extension">Extension d'une construction existante</option><option value="annexe">Annexe (garage, abri, atelier…)</option></select>
@@ -1061,7 +1066,7 @@ function polysOverlap(A,B){if(A.some(p=>pip(p,B))||B.some(p=>pip(p,A)))return tr
 function polyDist(A,B){let best={d:1e9};for(const p of A)for(let j=0;j<B.length;j++){const r=pSeg(p,B[j],B[(j+1)%B.length]);if(r.d<best.d)best={d:r.d,p,q:r.q}}
   for(const p of B)for(let j=0;j<A.length;j++){const r=pSeg(p,A[j],A[(j+1)%A.length]);if(r.d<best.d)best={d:r.d,p:r.q,q:p}}return best}
 function totals(){const sf=surfaces();const k=exKept(),d=exDem();const sdpEx=S.existants.reduce((s,e)=>s+exSdp(e),0),sdpDem=d.reduce((s,e)=>s+exSdp(e),0);
-  const empEx=k.reduce((s,e)=>s+exArea(e),0);return{...sf,empEx,empTot:empEx+sf.emprise,sdpEx,sdpDem,sdpTot:sdpEx-sdpDem+sf.sdp}}
+  const empEx=k.reduce((s,e)=>s+exArea(e),0);const empAm=amEmprise();return{...sf,empEx,empAm,empTot:empEx+sf.emprise+empAm,sdpEx,sdpDem,sdpTot:sdpEx-sdpDem+sf.sdp}}
 function nearestExisting(){const B=bat().corners;let best=null;for(const e of exKept()){const r=polyDist(B,exRing(e));if(!best||r.d<best.d)best={...r,e}}return best}
 function batShrunk(){const p=S.projet,r=p.rot*D2R,U=[Math.cos(r),Math.sin(r)],V=[-Math.sin(r),Math.cos(r)],a=p.L/2-0.05,b=p.W/2-0.05;return[[-a,-b],[a,-b],[a,b],[-a,b]].map(([u,v])=>[p.x+u*U[0]+v*V[0],p.y+u*U[1]+v*V[1]])}
 function usageFr(pr){const u=pr.usage_1||'',n=pr.nature||'';if(pr.construction_legere)return'Construction légère';if(/R[ée]sidentiel/i.test(u))return'Habitation';if(/Annexe/i.test(u))return'Annexe';if(/Agricole/i.test(u))return'Bâtiment agricole';
@@ -1305,7 +1310,7 @@ function insertionSVG0(env){
     faces.sort((x,y)=>y.d-x.d);for(const f of faces)svg+=`<polygon points="${pts(V.clip(f.f))}" fill="${shade('#e4dfd5',f.k)}" stroke="#6d6a64" stroke-width="0.025"/>`;
     svg+=`<polygon points="${pts(V.clip(R.map(([u,v])=>[u,v,z0+hh])))}" fill="#9a958d" stroke="#6d6a64" stroke-width="0.025"/>`;objs.push({d:dist,svg})}
   const RB=renderBuilding([V.f[0],V.f[1]],0,{V,mode:'render',sw:0.03,shadow:true,blur:0.22,lines:S.photos.insLines!==false,shadowK:(S.photos.insShadow??100)/100});
-  if(mode()==='dp-cloture'){objs.push(...cloInsertion(V))}else objs.push({d:V.depth([0,0,0]),svg:RB.svg});objs.sort((a,b)=>b.d-a.d);out+=objs.map(o=>o.svg).join('');
+  if(mode()==='dp-cloture'){objs.push(...cloInsertion(V))}else if(!isPoolMode())objs.push({d:V.depth([0,0,0]),svg:RB.svg});objs.push(...amRender(V,{bld:[0.3,0.3,0.9],soft:true}));objs.sort((a,b)=>b.d-a.d);out+=objs.map(o=>o.svg).join('');
   if(env)return{svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${(-W).toFixed(3)} ${(-cy-H/2).toFixed(3)} ${(2*W).toFixed(3)} ${H.toFixed(3)}" preserveAspectRatio="xMidYMid slice"><defs>${defs}</defs>${out}</svg>`,IC};
   const bb=RB.bb;const pad=0.6;return{svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${(bb[0]-pad).toFixed(2)} ${(-bb[3]-pad).toFixed(2)} ${(bb[2]-bb[0]+2*pad).toFixed(2)} ${(bb[3]-bb[1]+2*pad).toFixed(2)}">${RB.svg}</svg>`,IC};
 }
@@ -1405,7 +1410,8 @@ function checks(){if(mode()!=='pc')return dpChecks();
   const ov=K.filter(e=>polysOverlap(batShrunk(),exRing(e)));
   if(ov.length)add('bad','Le projet chevauche une construction existante conservée',`${esc(ov.map(e=>e.usage).join(', '))} : déplacez le projet ou indiquez que cette construction sera démolie.`);
   const ne=nearestExisting();if(ne&&!ov.length)add('info',`Distance à la construction existante la plus proche : ${fmt(ne.d)} m`,ne.d<0.1?'Le projet est accolé à cette construction.':'Vérifiez si le PLU impose une distance minimale entre deux constructions sur un même terrain.');
-  if(R.ces!=null&&R.ces!==''&&A){const c=TT.empTot/A*100;add(c<=R.ces+1e-6?'ok':'bad',`Emprise au sol totale : ${fmt(TT.empTot,1)} m², soit ${fmt(c,1)} % du terrain`,`Projet ${fmt(sf.emprise,1)} m² + existant conservé ${fmt(TT.empEx,1)} m². Maximum autorisé : ${fmt(+R.ces,0)} %.`)}
+  for(const a of amList().filter(a=>a.k==='piscine')){const d=poolDists(a)[0];const ins=poolPoly(a,+a.marg||0).every(q=>inParcel(q,boundary().rings));add(ins?'info':'bad',`Piscine : bassin de ${fmt(polyArea(poolPoly(a)),1)} m²`,`${ins?'':'Elle dépasse du terrain. '}${poolSeuil()} Distance à la limite la plus proche : ${d?fmt(d.d,2):'—'} m. Vérifiez le recul imposé aux piscines par le PLU.`)}
+  if(R.ces!=null&&R.ces!==''&&A){const c=TT.empTot/A*100;add(c<=R.ces+1e-6?'ok':'bad',`Emprise au sol totale : ${fmt(TT.empTot,1)} m², soit ${fmt(c,1)} % du terrain`,`Projet ${fmt(sf.emprise,1)} m²${TT.empAm>0.05?` + piscine / terrasse ${fmt(TT.empAm,1)} m²`:''} + existant conservé ${fmt(TT.empEx,1)} m². Maximum autorisé : ${fmt(+R.ces,0)} %.`)}
   const sdpTxt=S.existants.length?`Projet ${fmt(sf.sdp,1)} m² + existant ${fmt(TT.sdpEx-TT.sdpDem,1)} m² conservé.`:'';
   if(TT.sdpTot>150)add('warn',`Surface de plancher totale après travaux : ${fmt(TT.sdpTot,1)} m²`,`${sdpTxt} Au-delà de 150 m², le recours à un architecte est obligatoire.`);
   else add('ok',`Surface de plancher totale après travaux : ${fmt(TT.sdpTot,1)} m²`,`${sdpTxt} En dessous du seuil de 150 m² imposant un architecte. Faites vérifier le calcul exact.`);
@@ -1463,7 +1469,7 @@ let masseMeta={scale:200};
 function svgMasse(){
   const T=S.terrain,P=S.projet;const {rings,E}=boundary();if(!rings.length)return'<div class="photo-empty">Chargez une parcelle.</div>';
   const B=bat(),h=heights(),D=distances();const MODE=mode();
-  const exR=S.existants.map(exRing);const bb=bbox(rings.flat().concat(MODE==='dp-cloture'?[]:B.corners),7);const wm=bb[2]-bb[0],hm=bb[3]-bb[1];
+  const exR=S.existants.map(exRing);amFix();const bb=bbox(rings.flat().concat(noBuild()?[]:B.corners).concat(amList().flatMap(a=>a.k==='piscine'?poolPoly(a,(+a.marg||0)+(+a.plage||0)):(terrPoly(a)||[]))),7);const wm=bb[2]-bb[0],hm=bb[3]-bb[1];
   const Wmm=203,Hmm=186;const sc=chooseScale('pcmi2',s=>wm*1000/s<=Wmm&&hm*1000/s<=Hmm);masseMeta.scale=sc;const k=sc/1000;
   const vw=Wmm*k,vh=Hmm*k,cx=(bb[0]+bb[2])/2,cy=(bb[1]+bb[3])/2;const vx=cx-vw/2,vy=cy-vh/2;
   const id='m';let o=`<svg id="svg-masse" xmlns="http://www.w3.org/2000/svg" width="${Wmm}mm" height="${Hmm}mm" viewBox="${vx.toFixed(3)} ${(-cy-vh/2).toFixed(3)} ${vw.toFixed(3)} ${vh.toFixed(3)}" font-family="Archivo Narrow, Arial Narrow, Arial, sans-serif" style="touch-action:pan-x pan-y pinch-zoom">`;
@@ -1509,7 +1515,7 @@ function svgMasse(){
     if(P.assain==='individuel'){ // filière ANC côté jardin, à l'opposé de la voie
       const cc=[P.x-ve.n[0]*(P.W/2+6),P.y-ve.n[1]*(P.W/2+6)];const ra=parkRot();const u=[Math.cos(ra),Math.sin(ra)],v=[-Math.sin(ra),Math.cos(ra)];const W2=(a,b)=>[cc[0]+a*u[0]+b*v[0],cc[1]+a*u[1]+b*v[1]];
       o+=polyS([W2(-4,-2),W2(4,-2),W2(4,2),W2(-4,2)],`fill="none" stroke="#1E5A56" stroke-width="${0.2*k}" stroke-dasharray="${0.8*k} ${0.4*k}"`)+textS(cc,'Filière ANC (étude SPANC)',1.7*k,'text-anchor="middle" dominant-baseline="middle" fill="#1E5A56"')}}
-  if(MODE!=='dp-cloture'){
+  if(!noBuild()){
   // toiture & débord
   const d=P.debord,W=B.w;const a=B.a,b=B.b;
   if(d>0)o+=polyS([W(-a-d,-b-d),W(a+d,-b-d),W(a+d,b+d),W(-a-d,b+d)],`fill="none" stroke="#111" stroke-width="${0.15*k}" stroke-dasharray="${0.8*k} ${0.5*k}" pointer-events="none"`);
@@ -1546,7 +1552,7 @@ function svgMasse(){
   { const R=implRefs(); [[R.A,'1'],[R.B,'2'],...(R.P&&R.P!==R.A&&R.P!==R.B?[[R.P,'∥']]:[])].forEach(([e,l])=>{if(!e)return;o+=lineS(e.a,e.b,`stroke="rgba(30,90,86,.35)" stroke-width="${1.6*k}" stroke-linecap="round" pointer-events="none"`);
       const m=[e.mid[0]+e.n[0]*2.4*k,e.mid[1]+e.n[1]*2.4*k];o+=`<g pointer-events="none"><circle cx="${m[0].toFixed(3)}" cy="${(-m[1]).toFixed(3)}" r="${1.5*k}" fill="#1E5A56"/>${textS(m,l,1.9*k,'text-anchor="middle" dominant-baseline="central" fill="#fff" font-weight="700"')}</g>`});
     if(S.ui.sel==='bat')o+=polyS(B.corners,`fill="none" stroke="#1E5A56" stroke-width="${0.6*k}" stroke-dasharray="${1.2*k} ${0.6*k}" pointer-events="none"`); }
-  o+=`<g pointer-events="none">${vegeMasse(k)}</g>`;
+  o+=amMasse(k);o+=`<g pointer-events="none">${vegeMasse(k)}</g>`;
   // nord + échelle
   o+=northArrow(vx+vw-7*k,vy+vh-10*k,k)+scaleBar(vx+5*k,vy+4*k,k,vw);
   void pc;void A;
@@ -1707,6 +1713,7 @@ const SHEETS=[
  {id:'dpf3',code:'DP4',t:'Plan des façades — existant et projeté',o:'land'},
  {id:'dpf4',code:'DP4',t:'Plan des façades — existant et projeté',o:'land'},
  {id:'dpclo',code:'DP4',t:'Élévations de la clôture et du portail',o:'land'},
+ {id:'dppisc',code:'DP3',t:'Plan et coupe de la piscine',o:'land'},
  {id:'dp5',code:'DP5',t:'Notice : description des travaux et aspect extérieur',o:'port'},
  {id:'cerfadp',code:'Cerfa',t:'Récapitulatif pour le formulaire 16702',o:'port'},
 ];
@@ -1714,7 +1721,7 @@ const facSolo=()=>S.ui.facLayout==='solo';
 const DP_MAP={pcmi1:['DP1','Plan de situation du terrain'],pcmi2:['DP2','Plan de masse'],pcmi6:['DP6','Document graphique d\'insertion du projet'],pcmi7:['DP7','Photographie de l\'environnement proche'],pcmi8:['DP8','Photographie de l\'environnement lointain']};
 function activeSheets(){const m=typeof mode==='function'?mode():'pc';const by=id=>SHEETS.find(s=>s.id===id);
   if(m==='pc')return SHEETS.filter(s=>!/^dp|cerfadp/.test(s.id)&&(facSolo()||(s.id!=='pcmi5c'&&s.id!=='pcmi5d')));
-  const ids=m==='dp-cloture'?['pcmi1','cad','pcmi2','dpclo','dp5','pcmi6','pcmi7','pcmi8','cerfadp']:['pcmi1','cad','pcmi2',...(m==='dp-toiture'?['dpt']:[]),'dpf1','dpf2','dpf3','dpf4','dp5','pcmi6','pcmi7','pcmi8','cerfadp'];
+  const ids=m==='dp-piscine'?['pcmi1','cad','pcmi2','dppisc','dp5','pcmi6','pcmi7','pcmi8','cerfadp']:m==='dp-cloture'?['pcmi1','cad','pcmi2','dpclo','dp5','pcmi6','pcmi7','pcmi8','cerfadp']:['pcmi1','cad','pcmi2',...(m==='dp-toiture'?['dpt']:[]),'dpf1','dpf2','dpf3','dpf4','dp5','pcmi6','pcmi7','pcmi8','cerfadp'];
   let n4=0;const tot4=ids.filter(i=>/^dp[ft]/.test(i)).length;
   return ids.map(id=>{const b=by(id);const o={...b};if(DP_MAP[id]){o.code=DP_MAP[id][0];o.t=DP_MAP[id][1]}if(/^dp[ft]/.test(id)){n4++;o.code=tot4>1?'DP4-'+n4:'DP4'}return o})}
 const NATURE={maison:'Construction d\'une maison individuelle',extension:'Extension d\'une construction existante',annexe:'Construction d\'une annexe (garage, abri, atelier…)'};
@@ -1745,8 +1752,9 @@ function sheetHTML(sh){
       mapCache[key]=mosaic({lon:c[0],lat:c[1],z:18,w:790,h:716,layers:[{l:'ORTHOIMAGERY.ORTHOPHOTOS',f:'image/jpeg'},{l:'CADASTRALPARCELS.PARCELLAIRE_EXPRESS',st:'PCI vecteur'}],overlay:proj=>parcelOverlay(proj,'#FFD400',3.5)})}
     return`${demoMark()}<div class="draw">${mapCache[key]}</div>${cart(sh,'1/1 600 env.',`<p style="margin:0">Parcelle${S.terrain.parcels.length>1?'s':''} du projet surlignée${S.terrain.parcels.length>1?'s':''} en jaune. Sources : Parcellaire Express (PCI) et orthophotographie IGN.</p>`)}`}
   case'pcmi2':{const svg=svgMasse();const k=1;void k;
-    const leg=(mode()==='dp-cloture'?'':lg(`<rect x="2" y="2" width="32" height="12" fill="url(#lgh)" stroke="#111" stroke-width="1.5"/><defs><pattern id="lgh" patternUnits="userSpaceOnUse" width="4" height="4" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="4" stroke="#111"/></pattern></defs>`,mode()==='pc'?'Construction projetée':'Construction concernée (existante)'))+
+    const leg=(noBuild()?'':lg(`<rect x="2" y="2" width="32" height="12" fill="url(#lgh)" stroke="#111" stroke-width="1.5"/><defs><pattern id="lgh" patternUnits="userSpaceOnUse" width="4" height="4" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="4" stroke="#111"/></pattern></defs>`,mode()==='pc'?'Construction projetée':'Construction concernée (existante)'))+
       (mode()==='dp-cloture'?lg(`<line x1="2" y1="8" x2="34" y2="8" stroke="#3a3f44" stroke-width="4"/>`,'Clôture / mur projeté')+lg(`<rect x="2" y="4" width="6" height="8" fill="#bbb" stroke="#111"/><line x1="8" y1="8" x2="28" y2="8" stroke="#3a3f44" stroke-width="2"/><rect x="28" y="4" width="6" height="8" fill="#bbb" stroke="#111"/>`,'Portail / portillon projeté'):'')+
+      (amList().some(a=>a.k==='piscine')?lg(`<rect x="2" y="2" width="32" height="12" fill="#9DD3E8" stroke="#1f6f8b" stroke-width="1.5"/>`,'Piscine (bassin)'):'')+(amList().some(a=>a.k==='terrasse')?lg(`<rect x="2" y="2" width="32" height="12" fill="#B98A5A" fill-opacity=".55" stroke="#5a4a3a" stroke-width="1.2"/>`,'Terrasse'):'')+
       (exKept().length?lg(`<rect x="2" y="2" width="32" height="12" fill="#C9C9C6" stroke="#333" stroke-width="1.2"/>`,'Construction existante conservée'):'')+
       (exDem().length?lg(`<rect x="2" y="2" width="32" height="12" fill="none" stroke="#AE3328" stroke-width="1.2" stroke-dasharray="3 2"/><line x1="2" y1="2" x2="34" y2="14" stroke="#AE3328"/><line x1="2" y1="14" x2="34" y2="2" stroke="#AE3328"/>`,'Construction à démolir'):'')+
       lg(`<line x1="2" y1="8" x2="34" y2="8" stroke="#111" stroke-width="2" stroke-dasharray="8 2 1.5 2"/>`,'Limite de propriété')+
@@ -1783,6 +1791,7 @@ function sheetHTML(sh){
   case'dpf1':case'dpf2':case'dpf3':case'dpf4':return dpFacadeSheet(sh);
   case'dpt':return dpRoofSheet(sh);
   case'dpclo':return cloSheet(sh);
+  case'dppisc':return poolSheet(sh);
   case'dp5':return dpNotice(sh);
   case'cerfadp':return dpCerfa();
   }
@@ -1825,7 +1834,7 @@ ${demTxt}<p>Le projet consiste en ${natTxt}, de ${fmt(P.L)} m × ${fmt(P.W)} m, 
 <h3>d) Matériaux et couleurs des constructions</h3>
 <p>Façades : ${esc(P.facade)}. Couverture : ${esc(P.toit==='plat'?'toiture-terrasse, étanchéité':P.couv)}. Menuiseries extérieures : ${esc(P.menuis)}.${hasG?' La porte de garage est de même teinte que les menuiseries.':''}</p>
 <h3>e) Traitement des espaces libres, notamment les plantations</h3>
-<p>${P.plantations?esc(P.plantations):vegeTxt()?'':'<span class="todo">[Décrire les espaces verts et les plantations prévues.]</span>'}${vegeTxt()?' '+esc(vegeTxt()):''}</p>
+<p>${P.plantations?esc(P.plantations):vegeTxt()?'':'<span class="todo">[Décrire les espaces verts et les plantations prévues.]</span>'}${vegeTxt()?' '+esc(vegeTxt()):''}${amText()?' '+esc(amText()):''}</p>
 <h3>f) Organisation et aménagement des accès au terrain, aux constructions et aux aires de stationnement</h3>
 <p>L'accès au terrain se fait depuis ${esc(T.street||'la voie publique')}. ${P.park>0?`${P.park} place${P.park>1?'s':''} de stationnement ${P.park>1?'sont aménagées':'est aménagée'} sur la parcelle, à proximité de l'accès.`:''} La construction est raccordée aux réseaux publics d'eau potable, d'électricité et de télécommunication existant sous la voie. ${P.assain==='collectif'?'Les eaux usées sont raccordées au réseau public d\'assainissement collectif.':'Les eaux usées sont traitées par un dispositif d\'assainissement non collectif, conformément à l\'avis du SPANC.'} ${P.ep?esc(P.ep):'Les eaux pluviales sont gérées sur la parcelle <span class="todo">[infiltration / cuve de récupération]</span>.'}</p>`;
 }
@@ -1844,15 +1853,15 @@ function cerfaHTML(){
   ${r('Superficie totale du terrain',fmt(parcelArea(),0)+' m²')}${r('Document d\'urbanisme',T.zone?`${T.zone.doc} — zone ${T.zone.libelle}`:'')}
   ${sec('Le projet')}${r('Nature des travaux',projetTitle()+(exDem().length?' et démolition':''))}${r('Courte description',desc)}${r('Destination','Habitation — logement individuel')}${r('Nombre de logements créés','1')}${r('Nombre de niveaux',`${P.niveaux}${P.combles&&P.toit!=='plat'?' + combles':''}`)}
   ${r('Mode d\'utilisation','Résidence principale / secondaire (à préciser)')}
-  ${sec('Surfaces')}${r('Surface de plancher existante avant travaux',fmt(TT.sdpEx,1)+' m²')}${r('Surface de plancher créée (estimation)',fmt(sf.sdp,1)+' m²')}${sf.gar>0.5?r('Dont garage / stationnement (hors surface de plancher)',fmt(sf.gar,1)+' m²'):''}${r('Surface de plancher supprimée (démolition)',fmt(TT.sdpDem,1)+' m²')}${r('Surface de plancher totale après travaux',fmt(TT.sdpTot,1)+' m²')}${r('Emprise au sol existante conservée',fmt(TT.empEx,1)+' m²')}${r('Emprise au sol créée',fmt(sf.emprise,1)+' m²')}${exDem().length?r('Constructions à démolir',exDem().map(e=>`${e.usage} (${fmt(exArea(e),0)} m²)`).join(', ')):''}${r('Hauteur au faîtage / à l\'égout',`${fmt(h.hF)} m / ${fmt(h.hE)} m`)}
+  ${sec('Surfaces')}${r('Surface de plancher existante avant travaux',fmt(TT.sdpEx,1)+' m²')}${r('Surface de plancher créée (estimation)',fmt(sf.sdp,1)+' m²')}${sf.gar>0.5?r('Dont garage / stationnement (hors surface de plancher)',fmt(sf.gar,1)+' m²'):''}${r('Surface de plancher supprimée (démolition)',fmt(TT.sdpDem,1)+' m²')}${r('Surface de plancher totale après travaux',fmt(TT.sdpTot,1)+' m²')}${r('Emprise au sol existante conservée',fmt(TT.empEx,1)+' m²')}${r('Emprise au sol créée',fmt(sf.emprise+TT.empAm,1)+' m²')}${poolBassin()?r('Piscine : surface du bassin',fmt(poolBassin(),1)+' m²'):''}${exDem().length?r('Constructions à démolir',exDem().map(e=>`${e.usage} (${fmt(exArea(e),0)} m²)`).join(', ')):''}${r('Hauteur au faîtage / à l\'égout',`${fmt(h.hF)} m / ${fmt(h.hE)} m`)}
   ${sec('Stationnement et réseaux')}${r('Places de stationnement créées',String(P.park))}${r('Assainissement',P.assain==='collectif'?'Raccordement au réseau collectif':'Assainissement non collectif')}
   ${sec('Pièces jointes')}${pcs.map(([c,t,ok])=>`<tr><td>${c}</td><td>${esc(t)} — ${ok?'<span class="pc-ok">générée</span>':'<span class="pc-no">à fournir</span>'}</td></tr>`).join('')}
   </tbody></table><p style="font:8pt var(--f-ui);color:#555;margin-top:5mm">La surface de plancher est une estimation (murs de 30 cm, hauteur sous plafond > 1,80 m). Faites-la vérifier avant dépôt. Le formulaire officiel est à télécharger sur service-public.fr ou à remplir en ligne sur le guichet numérique de votre commune.</p></div>`;
 }
 
 /* ================= Rendu ================= */
-function sheetReady(id){const P=S.photos;if(id==='cerfadp')return!!S.dem.nom;if(id==='dpclo')return S.clo.length>0;return{pcmi6:P.insMode==='image'?!!P.insImg:!!P.ins,pcmi7:!!P.p7,pcmi8:!!P.p8,cerfa:!!S.dem.nom}[id]??S.terrain.parcels.length>0}
-const SC_KEY={pcmi2:'pcmi2',pcmi3:'pcmi3',pcmi5a:'pcmi5',pcmi5b:'pcmi5',pcmi5c:'pcmi5',pcmi5d:'pcmi5',dpf1:'pcmi5',dpf2:'pcmi5',dpf3:'pcmi5',dpf4:'pcmi5',dpt:'dpt',dpclo:'dpclo'};
+function sheetReady(id){const P=S.photos;if(id==='cerfadp')return!!S.dem.nom;if(id==='dpclo')return S.clo.length>0;if(id==='dppisc')return!!poolItem();return{pcmi6:P.insMode==='image'?!!P.insImg:!!P.ins,pcmi7:!!P.p7,pcmi8:!!P.p8,cerfa:!!S.dem.nom}[id]??S.terrain.parcels.length>0}
+const SC_KEY={pcmi2:'pcmi2',pcmi3:'pcmi3',pcmi5a:'pcmi5',pcmi5b:'pcmi5',pcmi5c:'pcmi5',pcmi5d:'pcmi5',dpf1:'pcmi5',dpf2:'pcmi5',dpf3:'pcmi5',dpf4:'pcmi5',dpt:'dpt',dpclo:'dpclo',dppisc:'dppisc'};
 function renderScaleBar(){const key=SC_KEY[S.ui.tab];const bar=$('#scaleBar');if(!bar)return;bar.hidden=!key;if(!key)return;const inf=SCALEINFO[key];if(!inf)return;
   const cur=(S.ui.scales&&S.ui.scales[key])||'auto';
   $('#scSel').innerHTML=`<option value="auto">Auto · 1/${inf.auto} (pleine page)</option>`+STD_SC.filter(v=>v>=20&&v<=2500).map(v=>`<option value="${v}">1/${v}${v===inf.auto?' · conseillée':''}</option>`).join('');
@@ -1974,12 +1983,12 @@ $('#stage').addEventListener('pointerdown',e=>{
   const ed=e.target.closest('[data-edge]');if(ed){const E=boundary().E[+ed.dataset.edge];if(E.voie){S.terrain.voie=S.terrain.voie.filter(v=>{const q=toLocal(...v);return hyp(q[0]-E.mid[0],q[1]-E.mid[1])>=0.6})}else S.terrain.voie.push(toLL(...E.mid));schedule();return}
   const t=e.target.closest('[data-drag]');if(!t){if(S.ui.sel&&e.target.closest('#svg-masse')){S.ui.sel=null;renderSheet('pcmi2')}return}e.preventDefault();const kind=t.dataset.drag;if(kind!=='ins'){S.ui.sel=kind;}
   if(kind==='ins'){const area=t.parentElement.getBoundingClientRect();drag={kind,area,sx:e.clientX,sy:e.clientY,ox:S.photos.insX,oy:S.photos.insY};}
-  else{const pt=svgPt(e);const cur=kind==='bat'?[S.projet.x,S.projet.y]:kind==='park'?parkPos():kind.startsWith('ex:')?toLocal(...S.existants[+kind.slice(3)].c):toLocal(...S.photos[kind+'pos']);drag={kind,dx:cur[0]-pt[0],dy:cur[1]-pt[1]}}
+  else{const pt=svgPt(e);const cur=kind==='bat'?[S.projet.x,S.projet.y]:kind==='park'?parkPos():kind.startsWith('am:')?(()=>{const g=poolGeom(amList()[+kind.slice(3)]);return[g.x,g.y]})():kind.startsWith('ex:')?toLocal(...S.existants[+kind.slice(3)].c):toLocal(...S.photos[kind+'pos']);drag={kind,dx:cur[0]-pt[0],dy:cur[1]-pt[1]}}
 });
 window.addEventListener('pointermove',e=>{if(!drag)return;
   if(drag.kind==='ins'){S.photos.insX=drag.ox+(e.clientX-drag.sx)/drag.area.width*100;S.photos.insY=drag.oy+(e.clientY-drag.sy)/drag.area.height*100;const ov=$('#w-pcmi6 .ins-ov');if(ov){ov.style.left=S.photos.insX+'%';ov.style.top=S.photos.insY+'%'}return}
   const pt=svgPt(e);const q=[pt[0]+drag.dx,pt[1]+drag.dy];
-  if(drag.kind==='bat'){S.projet.x=q[0];S.projet.y=q[1]}else if(drag.kind==='park'){S.projet.parkX=q[0];S.projet.parkY=q[1]}else if(drag.kind.startsWith('ex:'))S.existants[+drag.kind.slice(3)].c=toLL(...q);else S.photos[drag.kind+'pos']=toLL(...q);
+  if(drag.kind==='bat'){S.projet.x=q[0];S.projet.y=q[1]}else if(drag.kind==='park'){S.projet.parkX=q[0];S.projet.parkY=q[1]}else if(drag.kind.startsWith('am:')){const a=amList()[+drag.kind.slice(3)];a.x=q[0];a.y=q[1]}else if(drag.kind.startsWith('ex:'))S.existants[+drag.kind.slice(3)].c=toLL(...q);else S.photos[drag.kind+'pos']=toLL(...q);
   renderSheet('pcmi2');showDragInfo()});
 window.addEventListener('pointerup',()=>{if(!drag)return;drag=null;renderAll();save()});
 /* ---- Implantation précise ---- */
@@ -2151,8 +2160,9 @@ $('#pluBody').addEventListener('click',e=>{const b=e.target.closest('[data-rule]
 const DMODES={pc:'Permis de construire',
   'dp-facade':'Déclaration préalable — modification de façade',
   'dp-toiture':'Déclaration préalable — modification de toiture',
-  'dp-cloture':'Déclaration préalable — clôture et portail'};
-const DPTITLE={'dp-facade':'Modification des façades d\'une construction existante','dp-toiture':'Modification de la toiture d\'une construction existante','dp-cloture':'Édification d\'une clôture et d\'un portail'};
+  'dp-cloture':'Déclaration préalable — clôture et portail',
+  'dp-piscine':'Déclaration préalable — piscine'};
+const DPTITLE={'dp-facade':'Modification des façades d\'une construction existante','dp-toiture':'Modification de la toiture d\'une construction existante','dp-cloture':'Édification d\'une clôture et d\'un portail','dp-piscine':'Construction d\'une piscine non couverte'};
 function mode(){return(S.dossier&&S.dossier.type)||'pc'}
 const isDPb=()=>mode()==='dp-facade'||mode()==='dp-toiture';
 const APP=['facade','facadeCouleur','couv','couvCouleur','menuis','menuisCouleur','ouv','toit','pente','debord','monoInv','toitItems'];
@@ -2188,6 +2198,7 @@ function setMode(m){ensureDossier();const prev=mode();if(prev===m)return;
   else if(m==='dp-facade'||m==='dp-toiture'){S.ui.editState='apres';if(!initDPBuilding(false))toast('Aucune construction existante sur le terrain : ajoutez-la à l\'étape 01 (« Ajouter une construction existante »).',7000);
     else if(S.dossier.apres)Object.assign(S.projet,JSON.parse(JSON.stringify(S.dossier.apres)))}
   else if(m==='dp-cloture'){if(!S.clo.length)addClo('portail',true)}
+  else if(m==='dp-piscine'){if(!poolItem()){const a=newPool();amList().push(a)}const a=poolItem();S.projet.L=a.L;S.projet.W=a.W;if(!S.demo){const c=defaultPoolPos(a);S.projet.x=c[0];S.projet.y=c[1];S.projet.rot=a.rot||0}}
   S.notice=null;fillInputs();renderAll();save();S.ui.tab='pcmi2';goTab('pcmi2')}
 
 /* ---- Fenêtres de toit et panneaux solaires ---- */
@@ -2383,13 +2394,14 @@ function dpNotice(sh){const T=S.terrain;S.noticeAdd=S.noticeAdd||{};const m=mode
       ${row('Teinte de la couverture',colorName(A.couvCouleur),colorName(B.couvCouleur))}${row('Forme et pente du toit',`${TOITN[A.toit]} · ${A.pente}°`,`${TOITN[B.toit]} · ${B.pente}°`)}${row('Fenêtres de toit',String(cnt(A,'velux')),String(cnt(B,'velux')))}${row('Panneaux solaires',String(cnt(A,'pv')),String(cnt(B,'pv')))}
       ${sd.map(s=>row('Ouvertures '+sideName(s).toLowerCase(),ouvTxt((A.ouv||{})[s.id]),ouvTxt((B.ouv||{})[s.id]))).join('')}</tbody></table>`+naddBox('dp-travaux');
     body+=`<h2>3. Insertion dans l'environnement</h2><p>Le volume de la construction est inchangé. Les matériaux et teintes projetés sont choisis pour s'accorder avec le bâti environnant${z?' et respecter le règlement de la zone':''}.</p>`+naddBox('dp-insertion')}
+  else if(m==='dp-piscine'){body+=naddBox('dp-terrain')+`<h2>2. Description des travaux</h2><p>${esc(amText())}</p>`+naddBox('dp-travaux')+`<h2>3. Insertion dans l'environnement</h2><p>La piscine est enterrée : seuls la margelle et la plage, au niveau du terrain, sont visibles. Elle n'est pas couverte. Son implantation respecte les reculs aux limites${S.regles.reculLim?` (${fmt(+S.regles.reculLim,1)} m)`:''} et préserve la végétation existante.</p>`+naddBox('dp-insertion')}
   else{body+=naddBox('dp-terrain')+`<h2>2. Description des travaux</h2>`+(S.clo.length?`<table class="dpt"><thead><tr><th>Élément</th><th>Implantation</th><th>Caractéristiques</th></tr></thead><tbody>${S.clo.map(c=>{const g=cloSeg(c);const isP=c.kind==='portail'||c.kind==='portillon';
       return`<tr><td>${KLBL[c.kind]}</td><td>${g?esc(g.l.name)+(isP?`, à ${fmt(g.s0,2)} m de l'origine`:`, de ${fmt(g.s0,1)} à ${fmt(g.s1,1)} m`):''}</td><td>${isP?`${esc(PORT_OUV[c.ouv]||'')}, ${esc((PORT_STYLES[c.style]||'').toLowerCase())}, ${fmt(g?g.len:+c.w,2)} m × ${fmt(+c.h,2)} m${c.pil?', piliers maçonnés':''}`:`${esc(CLO_STYLES[c.style]||'')}, hauteur ${fmt(+c.h,2)} m, longueur ${fmt(cloNetLen(c),2)} m (hors portails)`}. ${esc(c.mat||'')}, teinte ${esc(c.col||'')}.</td></tr>`}).join('')}</tbody></table>`:'<p><span class="todo">[Ajoutez les éléments à l\'étape 03.]</span></p>')+naddBox('dp-travaux')+
       `<h2>3. Insertion dans l'environnement</h2><p>Les clôtures et le portail reprennent les teintes et matériaux dominants de la rue${S.regles.hClo?` et respectent la hauteur maximale de ${fmt(+S.regles.hClo,2)} m fixée par le règlement`:''}.</p>`+naddBox('dp-insertion')}
   body+=`<h2>4. Informations complémentaires</h2>${naddBox('libre')}`;
   return`${demoMark(1)}<div class="notice"><div class="hd"><div><div class="code">${sh.code}</div><h1>${esc(sh.t)}</h1></div><div class="meta">${esc(projetTitle())}<br>${esc(adresseTerrain()||T.label)}<br>Parcelle${T.parcels.length>1?'s':''} ${esc(parcelRefs())}<br>${frDate(S.meta.date)} · indice ${esc(S.meta.indice)}</div></div><div class="notice-body" id="noticeBody">${body}</div></div>`}
 function dpCerfa(){const T=S.terrain,D=S.dem;const r=(a,b)=>`<tr><td>${a}</td><td class="v">${b===''||b==null?'<span class="pc-no">à compléter</span>':esc(b)}</td></tr>`;const sec=t=>`<tr class="sec"><td colspan="2">${t}</td></tr>`;
-  const m=mode();const desc=m==='dp-cloture'?S.clo.map(c=>{const g=cloSeg(c);return`${KLBL[c.kind].toLowerCase()} ${c.kind==='portail'||c.kind==='portillon'?'de '+fmt(g?g.len:+c.w,2)+' m':'de '+fmt(cloNetLen(c),1)+' m'} (H ${fmt(+c.h,2)} m)`}).join(', '):
+  const m=mode();const desc=m==='dp-piscine'?amText():m==='dp-cloture'?S.clo.map(c=>{const g=cloSeg(c);return`${KLBL[c.kind].toLowerCase()} ${c.kind==='portail'||c.kind==='portillon'?'de '+fmt(g?g.len:+c.w,2)+' m':'de '+fmt(cloNetLen(c),1)+' m'} (H ${fmt(+c.h,2)} m)`}).join(', '):
     (()=>{const A=variant('avant'),B=variant('apres');const t=[];if(A.facade!==B.facade||A.facadeCouleur!==B.facadeCouleur)t.push('modification de l\'aspect des façades ('+B.facade.toLowerCase()+')');if(A.menuis!==B.menuis||A.menuisCouleur!==B.menuisCouleur)t.push('remplacement des menuiseries ('+B.menuis.toLowerCase()+')');
       if(JSON.stringify(A.ouv)!==JSON.stringify(B.ouv))t.push('création ou modification d\'ouvertures');if(A.couv!==B.couv||A.couvCouleur!==B.couvCouleur||A.pente!==B.pente||A.toit!==B.toit)t.push('réfection de la toiture ('+(B.toit==='plat'?'toiture-terrasse':B.couv.toLowerCase())+')');
       const n=(x,k)=>(x.toitItems||[]).filter(i=>i.t===k).reduce((s,i)=>s+(+i.n||0),0);if(n(B,'velux')!==n(A,'velux'))t.push(`pose de ${n(B,'velux')} fenêtre${n(B,'velux')>1?'s':''} de toit`);if(n(B,'pv')!==n(A,'pv'))t.push(`installation de ${n(B,'pv')} panneaux photovoltaïques en toiture`);return t.join(', ')||''})();
@@ -2398,27 +2410,31 @@ function dpCerfa(){const T=S.terrain,D=S.dem;const r=(a,b)=>`<tr><td>${a}</td><t
   <table><tbody>${sec('Identité du déclarant')}${r('Civilité',D.civ)}${r('Nom',D.nom)}${r('Prénom',D.prenom)}${r('Date de naissance',frDate(D.naissance))}
   ${sec('Coordonnées')}${r('Adresse',D.adresse)}${r('Code postal',D.cp)}${r('Localité',D.ville)}${r('Téléphone',D.tel)}${r('Courriel',D.email)}
   ${sec('Le terrain')}${r('Adresse',adresseTerrain())}${T.parcels.map((p,i)=>r(`Référence cadastrale ${i+1}`,`${p.prefixe||'000'} · ${p.section} · ${p.numero} — ${fmt(p.contenance||0,0)} m²`)).join('')}${r('Document d\'urbanisme',T.zone?`${T.zone.doc} — zone ${T.zone.libelle}`:'')}
-  ${sec('Le projet')}${r('Nature des travaux',m==='dp-cloture'?'Édification d\'une clôture / d\'un portail':'Travaux sur construction existante modifiant l\'aspect extérieur')}${r('Courte description',desc?desc.charAt(0).toUpperCase()+desc.slice(1)+'.':'')}
-  ${r('Surface de plancher créée','0 m²')}${r('Emprise au sol créée','0 m²')}
+  ${sec('Le projet')}${r('Nature des travaux',m==='dp-piscine'?'Construction d\'une piscine non couverte':m==='dp-cloture'?'Édification d\'une clôture / d\'un portail':'Travaux sur construction existante modifiant l\'aspect extérieur')}${r('Courte description',desc?desc.charAt(0).toUpperCase()+desc.slice(1)+'.':'')}
+  ${r('Surface de plancher créée','0 m²')}${r('Emprise au sol créée',fmt(amEmprise(),1)+' m²')}${m==='dp-piscine'?r('Piscine : surface du bassin',fmt(poolBassin(),1)+' m²'):''}
   ${sec('Pièces jointes')}${list.map(s=>`<tr><td>${esc(s.code)}</td><td>${esc(s.t)} — <span class="pc-ok">générée</span></td></tr>`).join('')}
   </tbody></table><p style="font:8pt var(--f-ui);color:#555;margin-top:5mm">Formulaire officiel : cerfa 16702*03 « Déclaration préalable — constructions et travaux non soumis à permis de construire », valable depuis le 1er juillet 2026. Vérifiez la numérotation des pièces dans la notice du formulaire et auprès de votre mairie.</p></div>`}
 function dpChecks(){const out=[];const add=(l,t,s='')=>out.push({lvl:l,t,s});const T=S.terrain,m=mode();
   if(!T.parcels.length){add('bad','Aucune parcelle chargée','Recherchez l\'adresse du terrain.');return out}
   if(S.demo)add('warn','Données d\'exemple','Le terrain affiché est fictif. Chargez votre parcelle avant d\'imprimer.');
   add('info',DMODES[m],'Formulaire : cerfa 16702*03. Instruction en principe en 1 mois (2 mois en secteur protégé).');
+  if(m==='dp-piscine'){const a=poolItem();if(!a)add('bad','Aucune piscine','Ajoutez la piscine à l\'étape 03.');else{const b=polyArea(poolPoly(a));const d=poolDists(a)[0];const ins=poolPoly(a,+a.marg||0).every(q=>inParcel(q,boundary().rings));
+    add(ins?'ok':'bad',ins?'La piscine est entièrement sur le terrain':'La piscine dépasse les limites du terrain','');add(b>100?'bad':b<=10?'warn':'ok',`Bassin de ${fmt(b,1)} m²`,poolSeuil());
+    add(d&&S.regles.reculLim&&d.d<+S.regles.reculLim-0.01?'warn':'info',`Distance à la limite la plus proche : ${d?fmt(d.d,2):'—'} m`,'Le PLU fixe souvent un recul propre aux piscines : vérifiez-le dans le règlement.');
+    const A=parcelArea();const R=S.regles;if(R.ces&&A){const e=exKept().reduce((s2,e)=>s2+exArea(e),0)+amEmprise();add(e/A*100<=R.ces+1e-6?'ok':'bad',`Emprise au sol totale : ${fmt(e,1)} m², soit ${fmt(e/A*100,1)} %`,`Bassin compris. Maximum autorisé : ${fmt(+R.ces,0)} %.`)}}}
   if(isDPb()){const e=S.existants.find(x=>x.id===S.dossier.exId);add(e?'ok':'bad',e?`Construction concernée : ${e.usage||'construction'}`:'Aucune construction concernée',e?'':'Ajoutez ou choisissez la construction existante.');
     const A=variant('avant'),B=variant('apres');add(JSON.stringify(A)===JSON.stringify(B)?'warn':'ok',JSON.stringify(A)===JSON.stringify(B)?'Aucune différence entre existant et projeté':'Modifications décrites',JSON.stringify(A)===JSON.stringify(B)?'Décrivez l\'état projeté (bouton « État projeté » à l\'étape 03).':'Les planches DP4 montrent l\'existant et le projet côte à côte.');
     if(m==='dp-toiture'&&(B.toitItems||[]).some(i=>i.t==='pv'))add('info','Panneaux solaires en toiture','Vérifiez les règles d\'aspect du PLU (implantation dans le plan de la toiture, teinte).')}
-  else{add(S.clo.length?'ok':'bad',S.clo.length?`${S.clo.length} élément${S.clo.length>1?'s':''} de clôture`:'Aucune clôture ni portail','Ajoutez les éléments à l\'étape 03.');
+  else if(m==='dp-cloture'){add(S.clo.length?'ok':'bad',S.clo.length?`${S.clo.length} élément${S.clo.length>1?'s':''} de clôture`:'Aucune clôture ni portail','Ajoutez les éléments à l\'étape 03.');
     if(S.regles.hClo){for(const c of S.clo){const hh=Math.max(+c.h||0,c.pil?+c.h+0.15:0);add(hh<=+S.regles.hClo+1e-6?'ok':'bad',`${KLBL[c.kind]} : hauteur ${fmt(hh,2)} m`,`Maximum autorisé : ${fmt(+S.regles.hClo,2)} m.`)}}
     else add('warn','Hauteur maximale des clôtures non renseignée','Reportez la règle du PLU à l\'étape 02.')}
   if(T.zone)add('info',`Zone ${T.zone.libelle} — ${T.zone.doc}`,`${esc(T.zone.libelong||'')}${reglementUrl(T.zone)?` <a href="${esc(reglementUrl(T.zone))}" target="_blank" rel="noopener">Ouvrir le règlement écrit</a>`:''}`);
   const ph=S.photos;add(ph.p7?'ok':'warn','Photographie proche (DP7)',ph.p7?'Ajoutée.':'Photo à ajouter.');add(ph.p8?'ok':'warn','Photographie lointaine (DP8)',ph.p8?'Ajoutée.':'Photo à ajouter.');
   add((ph.insMode==='image'?ph.insImg:ph.ins)?'ok':'warn','Document d\'insertion (DP6)',(ph.insMode==='image'?ph.insImg:ph.ins)?'Présent.':'Vue de principe générée : ajoutez une photo ou importez votre insertion.');
   add(S.dem.nom?'ok':'warn','Identité du déclarant',S.dem.nom?'Renseignée.':'À compléter (étape 05).');return out}
-function renderModeUI(){ensureDossier();const m=mode();document.body.dataset.mode=m;$('#sumMode').textContent={pc:'PC','dp-facade':'DP façade','dp-toiture':'DP toiture','dp-cloture':'DP clôture'}[m];
-  $('#modeHint').textContent={pc:'Construction neuve, extension ou annexe : dossier PCMI1 à PCMI8.','dp-facade':'Ravalement, changement de teinte, de menuiseries ou d\'ouvertures : pièces DP1, DP2, DP4 (existant / projeté), DP5, DP6, DP7, DP8.','dp-toiture':'Réfection de couverture, fenêtres de toit, panneaux solaires : pièces DP1, DP2, DP4 (façades et plan de toiture, existant / projeté), DP5 à DP8.','dp-cloture':'Portail, portillon, clôture ou mur : pièces DP1, DP2, DP4 (élévations), DP5 à DP8.'}[m];
-  $('#dpBat').hidden=!isDPb();$('#cloEditor').hidden=m!=='dp-cloture';$('#projBody').hidden=m==='dp-cloture';
+function renderModeUI(){ensureDossier();const m=mode();document.body.dataset.mode=m;$('#sumMode').textContent={pc:'PC','dp-facade':'DP façade','dp-toiture':'DP toiture','dp-cloture':'DP clôture','dp-piscine':'DP piscine'}[m];
+  $('#modeHint').textContent={pc:'Construction neuve, extension ou annexe : dossier PCMI1 à PCMI8.','dp-facade':'Ravalement, changement de teinte, de menuiseries ou d\'ouvertures : pièces DP1, DP2, DP4 (existant / projeté), DP5, DP6, DP7, DP8.','dp-toiture':'Réfection de couverture, fenêtres de toit, panneaux solaires : pièces DP1, DP2, DP4 (façades et plan de toiture, existant / projeté), DP5 à DP8.','dp-cloture':'Portail, portillon, clôture ou mur : pièces DP1, DP2, DP4 (élévations), DP5 à DP8.','dp-piscine':'Piscine non couverte de 10 à 100 m² de bassin : pièces DP1, DP2, DP3 (plan et coupe), DP5 à DP8.'}[m];
+  $('#dpBat').hidden=!isDPb();$('#cloEditor').hidden=m!=='dp-cloture';$('#projBody').hidden=m==='dp-cloture'||m==='dp-piscine';{const ae=$('#amEditor');if(ae&&!ae.contains(document.activeElement))ae.innerHTML=amEditorHTML();const as=$('#amStep');if(as)as.hidden=m==='dp-cloture'||isDPb()}
   if(isDPb()){const C=dpCandidates();$('#dpEx').innerHTML=C.length?C.map(e=>`<option value="${esc(e.id)}"${e.id===S.dossier.exId?' selected':''}>${esc(e.usage||'Construction')} · ${fmt(exArea(e),0)} m² au sol${e.hauteur?' · H '+fmt(+e.hauteur,1)+' m':''}</option>`).join(''):'<option value="">Aucune construction existante (étape 01)</option>';
     const st=curState();$('#esAvant').checked=st==='avant';$('#esApres').checked=st==='apres';$('#stateHint').textContent=st==='avant'?'Vous décrivez l\'ÉTAT EXISTANT : matériaux, couleurs, ouvertures et toiture actuels.':'Vous décrivez l\'ÉTAT PROJETÉ : ce qui sera réalisé.';
     $('#bCopyState').hidden=st!=='apres'}
@@ -2790,7 +2806,7 @@ function shotOverlay(sh,opts={}){const {G,V}=shotView(sh);const s=(sh.w/2)/V.W;c
   if(mode()==='dp-cloture'){inner=cloInsertion(V).sort((a,b)=>b.d-a.d).map(o=>o.svg).join('')}
   else{const R=renderBuilding([V.f[0],V.f[1]],0,{V,mode:'render',sw:0.02,shadow:true,blur:sun.soft?0.7:0.14,lines:sh.lines===true,shadowK:sun.soft?0.4:0.85,sun:sun.bld,soft:sun.soft});
     const bd=V.depth([0,0,1.5]);const ve=vegeList().map(vegeLocal).map(v=>({v,d:V.depth([...toBld(...v.p),1])}));
-    inner=ve.filter(x=>x.d>bd).sort((a,b)=>b.d-a.d).map(x=>vegeRender(x.v,V,sun,uid)).join('')+R.svg+ve.filter(x=>x.d<=bd).sort((a,b)=>b.d-a.d).map(x=>vegeRender(x.v,V,sun,uid)).join('')}
+    const L=[...(isPoolMode()?[]:[{d:bd,svg:R.svg}]),...amRender(V,sun),...ve.map(x=>({d:x.d,svg:vegeRender(x.v,V,sun,uid)}))];inner=L.sort((x,y)=>y.d-x.d).map(o=>o.svg).join('')}
   const geo=`<g transform="rotate(${G.r.toFixed(2)} ${cx} ${cy}) translate(${cx} ${cy}) scale(${s.toFixed(4)})">${inner}</g>`;
   const mm=matchMatrix(sh);const blur=Math.max(0.25,sh.w/2600);
   defs+=`<filter id="${uid}ph" x="0" y="0" width="100%" height="100%" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">${mm?`<feColorMatrix type="matrix" values="${mm[0].toFixed(3)} 0 0 0 0  0 ${mm[1].toFixed(3)} 0 0 0  0 0 ${mm[2].toFixed(3)} 0 0  0 0 0 1 0" result="m"/>`:'<feOffset result="m"/>'}<feGaussianBlur in="m" stdDeviation="${blur.toFixed(2)}" result="b"/><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="1" seed="7" result="n"/><feColorMatrix in="n" type="saturate" values="0" result="ng"/><feComposite in="ng" in2="b" operator="in" result="gi"/><feComponentTransfer in="gi" result="gs"><feFuncA type="linear" slope="0.07"/></feComponentTransfer><feBlend in="gs" in2="b" mode="overlay"/></filter>`;
@@ -2828,7 +2844,7 @@ function hrLoop(){if($('#here').hidden){HR.loop=false;return}const h=ORI.h;const
   const g=GPS.last;const acc=g?Math.round(g.acc):null;$('#hrAcc').textContent=acc==null?'Recherche du GPS…':`Précision GPS : ± ${acc} m${acc<=6?' — très bien':acc<=12?' — correct':' — attendez quelques secondes, à découvert'}`;
   $('#hrAcc').className=acc!=null&&acc<=8?'ok':acc!=null&&acc<=15?'mid':'';$('#hrOk').disabled=!g;requestAnimationFrame(hrLoop)}
 function openHere(){const port=isPortail();
-  $('#hrTip').innerHTML=port?'Placez-vous <b>au milieu du futur portail</b>, sur la limite du terrain, puis appuyez sur « Ici ».':'Placez-vous <b>au milieu de la future façade avant</b> (celle de l\'entrée), <b>dos à la future maison</b>, en regardant dans la direction où elle donnera. Tenez le téléphone devant vous, puis appuyez sur « Ici ».';
+  $('#hrTip').innerHTML=isPoolMode()?'Placez-vous <b>au centre du futur bassin</b>, puis appuyez sur « Ici ». Vous ajusterez ensuite sur le plan.':port?'Placez-vous <b>au milieu du futur portail</b>, sur la limite du terrain, puis appuyez sur « Ici ».':'Placez-vous <b>au milieu de la future façade avant</b> (celle de l\'entrée), <b>dos à la future maison</b>, en regardant dans la direction où elle donnera. Tenez le téléphone devant vous, puis appuyez sur « Ici ».';
   $('#hrFig').innerHTML=port?`<rect x="20" y="62" width="160" height="4" fill="#1E5A56"/><rect x="72" y="52" width="56" height="10" fill="#3a3f44"/><circle cx="100" cy="85" r="7" fill="#E0A92A"/><text x="100" y="110" font-size="11" text-anchor="middle" fill="#555">vous, au milieu du portail</text>`:
     `<rect x="45" y="10" width="110" height="60" fill="#e9e2d2" stroke="#AE3328" stroke-width="2"/><line x1="45" y1="70" x2="155" y2="70" stroke="#AE3328" stroke-width="5"/><text x="100" y="44" font-size="11" text-anchor="middle" fill="#555">future maison</text><circle cx="100" cy="80" r="7" fill="#E0A92A"/><path d="M100 90 L100 108 M93 101 L100 110 L107 101" stroke="#E0A92A" stroke-width="3" fill="none"/><text x="114" y="102" font-size="10" fill="#555">vous regardez par là</text>`;
   $('#here').hidden=false;GPS.hist=[];startOrientation();gpsWatch(true);if(!HR.loop){HR.loop=true;requestAnimationFrame(hrLoop)}
@@ -2839,7 +2855,7 @@ $('#hrOk').onclick=()=>{const now=Date.now();let L=(GPS.hist||[]).filter(f=>now-
   const m=Math.min(...L.map(f=>f.acc));L=L.filter(f=>f.acc<=m*2+1);let sw=0,x=0,y=0;for(const f of L){const w=1/Math.max(1,f.acc)**2;sw+=w;x+=f.lonlat[0]*w;y+=f.lonlat[1]*w}
   closeHere({lonlat:[x/sw,y/sw],acc:m,h:ORI.h})};
 async function onsiteHere(){if(S.demo){toast('Choisissez d\'abord votre terrain.');return false}const r=await openHere();if(!r)return false;
-  const pt=toLocal(...r.lonlat);if(isPortail())placeAt(pt);else{if(r.h!=null)faceBearing(r.h);setFront(pt)}
+  const pt=toLocal(...r.lonlat);if(isPortail())placeAt(pt);else if(isPoolMode()){S.projet.x=pt[0];S.projet.y=pt[1]}else{if(r.h!=null)faceBearing(r.h);setFront(pt)}
   S.onsite=Object.assign(S.onsite||{},{here:r.lonlat,acc:r.acc,placed:true});save();toast(`Position enregistrée (± ${Math.round(r.acc)} m). Ajustez si besoin sur le plan.`);
   await placeOnPlan();return true}
 
@@ -2945,7 +2961,7 @@ function plRender(){const sh=PL.sh;const port=isPortail();const split=PL.view===
     const {G,V}=shotView(sh);const s=(sh.w/2)/V.W;const cx=sh.w/2,cy=sh.h/2;const tr=`rotate(${G.r.toFixed(2)} ${cx} ${cy}) translate(${cx} ${cy}) scale(${s.toFixed(4)})`;
     svg.innerHTML=`<image href="${sh.img}" x="0" y="0" width="${sh.w}" height="${sh.h}" preserveAspectRatio="none"/>`+(PL.guides?`<g transform="${tr}">${shotGuides(V)}</g>`:'')+`<g opacity="${PL.op}">${shotOverlay(sh)}</g>`+`<g id="plVis" pointer-events="none">${PL.tool==='brush'||PL.tool==='erase'?maskVis(sh):''}</g>`+(PL.tool==='anchor'?`<g id="plCorners">${cornersSVG(sh)}</g>`:'')+(()=>{return'';const a=shotProject(sh,anchorWorld());if(!a)return'';const r=sh.w/60;return`<g pointer-events="none"><circle cx="${a[0].toFixed(1)}" cy="${a[1].toFixed(1)}" r="${r.toFixed(1)}" fill="none" stroke="#ff5a4a" stroke-width="${(r/4).toFixed(1)}"/><circle cx="${a[0].toFixed(1)}" cy="${a[1].toFixed(1)}" r="${(r/4).toFixed(1)}" fill="#ff5a4a"/></g>`})()}
   if(plan){const m=$('#plMap');m.removeAttribute('hidden');m.innerHTML=plMapSVG();m.setAttribute('viewBox',PL.mapVB.join(' '))}
-  const cm=(PL.cmode==='4'?(port?'Tirez les 4 ronds sur les coins du portail.':'Tirez les 4 ronds sur les angles de la maison, au pied des murs.'):(port?'Tirez les 2 ronds rouges sur le bas du portail, au sol.':'Tirez les 2 ronds rouges sur les angles de la façade avant, au pied des murs.'))+(PL.msgMore?' La taille et la perspective se règlent seules. Pincez pour zoomer la photo ; touchez un rond puis les flèches pour l\'ajuster au pixel. <span class="more" data-msgless>moins</span>':' <span class="more" data-msgmore>ⓘ</span>');
+  const cm=isPoolMode()?(PL.cmode==='4'?'Tirez les 4 ronds sur les angles du bassin.':'Tirez les 2 ronds rouges sur deux angles du bassin (côté rue).')+' <span class="more">ⓘ</span>':(PL.cmode==='4'?(port?'Tirez les 4 ronds sur les coins du portail.':'Tirez les 4 ronds sur les angles de la maison, au pied des murs.'):(port?'Tirez les 2 ronds rouges sur le bas du portail, au sol.':'Tirez les 2 ronds rouges sur les angles de la façade avant, au pied des murs.'))+(PL.msgMore?' La taille et la perspective se règlent seules. Pincez pour zoomer la photo ; touchez un rond puis les flèches pour l\'ajuster au pixel. <span class="more" data-msgless>moins</span>':' <span class="more" data-msgmore>ⓘ</span>');
   $('#plMsg').innerHTML=photo&&PL.tool==='brush'?'<b>Peignez au doigt</b> ce qui doit rester <b>devant</b> la maison (haie, arbre, clôture, voiture) : ces zones repassent au premier plan. Zone peinte en bleu.':
     photo&&PL.tool==='erase'?'<b>Gomme</b> : repassez sur une zone peinte pour la retirer.':
     split?cm+' En bas : d\'où la photo a été prise (📷).':photo?cm:
@@ -3007,8 +3023,8 @@ function plMapSVG(){const {rings,E}=boundary();const sh=PL.sh;const G=sh?shotGeo
   if(PL.vegA){const m=M(PL.vegA);o+=`<circle cx="${m[0].toFixed(2)}" cy="${(-m[1]).toFixed(2)}" r="${0.8*k}" fill="#5d8a3f" stroke="#fff" stroke-width="${0.3*k}"/>`}
   if(isPortail()){for(const c of S.clo){const g=cloSeg(c);if(g)o+=L(g.p0,g.p1,`stroke="#ff5a4a" stroke-width="${1.4*k}"`)}}
   else{o+=`<polygon points="${B.corners.map(P).join(' ')}" fill="rgba(255,90,74,.38)" stroke="#ff5a4a" stroke-width="${0.4*k}"/>`;
-    const f=frontPt(),n=frontNormal(),fs=frontSide();const t=[-n[1],n[0]];const hl=fs.len/2;o+=L([f[0]-t[0]*hl,f[1]-t[1]*hl],[f[0]+t[0]*hl,f[1]+t[1]*hl],`stroke="#ff5a4a" stroke-width="${1.1*k}"`);
-    o+=T([S.projet.x,S.projet.y],wzKind()==='garage'?'GARAGE':'MAISON',`font-size="${2.6*k}" text-anchor="middle" dominant-baseline="middle" font-weight="700" fill="#fff" paint-order="stroke" stroke="rgba(0,0,0,.45)" stroke-width="${0.4*k}"`);
+    const f=frontPt(),n=frontNormal(),fs=frontSide();const t=[-n[1],n[0]];const hl=fs.len/2;if(!isPoolMode())o+=L([f[0]-t[0]*hl,f[1]-t[1]*hl],[f[0]+t[0]*hl,f[1]+t[1]*hl],`stroke="#ff5a4a" stroke-width="${1.1*k}"`);
+    o+=T([S.projet.x,S.projet.y],{garage:'GARAGE',piscine:'PISCINE',abri:'ABRI',extension:'EXTENSION'}[wzKind()]||'MAISON',`font-size="${2.6*k}" text-anchor="middle" dominant-baseline="middle" font-weight="700" fill="#fff" paint-order="stroke" stroke="rgba(0,0,0,.45)" stroke-width="${0.4*k}"`);
     PL.dl=plDists().filter(d=>d.d<30).slice(0,3);PL.dl.forEach((d,i)=>{const m=[(d.a[0]+d.b[0])/2,(d.a[1]+d.b[1])/2];const bad=(d.e.voie?S.regles.reculVoie:S.regles.reculLim);const red=bad!=null&&d.d<bad-0.01;
       o+=L(d.a,d.b,`stroke="#fff" stroke-width="${0.3*k}"`);const mm=M(m);
       o+=`<g data-dist="${i}" style="cursor:pointer"><rect x="${(mm[0]-6*k).toFixed(2)}" y="${(-mm[1]-2.4*k).toFixed(2)}" width="${12*k}" height="${4.8*k}" rx="${1.2*k}" fill="${red?'#AE3328':'#fff'}" stroke="#18211F" stroke-width="${0.2*k}"/><text x="${mm[0].toFixed(2)}" y="${(-mm[1]+1*k).toFixed(2)}" font-size="${2.8*k}" text-anchor="middle" font-weight="700" fill="${red?'#fff':'#18211F'}">${fmt(d.d,2)} m</text></g>`})}
@@ -3060,6 +3076,8 @@ $('#plMap').addEventListener('wheel',e=>{e.preventDefault();plZoom(e.deltaY>0?1.
 $('#plVPhoto').onclick=()=>{PL.view='photo';plRender()};
 function plMaskLive(){const sh=PL.sh;const m=$('#plSvg').querySelector('mask[id$="fg"]');if(m)m.innerHTML=maskInner(sh);const v=$('#plVis');if(v)v.innerHTML=maskVis(sh)}
 $('#plTAnchor').onclick=()=>{PL.tool='anchor';plRender()};
+{const after=()=>{const ae=$('#amEditor');if(ae)ae.innerHTML=amEditorHTML();schedule();if(!$('#wiz').hidden)wzRender()};
+  document.addEventListener('change',e=>{if(e.target.closest('#amEditor,#wzBody'))amOnChange(after)(e)});document.addEventListener('click',e=>{if(e.target.closest('#amEditor,#wzBody'))amOnClick(after)(e)})}
 document.addEventListener('change',async e=>{const f=e.target.closest('[data-logo]');if(!f||!f.files[0])return;try{S.meta.logo=await importImage(f.files[0],600);save();renderAll();if(!$('#wiz').hidden)wzRender();toast('Logo ajouté au cartouche.')}catch(err){toast('Image illisible.')}f.value=''});
 document.addEventListener('click',e=>{if(e.target.closest('[data-logodel]')){S.meta.logo=null;save();renderAll();if(!$('#wiz').hidden)wzRender()}});
 $('#plMsg').addEventListener('click',e=>{if(e.target.closest('[data-msgmore]')){PL.msgMore=true;plRender()}else if(e.target.closest('[data-msgless]')){PL.msgMore=false;plRender()}});
@@ -3186,6 +3204,119 @@ function oeBind(rerender){const sd=sidesDef();const s=sd.find(x=>x.id===OE.side)
   const aI=$('#oeAt');if(aI)aI.onchange=e=>{const{L,t}=cur();if(!t)return;t.at=+e.target.value;oeClamp(L[OE.sel[0]],t,s.len);oeSave(s,L);const so=L[OE.sel[0]].slice().sort((a,b)=>a.at-b.at);OE.sel=[OE.sel[0],so.indexOf(t)];rerender()};
   const dI=$('#oeDel');if(dI)dI.onclick=()=>{const{L}=cur();L[OE.sel[0]].splice(OE.sel[1],1);OE.sel=null;oeSave(s,L);rerender()}}
 
+/* ================= Terrasses et piscines ================= */
+var AM_REV={bois:'lames de bois',composite:'lames composite',carrelage:'carrelage',dalles:'dalles sur plots',beton:'béton désactivé'};
+var AM_REVC={bois:'#B98A5A',composite:'#8C7F72',carrelage:'#D9D2C3',dalles:'#C9C3B6',beton:'#BDB7AA'};
+function amList(){return(S.amenag=S.amenag||[])}
+function isPoolMode(){return mode()==='dp-piscine'}
+function noBuild(){return mode()==='dp-cloture'||mode()==='dp-piscine'}
+function poolItem(){return amList().find(a=>a.k==='piscine')}
+function newPool(){return{id:'a'+Date.now().toString(36),k:'piscine',L:8,W:4,forme:'rect',marg:0.3,plage:1,prof:1.5,local:true,x:null,y:null,rot:0,rev:'dalles'}}
+function newTerr(){const ve=voieMain();const sd=sidesDef();let side='S1';if(ve){const sc=sd.map(s=>{const n=sideWorldNormal(s.n);return{s,d:n[0]*ve.n[0]+n[1]*ve.n[1]}}).sort((a,b)=>a.d-b.d);side=sc[0].s.id}
+  const s=sd.find(x=>x.id===side);return{id:'a'+Date.now().toString(36),k:'terrasse',side,len:Math.min(6,Math.round(s.len*0.6*2)/2),dep:3,off:0,h:0,rev:'bois',couv:false}}
+/* géométrie (repère local du terrain) : en mode « piscine seule », le bassin est porté par S.projet (déplacement, rotation, calage photo) */
+function poolGeom(a){if(isPoolMode()&&a===poolItem())return{x:S.projet.x,y:S.projet.y,rot:S.projet.rot,L:a.L,W:a.W};const c=a.x==null?defaultPoolPos(a):[a.x,a.y];return{x:c[0],y:c[1],rot:a.rot||0,L:a.L,W:a.W}}
+function rectAt(g,e=0){const r=g.rot*D2R,U=[Math.cos(r),Math.sin(r)],V=[-Math.sin(r),Math.cos(r)];const a=g.L/2+e,b=g.W/2+e;return[[-a,-b],[a,-b],[a,b],[-a,b]].map(([u,v])=>[g.x+u*U[0]+v*V[0],g.y+u*U[1]+v*V[1]])}
+function roundAt(g,e=0){const r=g.rot*D2R,U=[Math.cos(r),Math.sin(r)],V=[-Math.sin(r),Math.cos(r)];const a=g.L/2+e,b=g.W/2+e;const rad=Math.min(b,a,1.1+e);const out=[];
+  for(const[cx,cy,a0]of[[a-rad,b-rad,0],[-a+rad,b-rad,90],[-a+rad,-b+rad,180],[a-rad,-b+rad,270]])for(let k=0;k<=6;k++){const t=(a0+k*15)*D2R;const u=cx+Math.cos(t)*rad,v=cy+Math.sin(t)*rad;out.push([g.x+u*U[0]+v*V[0],g.y+u*U[1]+v*V[1]])}
+  return out}
+function poolPoly(a,e=0){const g=poolGeom(a);return a.forme==='arrondie'?roundAt(g,e):rectAt(g,e)}
+function polyArea(P){let s=0;for(let i=0;i<P.length;i++){const p=P[i],q=P[(i+1)%P.length];s+=p[0]*q[1]-q[0]*p[1]}return Math.abs(s)/2}
+function terrPoly(t){if(noBuild())return null;const s=sidesDef().find(x=>x.id===t.side);if(!s)return null;const B=bat(),p=S.projet;const r=[-s.n[1],s.n[0]];const len=Math.min(+t.len||1,s.len);const off=clamp(+t.off||0,-(s.len-len)/2,(s.len-len)/2);
+  const base=[s.n[0]*s.half,s.n[1]*s.half];const P=[[base[0]+r[0]*(off-len/2),base[1]+r[1]*(off-len/2)],[base[0]+r[0]*(off+len/2),base[1]+r[1]*(off+len/2)]];P.push([P[1][0]+s.n[0]*t.dep,P[1][1]+s.n[1]*t.dep],[P[0][0]+s.n[0]*t.dep,P[0][1]+s.n[1]*t.dep]);
+  return P.map(([u,v])=>[p.x+u*B.U[0]+v*B.V[0],p.y+u*B.U[1]+v*B.V[1]])}
+/* emprise au sol : bassin des piscines, terrasses surélevées (> 0,60 m) ou couvertes */
+function amEmprise(){let e=0;for(const a of amList()){if(a.k==='piscine')e+=polyArea(poolPoly(a));else if(a.k==='terrasse'&&(+a.h>0.6||a.couv)){const P=terrPoly(a);if(P)e+=polyArea(P)}}return e}
+function poolBassin(){return amList().filter(a=>a.k==='piscine').reduce((s,a)=>s+polyArea(poolPoly(a)),0)}
+/* emplacement par défaut : côté jardin, loin des limites et des constructions */
+function defaultPoolPos(a){const {rings,E}=boundary();if(!rings.length)return[0,0];const bb=bbox(rings.flat());const ve=voieMain();const rot=ve?Math.atan2(ve.b[1]-ve.a[1],ve.b[0]-ve.a[0])/D2R:0;
+  const obst=[...exKept().map(exRing),...(noBuild()?[]:[bat().corners])];let best=null;
+  for(let x=bb[0];x<=bb[2];x+=1)for(let y=bb[1];y<=bb[3];y+=1){const P=rectAt({x,y,rot,L:a.L,W:a.W},(+a.marg||0)+(+a.plage||0));if(!P.every(q=>inParcel(q,rings)))continue;
+    let dl=1e9;for(const q of P)for(const e of E)dl=Math.min(dl,pSeg(q,e.a,e.b).d);let dob=1e9;for(const R of obst){if(P.some(q=>pip(q,R))||R.some(q=>pip(q,P))){dob=-1;break}for(const q of P)for(let i=0;i<R.length;i++)dob=Math.min(dob,pSeg(q,R[i],R[(i+1)%R.length]).d)}
+    if(dob<2)continue;const ds=ve?pSeg([x,y],ve.a,ve.b).d:0;const sc=Math.min(dl,4)*3+Math.min(dob,6)+ds*0.15;if(!best||sc>best.sc)best={sc,x,y,rot}}
+  if(best){a.rot=best.rot;return[best.x,best.y]}const c=parcelCentroid(rings);return c}
+function amFix(){for(const a of amList())if(a.k==='piscine'&&!(isPoolMode()&&a===poolItem())&&a.x==null){const c=defaultPoolPos(a);a.x=c[0];a.y=c[1]}}
+function poolDists(a){const P=poolPoly(a);const out=[];for(const e of boundary().E){let b=null;for(const q of P){const r=pSeg(q,e.a,e.b);if(!b||r.d<b.d)b={d:r.d,a:q,b:r.q}}out.push({e,...b})}return out.sort((x,y)=>x.d-y.d)}
+/* plan de masse */
+function amMasse(k){let o='';const lbl=(c,lines,fs)=>lines.map((t,i)=>textS([c[0],c[1]-(i-(lines.length-1)/2)*fs*1.25],t,i?fs*0.85:fs,`text-anchor="middle" dominant-baseline="middle" ${i?'':'font-weight="700"'} fill="#123" paint-order="stroke" stroke="#fff" stroke-width="${0.35*k}" pointer-events="none"`)).join('');
+  amList().forEach((a,i)=>{if(a.k==='terrasse'){const P=terrPoly(a);if(!P)return;const c=centroid(P);o+=polyS(P,`fill="${AM_REVC[a.rev]||'#ccc'}" fill-opacity=".55" stroke="#5a4a3a" stroke-width="${0.3*k}"`);
+      const d=[P[1][0]-P[0][0],P[1][1]-P[0][1]];const L=Math.hypot(...d);for(let s=0.4;s<L;s+=0.4){const f=s/L;o+=lineS([P[0][0]+d[0]*f,P[0][1]+d[1]*f],[P[3][0]+d[0]*f,P[3][1]+d[1]*f],`stroke="#5a4a3a" stroke-opacity=".35" stroke-width="${0.1*k}"`)}
+      o+=lbl(c,[`Terrasse ${fmt(+a.len,2)} × ${fmt(+a.dep,2)} m`,+a.h>0.05?`surélevée +${fmt(+a.h,2)}`:'de plain-pied'],1.6*k);return}
+    if(a.k==='piscine'){const g=poolGeom(a);const pl=+a.plage||0,mg=+a.marg||0;if(pl>0)o+=polyS(poolPoly(a,mg+pl),`fill="#E9E4D8" stroke="#8a8478" stroke-width="${0.2*k}" stroke-dasharray="${1*k} ${0.5*k}"`);
+      o+=polyS(poolPoly(a,mg),`fill="#fff" stroke="#555" stroke-width="${0.25*k}"`)+`<g ${isPoolMode()?'data-drag="bat"':`data-drag="am:${i}"`} style="cursor:move">${polyS(poolPoly(a),`fill="#9DD3E8" stroke="#1f6f8b" stroke-width="${0.35*k}"`)}</g>`;
+      if(a.local){const r=g.rot*D2R,U=[Math.cos(r),Math.sin(r)],V=[-Math.sin(r),Math.cos(r)];const c=[g.x+U[0]*(g.L/2+mg+pl+1.2),g.y+U[1]*(g.L/2+mg+pl+1.2)];o+=polyS(rectAt({x:c[0],y:c[1],rot:g.rot,L:1.2,W:1.6}),`fill="#ddd" stroke="#111" stroke-width="${0.25*k}"`)+textS(c,'LT',1.3*k,'text-anchor="middle" dominant-baseline="middle" pointer-events="none"');void V}
+      o+=lbl([g.x,g.y],[`Piscine ${fmt(g.L,2)} × ${fmt(g.W,2)} m`,`bassin ${fmt(polyArea(poolPoly(a)),1)} m² · prof. ${fmt(+a.prof||1.5,2)} m`],1.6*k);
+      for(const d of poolDists(a).slice(0,2)){if(d.d>25)continue;const m=[(d.a[0]+d.b[0])/2,(d.a[1]+d.b[1])/2];o+=lineS(d.a,d.b,`stroke="#1f6f8b" stroke-width="${0.18*k}" stroke-dasharray="${0.8*k} ${0.4*k}"`)+textS(m,fmt(d.d,2)+' m',1.6*k,`text-anchor="middle" dominant-baseline="middle" fill="#1f6f8b" font-weight="700" paint-order="stroke" stroke="#fff" stroke-width="${0.4*k}"`)}}});
+  return o}
+/* 3D : objets triés par profondeur, dans le repère de la construction */
+function amRender(V,sun){const objs=[];const P2=q=>q.map(v=>v[0].toFixed(3)+','+(-v[1]).toFixed(3)).join(' ');const B3=(P,z)=>P.map(q=>{const b=toBld(...q);return[b[0],b[1],z]});
+  for(const a of amList()){if(a.k==='piscine'){const g=poolGeom(a);const z=zRelAt(g.x,g.y);const mg=+a.marg||0,pl=+a.plage||0;let s='';
+      if(pl>0){const q=V.clip(B3(poolPoly(a,mg+pl),z+0.015));if(q.length>2)s+=`<polygon points="${P2(q)}" fill="#D9D3C5" stroke="#b8b1a2" stroke-width="0.01"/>`}
+      const q1=V.clip(B3(poolPoly(a,mg),z+0.03));if(q1.length>2)s+=`<polygon points="${P2(q1)}" fill="#F4F1EA" stroke="#cfc8ba" stroke-width="0.01"/>`;
+      const q2=V.clip(B3(poolPoly(a),z+0.03));if(q2.length>2)s+=`<polygon points="${P2(q2)}" fill="#3F9CC1"/>`;
+      const q3=V.clip(B3(poolPoly(a,-0.12),z-0.02));if(q3.length>2)s+=`<polygon points="${P2(q3)}" fill="#6CC3DE" fill-opacity=".9"/>`;
+      objs.push({d:V.depth([...toBld(g.x,g.y),0])+1000,svg:s});continue}
+    if(a.k==='terrasse'){const P=terrPoly(a);if(!P)continue;const c=centroid(P);const z0=zRelAt(...c);const zt=z0+Math.max(0.03,+a.h||0);const col=AM_REVC[a.rev]||'#c9b9a0';let s='';const lit=0.82+0.2*Math.max(0,sun.bld[2]);
+      if(+a.h>0.05)for(let i=0;i<4;i++){const A=P[i],Bq=P[(i+1)%4];const f=[...B3([A],z0),...B3([Bq],z0),...B3([Bq],zt),...B3([A],zt)];const q=V.clip([f[0],f[1],f[2],f[3]]);if(q.length>2)s+=`<polygon points="${P2(q)}" fill="${shade(col,0.7)}" stroke="${shade(col,0.5)}" stroke-width="0.01"/>`}
+      const qt=V.clip(B3(P,zt));if(qt.length>2)s+=`<polygon points="${P2(qt)}" fill="${shade(col,lit)}" stroke="${shade(col,0.6)}" stroke-width="0.012"/>`;
+      if(a.rev==='bois'||a.rev==='composite'){const d=[P[1][0]-P[0][0],P[1][1]-P[0][1]];const L=Math.hypot(...d);for(let t=0.15;t<L;t+=0.15){const f=t/L;const l=V.clip([...B3([[P[0][0]+d[0]*f,P[0][1]+d[1]*f]],zt+0.002),...B3([[P[3][0]+d[0]*f,P[3][1]+d[1]*f]],zt+0.002)]);if(l.length>=2)s+=`<polyline points="${P2(l)}" stroke="${shade(col,0.75)}" stroke-width="0.008" fill="none"/>`}}
+      if(+a.h>0.8){for(const[i,j]of[[1,2],[2,3],[3,0]]){const l=V.clip([...B3([P[i]],zt+1),...B3([P[j]],zt+1)]);if(l.length>=2)s+=`<polyline points="${P2(l)}" stroke="#333" stroke-width="0.03" fill="none"/>`}}
+      objs.push({d:V.depth([...toBld(...c),0]),svg:s})}}
+  return objs}
+/* textes de la notice */
+function amText(){const t=[];for(const a of amList()){if(a.k==='terrasse'){const s=sidesDef().find(x=>x.id===a.side);t.push(`Une terrasse ${+a.h>0.05?`surélevée de ${fmt(+a.h,2)} m`:'de plain-pied'} de ${fmt(+a.len,2)} × ${fmt(+a.dep,2)} m, en ${AM_REV[a.rev]||a.rev}${a.couv?', couverte,':''} prolonge la ${s?sideName(s).toLowerCase():'façade'}.${+a.h>0.6||a.couv?' Elle crée de l\'emprise au sol.':''}`)}
+    if(a.k==='piscine'){const d=poolDists(a)[0];t.push(`Une piscine enterrée ${a.forme==='arrondie'?'aux angles arrondis ':''}de ${fmt(+a.L,2)} × ${fmt(+a.W,2)} m (bassin de ${fmt(polyArea(poolPoly(a)),1)} m², profondeur ${fmt(+a.prof||1.5,2)} m) est réalisée${d?`, à ${fmt(d.d,2)} m de la limite la plus proche`:''}. Margelle de ${fmt(+a.marg||0,2)} m${+a.plage>0?` et plage en ${AM_REV[a.rev]||'dalles'} de ${fmt(+a.plage,2)} m`:''}.${a.local?' Le local technique (filtration) est enterré ou adossé, de faible hauteur.':''} Les eaux de vidange sont évacuées après neutralisation du traitement, conformément au règlement d'assainissement.`)}}
+  return t.join(' ')}
+/* formalités */
+function poolSeuil(){const b=poolBassin();if(!b)return'';return b<=10?'Bassin jusqu\'à 10 m² : aucune formalité (sauf secteur protégé).':b<=100?'Bassin de 10 à 100 m², non couvert : déclaration préalable.':'Bassin de plus de 100 m² : permis de construire.'}
+/* éditeur (étape 03 du mode complet et Express) */
+function amEditorHTML(opts={}){const L=amList();const sel=(a,k,o)=>`<select data-am="${a.id}" data-k="${k}">${Object.entries(o).map(([v,l])=>`<option value="${v}"${a[k]===v?' selected':''}>${l}</option>`).join('')}</select>`;
+  const num=(a,k,l,st=0.1,min=0)=>`<label class="f">${l}<input type="number" step="${st}" min="${min}" data-am="${a.id}" data-k="${k}" value="${a[k]??''}"></label>`;
+  const items=L.map(a=>a.k==='terrasse'?`<div class="am-it"><div class="am-h"><b>🪵 Terrasse</b><button class="btn sm" type="button" data-amdel="${a.id}">Retirer</button></div>
+      <div class="grid3"><label class="f">Façade${noBuild()?'':`<select data-am="${a.id}" data-k="side">${sidesDef().map(s=>`<option value="${s.id}"${a.side===s.id?' selected':''}>${esc(sideName(s))}</option>`).join('')}</select>`}</label>${num(a,'len','Longueur (m)',0.5,1)}${num(a,'dep','Profondeur (m)',0.5,1)}</div>
+      <div class="grid3">${num(a,'h','Hauteur / sol (m)',0.05,0)}<label class="f">Revêtement${sel(a,'rev',{bois:'Bois',composite:'Composite',carrelage:'Carrelage',dalles:'Dalles sur plots',beton:'Béton'})}</label>${num(a,'off','Décalage (m)',0.5,-50)}</div>
+      <label class="toggle"><input type="checkbox" data-am="${a.id}" data-k="couv"${a.couv?' checked':''}> Couverte (pergola fermée, auvent)</label></div>`
+    :`<div class="am-it"><div class="am-h"><b>🏊 Piscine</b>${isPoolMode()&&a===poolItem()?'':`<button class="btn sm" type="button" data-amdel="${a.id}">Retirer</button>`}</div>
+      <div class="grid3">${num(a,'L','Longueur (m)',0.5,2)}${num(a,'W','Largeur (m)',0.5,1.5)}${num(a,'prof','Profondeur (m)',0.1,0.5)}</div>
+      <div class="grid3">${num(a,'marg','Margelle (m)',0.05,0)}${num(a,'plage','Plage (m)',0.25,0)}<label class="f">Forme${sel(a,'forme',{rect:'Rectangle',arrondie:'Angles arrondis'})}</label></div>
+      <div class="grid2"><label class="f">Plage en${sel(a,'rev',{dalles:'Dalles',bois:'Bois',composite:'Composite',carrelage:'Carrelage',beton:'Béton'})}</label><label class="toggle" style="align-self:end"><input type="checkbox" data-am="${a.id}" data-k="local"${a.local?' checked':''}> Local technique</label></div>
+      ${opts.hint!==false?`<p class="hint">${isPoolMode()?'Déplacez-la sur le plan (glisser) ou à l\'étape Implantation.':'Faites-la glisser sur le plan de masse pour la placer.'} ${poolSeuil()}</p>`:''}</div>`).join('');
+  return`<div class="am-list">${items}</div><div class="btns">${noBuild()?'':'<button class="btn sm" type="button" data-amadd="terrasse">+ Terrasse</button>'}${L.some(a=>a.k==='piscine')?'':'<button class="btn sm" type="button" data-amadd="piscine">+ Piscine</button>'}</div>`}
+function amOnChange(after){return e=>{const el=e.target.closest('[data-am]');if(!el)return;const a=amList().find(x=>x.id===el.dataset.am);if(!a)return;const k=el.dataset.k;
+  a[k]=el.type==='checkbox'?el.checked:el.tagName==='SELECT'?el.value:+el.value;if(isPoolMode()&&a===poolItem()&&(k==='L'||k==='W')){S.projet.L=a.L;S.projet.W=a.W}save();after&&after()}}
+function amOnClick(after){return e=>{const ad=e.target.closest('[data-amadd]');if(ad){const it=ad.dataset.amadd==='piscine'?newPool():newTerr();amList().push(it);amFix();save();after&&after();return}
+  const dl=e.target.closest('[data-amdel]');if(dl){S.amenag=amList().filter(x=>x.id!==dl.dataset.amdel);save();after&&after()}}}
+/* sur la photo : la piscine seule se cale comme une construction de hauteur nulle */
+function poolSync(){const a=poolItem();if(!a||!isPoolMode())return;S.projet.L=a.L;S.projet.W=a.W;S.projet.niveaux=1;S.projet.toit='plat'}
+
+/* DP3 : plan et coupe de la piscine */
+function poolSheet(sh){const a=poolItem();if(!a)return`<div class="draw"><div class="photo-empty">Ajoutez une piscine (étape 03).</div></div>${cart(sh,'—')}`;
+  const L=+a.L,W=+a.W,mg=+a.marg||0,pl=+a.plage||0,pr=+a.prof||1.5,e=mg+pl;const lt=a.local?2.6:0;
+  const wTot=L+2*e+lt+4,hPlan=W+2*e+3,hCoupe=pr+3.2;const Wmm=203,Hmm=182;
+  const auto=STD_SC.find(sc=>wTot*1000/sc<=Wmm&&(hPlan+hCoupe+2)*1000/sc<=Hmm)||200;const ov=S.ui.scales&&S.ui.scales.dppisc;const sc=ov&&ov!=='auto'?+ov:auto;SCALEINFO.dppisc={sc,auto,forced:!!(ov&&ov!=='auto'),fits:sc>=auto};
+  const k=sc/1000;const vw=Wmm*k,vh=Hmm*k;const cx=lt/2;let o='';
+  const yP=vh/2-hPlan/2-0.6;const yC=-vh/2+hCoupe-0.4;
+  const R=(x0,y0,w,h,attr)=>`<rect x="${(x0).toFixed(3)}" y="${(-(y0+h)).toFixed(3)}" width="${w.toFixed(3)}" height="${h.toFixed(3)}" ${attr}/>`;
+  // plan
+  o+=textS([-vw/2+2*k+cx,yP+hPlan/2+0.2],'PLAN',2.4*k,'font-weight="700"');
+  if(pl>0)o+=R(-L/2-e,yP-W/2-e,L+2*e,W+2*e,`fill="#EEEAE0" stroke="#8a8478" stroke-width="${0.2*k}" stroke-dasharray="${1*k} ${0.5*k}"`);
+  o+=R(-L/2-mg,yP-W/2-mg,L+2*mg,W+2*mg,`fill="#fff" stroke="#444" stroke-width="${0.25*k}"`)+R(-L/2,yP-W/2,L,W,`fill="#BFE3F0" stroke="#1f6f8b" stroke-width="${0.35*k}"${a.forme==='arrondie'?` rx="${Math.min(W/2,1.1)}"`:''}`);
+  if(a.local)o+=R(L/2+e+0.8,yP-0.8,1.2,1.6,`fill="#ddd" stroke="#111" stroke-width="${0.25*k}"`)+textS([L/2+e+1.4,yP],'LT',1.6*k,'text-anchor="middle" dominant-baseline="middle"');
+  o+=dimLine([-L/2,yP-W/2-e-1.2],[L/2,yP-W/2-e-1.2],k,fmt(L,2)+' m')+dimLine([-L/2-e-1.2,yP-W/2],[-L/2-e-1.2,yP+W/2],k,fmt(W,2)+' m',{side:-1});
+  if(e>0)o+=dimLine([L/2,yP+W/2+0.6],[L/2+e,yP+W/2+0.6],k,fmt(e,2));
+  o+=textS([0,yP],`Bassin ${fmt(polyArea(poolPoly(a)),1)} m²`,2*k,'text-anchor="middle" dominant-baseline="middle" font-weight="700" fill="#1f5a70"');
+  // coupe
+  o+=textS([-vw/2+2*k+cx,yC+0.9],'COUPE',2.4*k,'font-weight="700"');
+  const gx0=-L/2-e-1.5,gx1=L/2+e+1.5;o+=lineS([gx0,yC],[-L/2-mg,yC],`stroke="#111" stroke-width="${0.35*k}"`)+lineS([L/2+mg,yC],[gx1,yC],`stroke="#111" stroke-width="${0.35*k}"`);
+  o+=`<path d="M${(-L/2-mg).toFixed(3)} ${(-yC).toFixed(3)} L${(-L/2-mg).toFixed(3)} ${(-(yC-pr-0.25)).toFixed(3)} L${(L/2+mg).toFixed(3)} ${(-(yC-pr-0.25)).toFixed(3)} L${(L/2+mg).toFixed(3)} ${(-yC).toFixed(3)} L${(L/2).toFixed(3)} ${(-yC).toFixed(3)} L${(L/2).toFixed(3)} ${(-(yC-pr)).toFixed(3)} L${(-L/2).toFixed(3)} ${(-(yC-pr)).toFixed(3)} L${(-L/2).toFixed(3)} ${(-yC).toFixed(3)}Z" fill="#cfcac0" stroke="#111" stroke-width="${0.3*k}"/>`;
+  o+=R(-L/2,yC-pr,L,pr-0.15,`fill="#BFE3F0"`)+lineS([-L/2,yC-0.15],[L/2,yC-0.15],`stroke="#1f6f8b" stroke-width="${0.25*k}"`);
+  o+=R(-L/2-mg,yC,mg,0.06,'fill="#fff" stroke="#444" stroke-width="0.01"')+R(L/2,yC,mg,0.06,'fill="#fff" stroke="#444" stroke-width="0.01"');
+  if(pl>0){o+=R(-L/2-e,yC,pl,0.05,`fill="#bdb6a8"`)+R(L/2+mg,yC,pl,0.05,`fill="#bdb6a8"`)}
+  o+=dimLine([L/2+e+0.9,yC],[L/2+e+0.9,yC-pr],k,'prof. '+fmt(pr,2)+' m',{side:-1})+textS([gx0,yC+0.35],'TN',1.6*k,'fill="#555"');
+  o+=textS([0,yC-pr-0.9],`Margelle ${fmt(mg,2)} m${pl>0?` · plage ${fmt(pl,2)} m en ${AM_REV[a.rev]||'dalles'}`:''} · terrain naturel conservé autour du bassin`,1.7*k,'text-anchor="middle" fill="#333"');
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${Wmm}mm" height="${Hmm}mm" viewBox="${(-vw/2+cx).toFixed(3)} ${(-vh/2).toFixed(3)} ${vw.toFixed(3)} ${vh.toFixed(3)}" font-family="Archivo Narrow, Arial Narrow, Arial, sans-serif">${o}</svg>`;
+  return`${demoMark()}<div class="draw">${svg}</div>${cart(sh,'1/'+sc,`<p style="margin:0">Piscine enterrée, non couverte. ${esc(poolSeuil())}</p>`)}`}
+
 /* ================= PDF direct (sans la boîte d'impression) et export pour le dépôt en ligne ================= */
 const LIBS={h2c:'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',pdf:'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',zip:'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'};
 const libP={};
@@ -3232,7 +3363,7 @@ async function gardeCanvas(){const host=document.createElement('div');host.class
 
 /* ================= Dossier express : permis de construire guidé en ~10 minutes ================= */
 const WZ={step:0,t0:null,timer:null,plu:null,pluBusy:false};
-const WDEF={welcome:'Bienvenue',terrain:'Terrain',maison:'Votre maison',garage:'Votre garage',portail:'Votre portail',implant:'Implantation',ouvertures:'Portes et fenêtres',abords:'Terrain et abords',photos:'Photos',vous:'Vous',fin:'Dossier prêt'};
+const WDEF={piscine:'Votre piscine',welcome:'Bienvenue',terrain:'Terrain',maison:'Votre maison',garage:'Votre garage',portail:'Votre portail',implant:'Implantation',ouvertures:'Portes et fenêtres',abords:'Terrain et abords',photos:'Photos',vous:'Vous',fin:'Dossier prêt'};
 const STYLES={
   trad:{n:'Traditionnelle',d:'Enduit ton pierre, tuiles terre cuite, toit 2 pans',p:{facade:'Enduit gratté fin ton pierre',facadeCouleur:'#DDCFB6',couv:'Tuiles terre cuite',couvCouleur:'#A65A3F',menuis:'PVC blanc',menuisCouleur:'#F3F2EE',toit:'2pans',pente:35,debord:0.5,monoInv:false}},
   contemp:{n:'Contemporaine',d:'Enduit blanc, monopente bac acier, alu anthracite',p:{facade:'Enduit lisse blanc cassé',facadeCouleur:'#ECE7DC',couv:'Bac acier',couvCouleur:'#62696E',menuis:'Aluminium gris anthracite',menuisCouleur:'#3A3F44',toit:'mono',pente:12,debord:0.3,monoInv:false}},
@@ -3242,7 +3373,7 @@ const STYLES={
 const PORT_COLS={'#3A3F44':'Gris anthracite','#232526':'Noir','#F3F2EE':'Blanc','#5B6B4E':'Vert','#A8835B':'Bois'};
 function wzState(){S.wz=S.wz||{};const w=S.wz;for(const[k,v]of Object.entries({kind:'maison',surf:110,niv:1,garage:true,style:'trad',gsurf:20,esurf:25,asurf:12}))if(w[k]==null)w[k]=v;return w}
 const wzKind=()=>wzState().kind;
-function wzKeys(){const k0=wzKind();const k=k0==='extension'?'maison':k0==='abri'?'garage':k0;return k0==='portail'?['welcome','terrain','portail','implant','photos','vous','fin']:['welcome','terrain',k,'ouvertures','implant','abords','photos','vous','fin']}
+function wzKeys(){const k0=wzKind();const k=k0==='extension'?'maison':k0==='abri'?'garage':k0;return k0==='portail'?['welcome','terrain','portail','implant','photos','vous','fin']:k0==='piscine'?['welcome','terrain','piscine','implant','photos','vous','fin']:['welcome','terrain',k,'ouvertures','implant','abords','photos','vous','fin']}
 const wzKey=()=>wzKeys()[WZ.step];
 function wzAb(){const w=wzState();if(!w.ab){w.ab={veg:['pelouse'],ab:['maisons'],clo:'garde',pl:['gazon'],ep:'infil',as:S.projet.assain||'collectif'};abApply()}return w.ab}
 const joinFr=a=>a.length<2?(a[0]||''):a.slice(0,-1).join(', ')+' et '+a[a.length-1];
@@ -3255,7 +3386,7 @@ function abApply(){const A=wzState().ab;if(!A)return;const P=S.projet;
   P.plantations=pl.length?pl[0][0].toUpperCase()+joinFr(pl).slice(1)+'.':'';
   P.ep={infil:'Les eaux pluviales sont infiltrées sur la parcelle.',cuve:'Les eaux pluviales sont recueillies dans une cuve de récupération, le trop-plein étant infiltré sur la parcelle.',reseau:'Les eaux pluviales sont raccordées au réseau public pluvial.'}[A.ep]||'';
   if(A.as)P.assain=A.as}
-function wzWantMode(){return wzKind()==='portail'?'dp-cloture':'pc'}
+function wzWantMode(){return wzKind()==='portail'?'dp-cloture':wzKind()==='piscine'?'dp-piscine':'pc'}
 /* dimensions à partir de la surface */
 function sizeFromSurface(){const w=wzState(),p=S.projet;
   if(w.kind==='abri'){const A=+w.asurf||12;p.niveaux=1;p.combles=false;p.hEtage=2.3;const Wi=Math.max(2,Math.min(4.5,Math.sqrt(A/1.4)));p.W=Math.round((Wi+0.3)*10)/10;p.L=Math.round((A/Wi+0.3)*10)/10;p.nature='annexe';p.usage='abri';p.garageSurf=null;p.park=0;return}
@@ -3290,12 +3421,12 @@ function implantExtension(){const e=exKept()[0];if(!e)return false;const R0=minR
   const {rings,E}=boundary();const score=C=>{put(C);const cs=bat().corners;const inside=cs.every(c=>inParcel(c,rings));let dm=1e9;for(const c of cs)for(const e of E)dm=Math.min(dm,pSeg(c,e.a,e.b).d);return(inside?100:0)+Math.min(dm,6)*4-(C.n[0]*vn[0]+C.n[1]*vn[1])*8};
   const best=[{n:b,half:R0.h/2},{n:[-b[0],-b[1]],half:R0.h/2},{n:a,half:R0.w/2},{n:[-a[0],-a[1]],half:R0.w/2}].map(C=>({C,s:score(C)})).sort((x,y)=>y.s-x.s)[0].C;
   put(best);S.wz.attach='S1';S.wz.front='S3';return true}
-function autoImplant(){const R=S.regles;if(wzKind()==='extension'&&implantExtension())return;if(!voieMain()){centerBuilding();return}
+function autoImplant(){const R=S.regles;if(isPoolMode()){const a=poolItem();if(a){poolSync();const c=defaultPoolPos(a);S.projet.x=c[0];S.projet.y=c[1];S.projet.rot=a.rot||0}return}if(wzKind()==='extension'&&implantExtension())return;if(!voieMain()){centerBuilding();return}
   const dv=Math.max(+R.reculVoie||0,wzKind()==='garage'?1:5);placeFront(dv);
   const {rings}=boundary();const ok=()=>bat().corners.every(c=>inParcel(c,rings));
   if(!ok()){for(const d of[dv+2,dv+4,dv+6,3])if((placeFront(d),ok()))break}
   if(!ok())centerBuilding();S.projet.parkX=null;S.projet.parkY=null}
-function wzDefaults(){const w=wzState();if(w.kind==='portail'){if(!S.clo.some(c=>c.kind==='portail'))addClo('portail',true);return}
+function wzDefaults(){const w=wzState();if(w.kind==='piscine'){if(mode()!=='dp-piscine')setMode('dp-piscine');if(!poolItem())amList().push(newPool());poolSync();const a=poolItem();const c=defaultPoolPos(a);S.projet.x=c[0];S.projet.y=c[1];S.projet.rot=a.rot||0;return}if(w.kind==='portail'){if(!S.clo.some(c=>c.kind==='portail'))addClo('portail',true);return}
   sizeFromSurface();wzApplyStyle();if(!(S.onsite&&S.onsite.placed))autoImplant();autoOuvertures()}
 /* lecture automatique du règlement pour proposer les règles */
 async function wzReadPLU(){const z=S.terrain.zone;const url=reglementUrl(z);if(!url||WZ.pluBusy)return;WZ.pluBusy=true;WZ.plu={busy:true,msg:'Lecture du règlement du PLU…'};wzRender();
@@ -3319,7 +3450,7 @@ function wzRender(){const el=$('#wiz');if(!el||el.hidden)return;const keys=wzKey
   $('#wzSteps').innerHTML=keys.map((n,i)=>`<span class="${i<st?'done':i===st?'on':''}" title="${esc(WDEF[n])}"></span>`).join('');
   const ttl=k==='maison'&&w.kind==='extension'?'Votre extension':k==='garage'&&w.kind==='abri'?'Votre abri':WDEF[k];$('#wzTitle').textContent=st?`${st}. ${ttl}`:ttl;$('#wzTime').textContent=wzTime();
   let h='';
-  if(k==='welcome'){const K=[['maison','🏠','Une maison','Permis de construire, cerfa 13406'],['extension','➕','Une extension','Agrandir une maison existante : permis ou déclaration selon la surface'],['garage','🚗','Un garage','Garage, carport fermé, atelier : permis ou déclaration selon la surface'],['abri','🛖','Un abri de jardin','Abri, local technique, cabanon : déclaration préalable le plus souvent'],['portail','🚪','Un portail','Déclaration préalable, cerfa 16702']];
+  if(k==='welcome'){const K=[['maison','🏠','Une maison','Permis de construire, cerfa 13406'],['extension','➕','Une extension','Agrandir une maison existante : permis ou déclaration selon la surface'],['garage','🚗','Un garage','Garage, carport fermé, atelier : permis ou déclaration selon la surface'],['abri','🛖','Un abri de jardin','Abri, local technique, cabanon : déclaration préalable le plus souvent'],['piscine','🏊','Une piscine','Bassin de 10 à 100 m² : déclaration préalable'],['portail','🚪','Un portail','Déclaration préalable, cerfa 16702']];
     h=`<div class="wz-hero"><h3>Votre dossier en 10 minutes</h3><p>Sur place avec votre téléphone, c'est encore plus rapide : la position GPS trouve la parcelle, et vous placez le projet en touchant une photo.</p></div>
     <div class="wz-kinds">${K.map(([v,i,t,d])=>`<label class="${w.kind===v?'on':''}"><input type="radio" name="wzKind" value="${v}"${w.kind===v?' checked':''}><span class="ic">${i}</span><b>${t}</b><small>${d}</small></label>`).join('')}</div>
     <p class="hint">L'application va chercher le cadastre, le PLU, l'altimétrie et les bâtiments existants, puis dessine toutes les pièces. Vous pourrez tout affiner ensuite dans le mode complet.</p>`}
@@ -3337,6 +3468,7 @@ function wzRender(){const el=$('#wiz');if(!el||el.hidden)return;const keys=wzKey
     ${w.kind==='abri'?`<label class="f">Surface de l'abri : <b id="wzSurfV">${w.asurf} m²</b><input type="range" min="3" max="40" step="1" id="wzSurf" value="${w.asurf}"></label>`:`<label class="f">Surface du garage : <b id="wzSurfV">${w.gsurf} m²</b><input type="range" min="8" max="60" step="1" id="wzSurf" value="${w.gsurf}"></label>`}${wzStylesHTML()}
     </div><div class="wz-prev">${wzPreview3d()}<p class="hint">${fmt(p.L,1)} × ${fmt(p.W,1)} m · emprise ${fmt(em,0)} m²</p></div></div>
     ${wzSeuil(em,w.kind)}`}
+  if(k==='piscine'){if(!poolItem()){amList().push(newPool())}poolSync();h=`<div class="wz-split"><div>${amEditorHTML({hint:false})}<div class="wz-card">${poolSeuil()?`<b>${esc(poolSeuil())}</b>`:''}<span class="hint">Les terrasses accolées à une maison se déclarent avec le permis ou la déclaration de la maison (mode complet).</span></div></div><div class="wz-prev wz-masse">${wzMasse()}</div></div>`}
   if(k==='portail'){const c=S.clo.find(o=>o.kind==='portail')||{};h=`<div class="wz-split"><div>
     <div class="grid2"><label class="f">Largeur de passage (m)<input type="number" step="0.1" min="0.8" max="8" id="wzPW" value="${c.w??3.5}"></label><label class="f">Hauteur (m)<input type="number" step="0.05" min="0.8" max="2.5" id="wzPH" value="${c.h??1.6}"></label></div>
     <label class="f">Ouverture<select id="wzPO">${Object.entries(PORT_OUV).map(([v,l])=>`<option value="${v}"${c.ouv===v?' selected':''}>${l}</option>`).join('')}</select></label>
@@ -3355,8 +3487,8 @@ function wzRender(){const el=$('#wiz');if(!el||el.hidden)return;const keys=wzKey
       pluBox=`<div class="wz-card ok"><b>Règlement lu : zone ${esc(pl.label)}, pages ${pl.pages[0]} à ${pl.pages[1]}</b>${ks.length?`Valeurs trouvées : ${ks.map(x=>`${lbl[x]} ${fmt(fd[x],x==='ces'?0:1)}${x==='ces'?' %':' m'}`).join(' · ')}<div class="btns" style="margin-top:6px"><button class="btn sm primary" type="button" id="wzPluApply">Utiliser ces valeurs</button></div><span class="hint">À vérifier : la lecture automatique peut se tromper.</span>`:'Aucune valeur chiffrée trouvée : saisissez les règles.'}</div>`}}
     const placed=S.onsite&&S.onsite.placed;
     const shot=S.onsite&&S.onsite.shot&&S.photos.p7===S.onsite.shot.img;const what=port?'du portail':'de la maison';
-    const cam=`<div class="wz-place"><b>1. Placer ${port?'le portail':{extension:'l\'extension',abri:'l\'abri',garage:'le garage'}[wzKind()]||'la maison'}</b>
-      <button class="btn primary wz-big" type="button" id="wzHere">📍 Je suis à l'emplacement ${port?'du portail':{extension:'de l\'extension',abri:'de l\'abri',garage:'du garage'}[wzKind()]||'de la maison'}</button>
+    const cam=`<div class="wz-place"><b>1. Placer ${port?'le portail':{extension:'l\'extension',abri:'l\'abri',garage:'le garage',piscine:'la piscine'}[wzKind()]||'la maison'}</b>
+      <button class="btn primary wz-big" type="button" id="wzHere">📍 Je suis à l'emplacement ${port?'du portail':{extension:'de l\'extension',abri:'de l\'abri',garage:'du garage',piscine:'de la piscine'}[wzKind()]||'de la maison'}</button>
       <button class="btn wz-big2" type="button" id="wzPlan">🗺️ Placer sur la vue aérienne</button>
       ${placed?`<span class="wz-okline">✓ Emplacement validé${S.onsite.here?' (position GPS'+(S.onsite.acc?' ± '+Math.round(S.onsite.acc)+' m':'')+')':''}</span>`:''}</div>
       <div class="wz-place"><b>2. Photo pour l'insertion</b>
@@ -3380,11 +3512,12 @@ function wzRender(){const el=$('#wiz');if(!el||el.hidden)return;const keys=wzKey
       ${grp('veg','Le terrain aujourd\'hui',[['pelouse','Pelouse / prairie'],['arbres','Arbres'],['haies','Haies'],['nu','Terrain nu / friche'],['potager','Potager / jardin']],1)}
       ${grp('ab','Autour du terrain',[['maisons','Maisons'],['champs','Champs'],['bois','Bois'],['route','Route passante']],1)}
       ${grp('clo','Clôture',[['garde','Existante, conservée'],['grillage','Grillage rigide + haie à créer'],['muret','Muret + grille à créer'],['aucune','Pas de clôture']],0)}
+      <div class="wz-ab"><b>Terrasse et piscine</b>${amEditorHTML()}</div>
       ${grp('pl','Plantations prévues',[['gazon','Espaces libres engazonnés'],['haie','Haie d\'essences locales'],['arbres','Arbres de haute tige'],['fruitiers','Arbres fruitiers']],1)}
       ${grp('ep','Eaux de pluie',[['infil','Infiltration sur la parcelle'],['cuve','Cuve de récupération'],['reseau','Réseau public pluvial']],0)}
       ${grp('as','Eaux usées',[['collectif','Tout-à-l\'égout'],['individuel','Assainissement individuel']],0)}
       <div class="wz-card"><b>Aperçu de la notice</b><span class="hint">${esc([S.projet.etatInitial,S.projet.abords?'Abords : '+S.projet.abords+'.':'',S.projet.cloture,S.projet.plantations,S.projet.ep].filter(Boolean).join(' ')).slice(0,420)||'—'}</span></div>`}
-  if(k==='photos'){const ph=S.photos;const tag=port?'DP':'PCMI';const fromSite=S.onsite&&S.onsite.placed&&S.onsite.shot&&ph.p7===S.onsite.shot.img;
+  if(k==='photos'){const ph=S.photos;const tag=mode()==='pc'?'PCMI':'DP';const fromSite=S.onsite&&S.onsite.placed&&S.onsite.shot&&ph.p7===S.onsite.shot.img;
     const card=(kk,t,d)=>{const has=kk==='ins'?(ph.insMode==='image'?ph.insImg:ph.ins):ph[kk];return`<div class="wz-ph ${has?'ok':''}"><div class="th">${has?`<img src="${has}" alt="">`:'<span>📷</span>'}</div><div><b>${t}</b><span class="hint">${d}</span>
       <div class="btns"><button class="btn sm ${has?'':'primary'}" type="button" data-wzcam="${kk}">${has?'Reprendre sur place':'Prendre sur place'}</button><label class="btn sm">Choisir une photo<input type="file" accept="image/*,.heic,.heif" data-wzph="${kk}" hidden></label></div></div></div>`};
     h=`<p>Les photos prises depuis l'application placent automatiquement leur point de vue sur le plan de masse (position GPS et boussole).</p>
@@ -3403,7 +3536,7 @@ function wzRender(){const el=$('#wiz');if(!el||el.hidden)return;const keys=wzKey
       ${nb.concat(nw).slice(0,6).map(c=>`<div class="ck ${c.lvl}"><div class="ic">${c.lvl==='bad'?'×':'!'}</div><div><b>${c.t}</b><span>${c.s}</span></div></div>`).join('')}
       <div class="wz-pieces">${sh.map(s=>`<span class="${sheetReady(s.id)?'ok':'warn'}">${esc(s.code)}</span>`).join('')}</div>
       <div class="btns wz-final"><button class="btn primary" type="button" id="wzPrint">Télécharger le dossier en PDF</button><button class="btn" type="button" id="wzZip">Fichiers pour le dépôt en ligne</button><button class="btn" type="button" id="wzSee">Voir les planches</button><button class="btn" type="button" id="wzSaveP">Enregistrer le projet</button></div>
-      <p class="hint">${port?'Le formulaire cerfa 16702 se remplit avec les données du récapitulatif.':`Restent à joindre par vous : l'attestation RE2020 (PCMI14-1)${w.kind==='garage'?' si le garage est chauffé':''}${S.projet.assain==='individuel'?' et l\'attestation du SPANC':''}. Le formulaire cerfa se remplit avec les données du récapitulatif.`}</p>`}
+      <p class="hint">${mode()!=='pc'?'Le formulaire cerfa 16702 se remplit avec les données du récapitulatif.':`Restent à joindre par vous : l'attestation RE2020 (PCMI14-1)${w.kind==='garage'?' si le garage est chauffé':''}${S.projet.assain==='individuel'?' et l\'attestation du SPANC':''}. Le formulaire cerfa se remplit avec les données du récapitulatif.`}</p>`}
   $('#wzBody').innerHTML=h;
   $('#wzPrev').hidden=st===0;$('#wzNext').hidden=st===keys.length-1;$('#wzNext').textContent=st===0?'Commencer':'Continuer';$('#wzNext').disabled=!wzCanNext();
   wzBind()}
