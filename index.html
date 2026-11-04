@@ -485,6 +485,7 @@ body[data-mode="dp-facade"] .pc-only,body[data-mode="dp-toiture"] .pc-only{displ
 .pl-veg button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:7px 11px;font:600 13px var(--f-ui);cursor:pointer}.pl-veg button.on{background:var(--ok);color:#fff;border-color:var(--ok)}
 .pl-mtools button.wide.vegon{background:var(--ok);color:#fff}
 .pl-loupe{position:absolute;width:120px;height:120px;border-radius:50%;overflow:hidden;border:3px solid #fff;box-shadow:0 6px 18px rgba(0,0,0,.45);pointer-events:none;z-index:3;background:#000}.pl-loupe svg{width:100%;height:100%;display:block}
+.pl-pz{position:absolute;right:8px;top:8px;display:grid;gap:6px;z-index:2}.pl-pz button{width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.3);background:rgba(20,28,26,.78);color:#fff;font:600 19px var(--f-ui);cursor:pointer}
 .pl-edit{position:absolute;left:8px;right:8px;top:8px;display:flex;gap:8px;align-items:center;background:#fff;border-radius:12px;padding:10px;box-shadow:0 6px 20px rgba(0,0,0,.3);font-size:14px;color:var(--ink)}
 .pl-edit input{width:90px;padding:8px;border:1px solid var(--line);border-radius:8px;font:600 16px var(--f-mono)}.pl-edit #plEditLbl{flex:1;font-weight:600}
 </style>
@@ -816,12 +817,13 @@ body[data-mode="dp-facade"] .pc-only,body[data-mode="dp-toiture"] .pc-only{displ
 </div>
 <div class="place" id="place" hidden role="dialog" aria-modal="true" aria-label="Placer le projet">
   <div class="pl-top"><div class="pl-seg pl-seg3" id="plSeg"><button type="button" id="plVPhoto">Photo</button><button type="button" id="plVSplit">Photo + plan</button><button type="button" id="plVPlan" class="on">Plan</button></div><span id="plMsg"></span></div>
-  <div class="pl-photo"><svg id="plSvg" preserveAspectRatio="xMidYMid meet" hidden></svg><svg id="plMap" preserveAspectRatio="xMidYMid meet"></svg><div class="pl-loupe" id="plLoupe" hidden><svg preserveAspectRatio="xMidYMid slice"><image x="0" y="0" preserveAspectRatio="none"/><g id="plLoupeOv"></g></svg></div>
-    <div class="pl-tools" id="plTools" hidden><button type="button" id="plTAnchor" class="on">📐 Caler les coins</button><button type="button" id="plTBrush">🖌 Premier plan</button><button type="button" id="plTErase">Gomme</button><select id="plBSize" aria-label="Taille du pinceau"><option value="12">Fin</option><option value="28" selected>Moyen</option><option value="60">Large</option></select><button type="button" id="plTClear">Effacer</button><button type="button" id="plTGuide" class="on">Limites</button><button type="button" id="plTSee">👁 Photo seule</button></div>
+  <div class="pl-photo"><svg id="plSvg" preserveAspectRatio="xMidYMid meet" hidden></svg><svg id="plMap" preserveAspectRatio="xMidYMid meet"></svg><div class="pl-pz" id="plPz"><button type="button" id="plPzIn" aria-label="Zoomer la photo">+</button><button type="button" id="plPzOut" aria-label="Dézoomer la photo">−</button><button type="button" id="plPzFit" aria-label="Photo entière">⤢</button></div><div class="pl-loupe" id="plLoupe" hidden><svg preserveAspectRatio="xMidYMid slice"><image x="0" y="0" preserveAspectRatio="none"/><g id="plLoupeOv"></g></svg></div>
+    <div class="pl-tools" id="plTools" hidden><button type="button" id="plTAnchor" class="on">📐 Caler les coins</button><button type="button" id="plCMode">2 coins</button><button type="button" id="plPFine">Précis</button><button type="button" id="plTBrush">🖌 Premier plan</button><button type="button" id="plTErase">Gomme</button><select id="plBSize" aria-label="Taille du pinceau"><option value="12">Fin</option><option value="28" selected>Moyen</option><option value="60">Large</option></select><button type="button" id="plTClear">Effacer</button><button type="button" id="plTGuide" class="on">Limites</button><button type="button" id="plTSee">👁 Photo seule</button></div>
     <div class="pl-mtools" id="plMapTools"><button type="button" id="plZin" aria-label="Zoom avant">+</button><button type="button" id="plZout" aria-label="Zoom arrière">−</button><button type="button" id="plZhouse" aria-label="Zoomer sur le projet">🎯</button><button type="button" id="plZfit" aria-label="Tout le terrain">⤢</button><button type="button" id="plTOrtho" class="on wide">Aérien</button><button type="button" id="plTVeg" class="wide">🌳<span> Végétation</span></button></div>
     <div class="pl-edit" id="plEdit" hidden><span id="plEditLbl"></span><input type="text" inputmode="decimal" id="plEditV"><span>m</span><button class="btn primary sm" type="button" id="plEditOk">OK</button><button class="btn sm" type="button" id="plEditX" aria-label="Fermer">×</button></div></div>
   <div class="pl-ctl">
     <div class="pl-dist" id="plDist"></div>
+    <div class="pl-move" id="plNudge" hidden><span id="plNudgeL">Coin</span><button type="button" data-nudge="-1,0" aria-label="Gauche">←</button><button type="button" data-nudge="0,-1" aria-label="Haut">↑</button><button type="button" data-nudge="0,1" aria-label="Bas">↓</button><button type="button" data-nudge="1,0" aria-label="Droite">→</button></div>
     <div class="pl-veg" id="plVeg" hidden><span>Touchez le plan :</span><button type="button" data-veg="arbre">🌳 Arbre</button><button type="button" data-veg="arbuste">🌿 Arbuste</button><button type="button" data-veg="haie">▬ Haie (2 points)</button><button type="button" data-veg="del">Supprimer</button><button type="button" data-veg="">OK</button></div>
     <details class="pl-adv" id="plRender"><summary>Rendu : soleil, couleurs, contours</summary>
       <div class="pl-row"><span>Soleil</span><select id="plSun"><option value="photo">Comme à l'heure de la photo</option><option value="couvert">Temps couvert (ombres douces)</option><option value="manuel">Réglage manuel</option></select><b id="plSunV"></b></div>
@@ -2817,29 +2819,33 @@ function poseFromCorners(sh,pix){const CP=cornerPlane();if(!CP)return false;cons
 /* ajustement par moindres carrés (Levenberg-Marquardt) quand la solution directe ne colle pas */
 function poseGet(sh){const P=sh.pose;const c=P.lonlat?toLocal(...P.lonlat):shotGeom(sh).cw;return[c[0],c[1],+P.eye||1.5,shotGeom(sh).h,(+P.p||0)+(+P.dp||0),+P.r||0,Math.log(+P.fov||66)]}
 function poseSet(sh,x){Object.assign(sh.pose,{lonlat:toLL(x[0],x[1]),acc:null,eye:x[2],h:nAng(x[3]),p:x[4],r:x[5],fov:Math.exp(x[6]),dh:0,dp:0,hSrc:'coins'})}
-function poseResid(sh,x,T){poseSet(sh,x);const px=cornerPix(sh);if(!px||!px.every(Boolean))return null;const r=[];px.forEach((q,i)=>{r.push(q[0]-T[i][0],q[1]-T[i][1])});
-  const k=sh.w/1000;r.push((Math.exp(x[6])-62)*0.4*k,x[5]*0.6*k,(x[2]-1.6)*1.5*k);return r}
-function poseLM(sh,T){let x=poseGet(sh);let r=poseResid(sh,x,T);if(!r){poseSet(sh,x);return false}let lam=1e-2;const E=v=>v.reduce((a,b)=>a+b*b,0);let e=E(r);
+function poseResid(sh,x,T,O){poseSet(sh,x);const px=cornerPix(sh);if(!px||!px.every(Boolean))return null;const r=[];for(const i of O.idx){r.push(px[i][0]-T[i][0],px[i][1]-T[i][1])}
+  const k=sh.w/1000;r.push((x[2]-O.eye0)*(O.free.includes(2)?2:0)*k,x[5]*(O.free.includes(5)?0.8:0)*k);return r}
+function poseLM(sh,T,O){let x=poseGet(sh);if(!O.free.includes(5))x[5]=O.roll0;if(!O.free.includes(2))x[2]=O.eye0;if(!O.free.includes(6))x[6]=Math.log(O.fov0);let r=poseResid(sh,x,T,O);if(!r){poseSet(sh,x);return false}let lam=1e-2;const E=v=>v.reduce((a,b)=>a+b*b,0);let e=E(r);
   const st=[0.05,0.05,0.02,0.05,0.05,0.05,0.005];
-  for(let it=0;it<25&&e>0.25;it++){const J=st.map((h,j)=>{const x2=x.slice();x2[j]+=h;const r2=poseResid(sh,x2,T);return r2?r2.map((v,i)=>(v-r[i])/h):r.map(()=>0)});
-    const n=x.length;const A=[...Array(n)].map((_,a)=>[...Array(n)].map((_,b)=>J[a].reduce((sum,v,i)=>sum+v*J[b][i],0)));const g=[...Array(n)].map((_,a)=>-J[a].reduce((sum,v,i)=>sum+v*r[i],0));
-    let improved=false;for(let tr=0;tr<6;tr++){const A2=A.map((row,a)=>row.map((v,b)=>a===b?v*(1+lam)+1e-9:v));const d=linSolve(A2,g);if(!d)break;const x2=x.map((v,i)=>v+d[i]);x2[2]=clamp(x2[2],0.3,40);x2[6]=clamp(x2[6],Math.log(28),Math.log(105));
-      const r2=poseResid(sh,x2,T);if(r2&&E(r2)<e){x=x2;r=r2;e=E(r2);lam=Math.max(1e-6,lam/3);improved=true;break}lam*=4}
-    if(!improved)break}
+  for(let it=0;it<30&&e>0.05;it++){const J=O.free.map(j=>{const x2=x.slice();x2[j]+=st[j];const r2=poseResid(sh,x2,T,O);return r2?r2.map((v,i)=>(v-r[i])/st[j]):r.map(()=>0)});
+    const n=O.free.length;const A=[...Array(n)].map((_,a)=>[...Array(n)].map((_,b)=>J[a].reduce((sum,v,i)=>sum+v*J[b][i],0)));const g=[...Array(n)].map((_,a)=>-J[a].reduce((sum,v,i)=>sum+v*r[i],0));
+    let ok=false;for(let tr=0;tr<7;tr++){const A2=A.map((row,a)=>row.map((v,b)=>a===b?v*(1+lam)+1e-9:v));const d=linSolve(A2,g);if(!d)break;const x2=x.slice();O.free.forEach((j,a)=>x2[j]+=d[a]);x2[2]=clamp(x2[2],0.3,40);x2[6]=clamp(x2[6],Math.log(28),Math.log(105));
+      const r2=poseResid(sh,x2,T,O);if(r2&&E(r2)<e){x=x2;r=r2;e=E(r2);lam=Math.max(1e-7,lam/3);ok=true;break}lam*=4}
+    if(!ok)break}
   poseSet(sh,x);return true}
-function solveCorners(sh,T){const bak={...sh.pose};if(poseFromCorners(sh,T)){const px=cornerPix(sh);if(px&&px.every(Boolean)&&Math.max(...px.map((q,i)=>Math.hypot(q[0]-T[i][0],q[1]-T[i][1])))<sh.w/400)return true}
-  Object.assign(sh.pose,bak);return poseLM(sh,T)}
+function solveCorners(sh,T){const CP=cornerPlane();const four=PL.cmode==='4';const P=sh.pose;
+  const O={idx:four?[0,1,2,3]:CP.front,free:four?(PL.fovFree?[0,1,2,3,4,5,6]:[0,1,2,3,4,5]):[0,1,3,4],eye0:+P.eye||1.6,roll0:four?(+P.r||0):(+P.r||0),fov0:+P.fov||66};return poseLM(sh,T,O)}
 /* projection actuelle des 4 coins sur la photo */
 function cornerPix(sh){const CP=cornerPlane();if(!CP)return null;return CP.W.map(w=>shotProject(sh,w))}
 function resetPoseDefault(sh){const p=S.projet;const f=isPortail()?(cloCenter()||[p.x,p.y]):frontPt();const n=isPortail()?(()=>{const ve=voieMain();return ve?ve.n:[0,-1]})():frontNormal();
   const d=isPortail()?9:Math.max(p.L,p.W)*1.4+8;const cw=[f[0]+n[0]*d,f[1]+n[1]*d];Object.assign(sh.pose,{lonlat:toLL(...cw),h:bearing(-n[0],-n[1]),p:-4,r:0,fov:66,eye:1.6,dh:0,dp:0,hSrc:'coins'})}
-function cornersSVG(sh){let px=cornerPix(sh);if(!px)return'';if(!px.every(Boolean)){resetPoseDefault(sh);px=cornerPix(sh);if(!px||!px.every(Boolean))return''}const pts=px;const k=sh.w/Math.max(1,$('#plSvg').getBoundingClientRect().width||sh.w);
-  const CP=cornerPlane();const r=16*k;let o=`<polygon points="${pts.map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ')}" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-width="${2*k}" stroke-dasharray="${8*k} ${5*k}" data-cq="1"/>`;
-  const f=CP.front;o+=`<line x1="${pts[f[0]][0]}" y1="${pts[f[0]][1]}" x2="${pts[f[1]][0]}" y2="${pts[f[1]][1]}" stroke="#ff5a4a" stroke-width="${4*k}"/>`;
-  pts.forEach((q,i)=>{o+=`<g data-ch="${i}" style="cursor:grab"><circle cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="${(r*2.2).toFixed(1)}" fill="transparent"/><circle cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="${r.toFixed(1)}" fill="rgba(255,255,255,.25)" stroke="${f.includes(i)?'#ff5a4a':'#fff'}" stroke-width="${3*k}"/><circle cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="${(2.5*k).toFixed(1)}" fill="${f.includes(i)?'#ff5a4a':'#fff'}"/></g>`});
+function cornersSVG(sh){let px=cornerPix(sh);if(!px)return'';if(!px.every(Boolean)){resetPoseDefault(sh);px=cornerPix(sh);if(!px||!px.every(Boolean))return''}const pts=px;const k=phK(sh);
+  const CP=cornerPlane();const f=CP.front;const act=i=>PL.cmode==='4'||f.includes(i);const r=15*k;
+  let o=`<polygon points="${pts.map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ')}" fill="rgba(255,255,255,.1)" stroke="#fff" stroke-width="${1.5*k}" stroke-dasharray="${7*k} ${5*k}"/>`;
+  o+=`<line x1="${pts[f[0]][0]}" y1="${pts[f[0]][1]}" x2="${pts[f[1]][0]}" y2="${pts[f[1]][1]}" stroke="#ff5a4a" stroke-width="${3*k}"/>`;
+  pts.forEach((q,i)=>{const a=act(i),sel=PL.selC===i;const c=f.includes(i)?'#ff5a4a':'#fff';const X=q[0].toFixed(1),Y=q[1].toFixed(1);
+    o+=a?`<g data-ch="${i}" style="cursor:grab"><circle cx="${X}" cy="${Y}" r="${(r*2.4).toFixed(1)}" fill="transparent"/><circle cx="${X}" cy="${Y}" r="${r.toFixed(1)}" fill="${sel?'rgba(242,193,78,.35)':'rgba(255,255,255,.2)'}" stroke="${sel?'#F2C14E':c}" stroke-width="${(sel?4:2.5)*k}"/><line x1="${q[0]-r*0.6}" y1="${Y}" x2="${q[0]+r*0.6}" y2="${Y}" stroke="${c}" stroke-width="${1.2*k}"/><line x1="${X}" y1="${q[1]-r*0.6}" x2="${X}" y2="${q[1]+r*0.6}" stroke="${c}" stroke-width="${1.2*k}"/></g>`
+      :`<circle cx="${X}" cy="${Y}" r="${(4*k).toFixed(1)}" fill="#fff" fill-opacity=".7" pointer-events="none"/>`});
   return o}
+function phK(sh){const r=$('#plSvg').getBoundingClientRect();const vb=PL.pz||[0,0,sh.w,sh.h];return Math.max(vb[2]/Math.max(1,r.width),vb[3]/Math.max(1,r.height))}
 /* loupe sous le doigt */
-function loupe(sh,pt,client){const L=$('#plLoupe');if(!pt){L.hidden=true;return}L.hidden=false;const k=sh.w/$('#plSvg').getBoundingClientRect().width;const R=40*k;
+function loupe(sh,pt,client){const L=$('#plLoupe');if(!pt){L.hidden=true;return}L.hidden=false;const k=phK(sh);const R=40*k;
   L.querySelector('svg').setAttribute('viewBox',`${pt[0]-R} ${pt[1]-R} ${2*R} ${2*R}`);L.querySelector('image').setAttribute('href',sh.img);L.querySelector('image').setAttribute('width',sh.w);L.querySelector('image').setAttribute('height',sh.h);
   L.querySelector('#plLoupeOv').innerHTML=`<g opacity=".55">${shotOverlay(sh)}</g><line x1="${pt[0]-R}" y1="${pt[1]}" x2="${pt[0]+R}" y2="${pt[1]}" stroke="#ff5a4a" stroke-width="${k*0.8}"/><line x1="${pt[0]}" y1="${pt[1]-R}" x2="${pt[0]}" y2="${pt[1]+R}" stroke="#ff5a4a" stroke-width="${k*0.8}"/>`;
   const box=$('.pl-photo').getBoundingClientRect();let x=client[0]-box.left-60,y=client[1]-box.top-150;if(y<4)y=client[1]-box.top+40;L.style.left=clamp(x,4,box.width-124)+'px';L.style.top=y+'px'}
@@ -2849,16 +2855,18 @@ const PL={sh:null,done:null,view:'plan',ptrs:new Map(),g:null,guides:true,op:1,o
 function plRender(){const sh=PL.sh;const port=isPortail();const split=PL.view==='split'&&sh;const photo=(PL.view==='photo'||split)&&sh;const plan=!photo||split;
   $('#plSeg').hidden=!sh;$('#plVPhoto').classList.toggle('on',PL.view==='photo');$('#plVSplit').classList.toggle('on',!!split);$('#plVPlan').classList.toggle('on',!photo);$('.pl-photo').classList.toggle('split',!!split);
   $('#plTools').hidden=!photo;for(const[id,t]of[['#plTAnchor','anchor'],['#plTBrush','brush'],['#plTErase','erase']])$(id).classList.toggle('on',PL.tool===t);$('#plBSize').hidden=$('#plTClear').hidden=PL.tool==='anchor';
+  $('#plPz').hidden=!photo;$('#plCMode').hidden=$('#plPFine').hidden=PL.tool!=='anchor';$('#plCMode').textContent=PL.cmode==='4'?'4 coins':'2 coins';$('#plCMode').classList.toggle('on',PL.cmode==='4');$('#plPFine').classList.toggle('on',!!PL.pfine);
+  $('#plNudge').hidden=!photo||PL.tool!=='anchor'||PL.selC==null;$('#plNudgeL').textContent=PL.selC==null?'':'Ajuster le coin sélectionné';
   $('#plRender').hidden=!photo;$('#plVeg').hidden=!plan||PL.veg==null;$('#plTVeg').classList.toggle('vegon',PL.veg!=null);$$('[data-veg]').forEach(b=>b.classList.toggle('on',b.dataset.veg!==''&&b.dataset.veg===PL.veg));
   if(sh){photoStats(sh);const su=sh.sun||{mode:'photo'};const sf=sunFor(sh);$('#plSun').value=su.mode||'photo';$('#plSunAzR').hidden=$('#plSunElR').hidden=su.mode!=='manuel';$('#plSunAz').value=Math.round(sf.az);$('#plSunEl').value=Math.round(sf.el);
     $('#plSunAzV').textContent=Math.round(sf.az)+'°';$('#plSunElV').textContent=Math.round(sf.el)+'°';$('#plSunV').textContent=su.mode==='couvert'?'':`${['N','NE','E','SE','S','SO','O','NO'][Math.round(sf.az/45)%8]} ${Math.round(sf.el)}°`;
     $('#plMatch').value=sh.match??70;$('#plMatchV').textContent=(sh.match??70)+' %';$('#plLines').checked=sh.lines===true}$('#plTGuide').classList.toggle('on',PL.guides);$('#plMapTools').hidden=!plan;$('#plTOrtho').classList.toggle('on',PL.ortho);$('#plFine').classList.toggle('on',PL.fine);
   if(!photo)$('#plSvg').setAttribute('hidden','');if(!plan)$('#plMap').setAttribute('hidden','');
-  if(photo){const svg=$('#plSvg');svg.removeAttribute('hidden');svg.setAttribute('viewBox',`0 0 ${sh.w} ${sh.h}`);
+  if(photo){const svg=$('#plSvg');svg.removeAttribute('hidden');svg.setAttribute('viewBox',(PL.pz||[0,0,sh.w,sh.h]).map(v=>v.toFixed(1)).join(' '));
     const {G,V}=shotView(sh);const s=(sh.w/2)/V.W;const cx=sh.w/2,cy=sh.h/2;const tr=`rotate(${G.r.toFixed(2)} ${cx} ${cy}) translate(${cx} ${cy}) scale(${s.toFixed(4)})`;
     svg.innerHTML=`<image href="${sh.img}" x="0" y="0" width="${sh.w}" height="${sh.h}" preserveAspectRatio="none"/>`+(PL.guides?`<g transform="${tr}">${shotGuides(V)}</g>`:'')+`<g opacity="${PL.op}">${shotOverlay(sh)}</g>`+`<g id="plVis" pointer-events="none">${PL.tool==='brush'||PL.tool==='erase'?maskVis(sh):''}</g>`+(PL.tool==='anchor'?`<g id="plCorners">${cornersSVG(sh)}</g>`:'')+(()=>{return'';const a=shotProject(sh,anchorWorld());if(!a)return'';const r=sh.w/60;return`<g pointer-events="none"><circle cx="${a[0].toFixed(1)}" cy="${a[1].toFixed(1)}" r="${r.toFixed(1)}" fill="none" stroke="#ff5a4a" stroke-width="${(r/4).toFixed(1)}"/><circle cx="${a[0].toFixed(1)}" cy="${a[1].toFixed(1)}" r="${(r/4).toFixed(1)}" fill="#ff5a4a"/></g>`})()}
   if(plan){const m=$('#plMap');m.removeAttribute('hidden');m.innerHTML=plMapSVG();m.setAttribute('viewBox',PL.mapVB.join(' '))}
-  const cm=port?'<b>Tirez les 4 ronds</b> sur les coins du futur portail : en bas au sol, en haut à sa hauteur. Rouge = côté rue.':'<b>Tirez les 4 ronds</b> sur les futurs angles de la maison, au pied des murs (ronds rouges = façade avant). La maison suit vos doigts en perspective ; un appui au milieu déplace l\'ensemble.';
+  const cm=PL.cmode==='4'?(port?'<b>Tirez les 4 ronds</b> sur les coins du futur portail.':'<b>Tirez les 4 ronds</b> sur les 4 angles de la maison au pied des murs.'):(port?'<b>Tirez les 2 ronds rouges</b> sur les deux bas du futur portail, au sol.':'<b>Tirez les 2 ronds rouges</b> sur les 2 angles de la façade avant, au pied des murs : la taille et la perspective se règlent seules.')+' Pincez pour zoomer la photo ; touchez un rond puis les flèches pour l\'ajuster au pixel.';
   $('#plMsg').innerHTML=photo&&PL.tool==='brush'?'<b>Peignez au doigt</b> ce qui doit rester <b>devant</b> la maison (haie, arbre, clôture, voiture) : ces zones repassent au premier plan. Zone peinte en bleu.':
     photo&&PL.tool==='erase'?'<b>Gomme</b> : repassez sur une zone peinte pour la retirer.':
     split?cm+' En bas : d\'où la photo a été prise (📷).':photo?cm:
@@ -2933,11 +2941,11 @@ function scrToWorld(dx,dy){const r=$('#plMap').getBoundingClientRect();const vb=
 function moveBy(d){if(isPortail()){const c=S.clo.find(o=>o.kind==='portail');const l=c&&cloLimit(c);if(l){const dir=[(l.b[0]-l.a[0])/l.len,(l.b[1]-l.a[1])/l.len];c.pos=clamp((+c.pos||0)+d[0]*dir[0]+d[1]*dir[1],(+c.w||3.5)/2,l.len-(+c.w||3.5)/2)}}
   else{S.projet.x+=d[0];S.projet.y+=d[1]}}
 function ptrDown(e,which){e.preventDefault();const el=e.currentTarget;try{el.setPointerCapture(e.pointerId)}catch(_){}PL.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(PL.ptrs.size===2){const [a,b]=[...PL.ptrs.values()];PL.g={two:true,dist:Math.hypot(b.x-a.x,b.y-a.y),mid:[(a.x+b.x)/2,(a.y+b.y)/2],fov:PL.sh?+PL.sh.pose.fov||66:66,bb:PL.zoomBB&&PL.zoomBB.slice()};return}
-  if(which==='photo'&&(PL.tool==='brush'||PL.tool==='erase')){const [px,py]=svgPtOf($('#plSvg'),e);const r=+$('#plBSize').value*PL.sh.w/$('#plSvg').getBoundingClientRect().width;PL.sh.mask=PL.sh.mask||[];const st={e:PL.tool==='erase'?1:0,r:Math.round(r),pts:[[px,py]]};PL.sh.mask.push(st);PL.g={stroke:st};plMaskLive();return}
-  if(which==='photo'){const [px,py]=svgPtOf($('#plSvg'),e);const pix=cornerPix(PL.sh);if(!pix||!pix.every(Boolean)){PL.g=null;return}const k=PL.sh.w/$('#plSvg').getBoundingClientRect().width;
-    let bi=-1,bd=48*k;pix.forEach((q,i)=>{const d=Math.hypot(q[0]-px,q[1]-py);if(d<bd){bd=d;bi=i}});
-    if(bi>=0){PL.g={ch:bi,fixed:pix.map(q=>q.slice()),off:[pix[bi][0]-px,pix[bi][1]-py]};loupe(PL.sh,pix[bi],[e.clientX,e.clientY]);return}
+  if(PL.ptrs.size===2){const [a,b]=[...PL.ptrs.values()];if(which==='photo'){const sh=PL.sh;PL.g={pz:true,dist:Math.hypot(b.x-a.x,b.y-a.y),mid:[(a.x+b.x)/2,(a.y+b.y)/2],vb:(PL.pz||[0,0,sh.w,sh.h]).slice()};loupe(sh,null);return}PL.g={two:true,dist:Math.hypot(b.x-a.x,b.y-a.y),mid:[(a.x+b.x)/2,(a.y+b.y)/2],fov:PL.sh?+PL.sh.pose.fov||66:66,bb:PL.zoomBB&&PL.zoomBB.slice()};return}
+  if(which==='photo'&&(PL.tool==='brush'||PL.tool==='erase')){const [px,py]=svgPtOf($('#plSvg'),e);const r=+$('#plBSize').value*phK(PL.sh);PL.sh.mask=PL.sh.mask||[];const st={e:PL.tool==='erase'?1:0,r:Math.round(r),pts:[[px,py]]};PL.sh.mask.push(st);PL.g={stroke:st};plMaskLive();return}
+  if(which==='photo'){const [px,py]=svgPtOf($('#plSvg'),e);const pix=cornerPix(PL.sh);if(!pix||!pix.every(Boolean)){PL.g=null;return}const k=phK(PL.sh);const CPf=cornerPlane().front;
+    let bi=-1,bd=48*k;pix.forEach((q,i)=>{if(PL.cmode!=='4'&&!CPf.includes(i))return;const d=Math.hypot(q[0]-px,q[1]-py);if(d<bd){bd=d;bi=i}});
+    if(bi>=0){PL.selC=bi;PL.g={ch:bi,fixed:pix.map(q=>q.slice()),start:[px,py],base:pix[bi].slice()};loupe(PL.sh,pix[bi],[e.clientX,e.clientY]);return}
     if(pip([px,py],pix)){PL.g={quad:true,start:[px,py],fixed:pix.map(q=>q.slice())};return}PL.g=null;return}
   if(PL.veg!=null&&PL.veg!==''){const [x,y]=svgPtOf($('#plMap'),e);const w=mRot([x,-y],-(PL.th||0));const L=vegeList();
     if(PL.veg==='del'){let bi=-1,bd=3;L.forEach((v,i)=>{const a=toLocal(...v.p);let d=Math.hypot(a[0]-w[0],a[1]-w[1]);if(v.p2){const q=pSeg(w,a,toLocal(...v.p2));d=q.d}if(d<bd){bd=d;bi=i}});if(bi>=0)L.splice(bi,1)}
@@ -2948,27 +2956,38 @@ function ptrDown(e,which){e.preventDefault();const el=e.currentTarget;try{el.set
   const dl=e.target.closest('[data-dist]');if(dl){const d=PL.dl[+dl.dataset.dist];PL.edit={e:d.e,val:d.d,label:d.e.voie?'Distance à la rue':'Distance à la limite'};PL.g=null;plRender();setTimeout(()=>{const i=$('#plEditV');i.focus();i.select()},50);return}
   if(PL.view==='split'){PL.g={pan:true,x:e.clientX,y:e.clientY,bb:PL.zoomBB.slice()};return}
   PL.g={move:true,x:e.clientX,y:e.clientY,acc:[0,0]}}
-function ptrMove(e,which){if(!PL.ptrs.has(e.pointerId))return;PL.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});const g=PL.g;if(!g)return;
-  const now=performance.now();if(PL.lt&&now-PL.lt<25)return;PL.lt=now;
-  if(g.two&&PL.ptrs.size>=2){const [a,b]=[...PL.ptrs.values()];const dist=Math.hypot(b.x-a.x,b.y-a.y);
-    if(which==='photo')PL.sh.pose.fov=clamp(g.fov*g.dist/dist,30,100);
+function ptrMove(e,which){if(!PL.ptrs.has(e.pointerId))return;PL.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});if(!PL.g)return;
+  PL.pend={e:{clientX:e.clientX,clientY:e.clientY,pointerId:e.pointerId,target:e.target},which};if(!PL.raf)PL.raf=requestAnimationFrame(ptrFlush)}
+function ptrFlush(){PL.raf=null;const q=PL.pend;PL.pend=null;if(q)ptrMove2(q.e,q.which)}
+function ptrMove2(e,which){const g=PL.g;if(!g)return;
+    if(g.two&&PL.ptrs.size>=2){const [a,b]=[...PL.ptrs.values()];const dist=Math.hypot(b.x-a.x,b.y-a.y);
+    if(g.pz){const sh=PL.sh;const z=clamp(g.dist/dist,0.08,1);const vb=g.vb;const r=$('#plSvg').getBoundingClientRect();const kk=Math.max(vb[2]/r.width,vb[3]/r.height);const mid=[(a.x+b.x)/2,(a.y+b.y)/2];
+      const cx=vb[0]+vb[2]/2-(mid[0]-g.mid[0])*kk,cy=vb[1]+vb[3]/2-(mid[1]-g.mid[1])*kk;const w=clamp(vb[2]*g.dist/dist,sh.w*0.08,sh.w),h=w*sh.h/sh.w;PL.pz=w>=sh.w*0.999?null:[clamp(cx-w/2,0,sh.w-w),clamp(cy-h/2,0,sh.h-h),w,h];void z}
+    else if(which==='photo')PL.sh.pose.fov=clamp(g.fov*g.dist/dist,30,100);
     else if(g.bb){const k=g.dist/dist;const c=[(g.bb[0]+g.bb[2])/2,(g.bb[1]+g.bb[3])/2];const hw=clamp((g.bb[2]-g.bb[0])/2*k,6,150),hh=hw*(g.bb[3]-g.bb[1])/(g.bb[2]-g.bb[0]);
       const r=$('#plMap').getBoundingClientRect();const s=Math.max((g.bb[2]-g.bb[0])/r.width,(g.bb[3]-g.bb[1])/r.height);const mid=[(a.x+b.x)/2,(a.y+b.y)/2];const px=(mid[0]-g.mid[0])*s,py=(mid[1]-g.mid[1])*s;
       PL.zoomBB=[c[0]-hw-px,c[1]-hh+py,c[0]+hw-px,c[1]+hh+py]}
     plRender();return}
   if(g.stroke){const [px,py]=svgPtOf($('#plSvg'),e);const L=g.stroke.pts[g.stroke.pts.length-1];if(Math.hypot(px-L[0],py-L[1])>g.stroke.r*0.25){g.stroke.pts.push([Math.round(px),Math.round(py)]);plMaskLive()}return}
-  if(g.ch!=null||g.quad){const [px,py]=svgPtOf($('#plSvg'),e);let T;if(g.quad){const d=[px-g.start[0],py-g.start[1]];T=g.fixed.map(q=>[q[0]+d[0],q[1]+d[1]])}else{T=g.fixed.map(q=>q.slice());T[g.ch]=[px+g.off[0],py+g.off[1]]}
+  if(g.ch!=null||g.quad){const [px,py]=svgPtOf($('#plSvg'),e);let T;if(g.quad){const kf=PL.pfine?0.25:1;const d=[(px-g.start[0])*kf,(py-g.start[1])*kf];T=g.fixed.map(q=>[q[0]+d[0],q[1]+d[1]])}else{T=g.fixed.map(q=>q.slice());const kf=PL.pfine?0.25:1;T[g.ch]=[g.base[0]+(px-g.start[0])*kf,g.base[1]+(py-g.start[1])*kf]}
     PL.g.T=T;solveCorners(PL.sh,T);plRender();if(g.ch!=null)loupe(PL.sh,T[g.ch],[e.clientX,e.clientY]);return}
   if(g.cam||g.camh){const [x,y]=svgPtOf($('#plMap'),e);const w=mRot([x,-y],-(PL.th||0));const P=PL.sh.pose;
     if(g.cam){P.lonlat=toLL(...w);P.acc=null}else{const cw=shotGeom(PL.sh).cw;P.h=bearing(w[0]-cw[0],w[1]-cw[1]);P.dh=0;P.hSrc='manuel'}plRender();return}
   if(g.pan){const r=$('#plMap').getBoundingClientRect();const sc=Math.max((g.bb[2]-g.bb[0])/r.width,(g.bb[3]-g.bb[1])/r.height);const dx=(e.clientX-g.x)*sc,dy=(e.clientY-g.y)*sc;PL.zoomBB=[g.bb[0]-dx,g.bb[1]+dy,g.bb[2]-dx,g.bb[3]+dy];plRender();return}
   if(g.move){const k=PL.fine?0.2:1;const d=scrToWorld((e.clientX-g.x)*k,(e.clientY-g.y)*k);g.x=e.clientX;g.y=e.clientY;moveBy(d);PL.edit=null;plRender()}}
-function ptrUp(e){if(PL.g&&(PL.g.ch!=null||PL.g.quad)){loupe(PL.sh,null);PL.g=null;PL.ptrs.delete(e.pointerId);plRender();return}if(PL.g&&PL.g.stroke){PL.g=null;PL.ptrs.delete(e.pointerId);plRender();return}PL.ptrs.delete(e.pointerId);if(PL.ptrs.size<2&&PL.g&&PL.g.two)PL.g=null;if(!PL.ptrs.size)PL.g=null}
+function ptrUp(e){if(PL.raf){cancelAnimationFrame(PL.raf);ptrFlush()}if(PL.g&&(PL.g.ch!=null||PL.g.quad)){loupe(PL.sh,null);PL.g=null;PL.ptrs.delete(e.pointerId);plRender();return}if(PL.g&&PL.g.stroke){PL.g=null;PL.ptrs.delete(e.pointerId);plRender();return}PL.ptrs.delete(e.pointerId);if(PL.ptrs.size<2&&PL.g&&PL.g.two)PL.g=null;if(!PL.ptrs.size)PL.g=null}
 for(const[id,w]of[['#plSvg','photo'],['#plMap','plan']]){const el=$(id);el.addEventListener('pointerdown',e=>ptrDown(e,w));el.addEventListener('pointermove',e=>ptrMove(e,w));el.addEventListener('pointerup',ptrUp);el.addEventListener('pointercancel',ptrUp)}
 $('#plMap').addEventListener('wheel',e=>{e.preventDefault();plZoom(e.deltaY>0?1.15:0.87)},{passive:false});
 $('#plVPhoto').onclick=()=>{PL.view='photo';plRender()};
 function plMaskLive(){const sh=PL.sh;const m=$('#plSvg').querySelector('mask[id$="fg"]');if(m)m.innerHTML=maskInner(sh);const v=$('#plVis');if(v)v.innerHTML=maskVis(sh)}
-$('#plTAnchor').onclick=()=>{PL.tool='anchor';plRender()};$('#plTBrush').onclick=()=>{PL.tool='brush';plRender()};$('#plTErase').onclick=()=>{PL.tool='erase';plRender()};
+$('#plTAnchor').onclick=()=>{PL.tool='anchor';plRender()};
+$('#plCMode').onclick=()=>{PL.cmode=PL.cmode==='4'?'2':'4';PL.selC=null;plRender()};$('#plPFine').onclick=()=>{PL.pfine=!PL.pfine;plRender()};
+function pzZoom(f){const sh=PL.sh;const vb=PL.pz||[0,0,sh.w,sh.h];let c=[vb[0]+vb[2]/2,vb[1]+vb[3]/2];if(f<1&&PL.selC!=null){const px=cornerPix(sh);if(px&&px[PL.selC])c=px[PL.selC]}
+  const w=clamp(vb[2]*f,sh.w*0.08,sh.w),h=w*sh.h/sh.w;PL.pz=w>=sh.w*0.999?null:[clamp(c[0]-w/2,0,sh.w-w),clamp(c[1]-h/2,0,sh.h-h),w,h];plRender()}
+$('#plPzIn').onclick=()=>pzZoom(0.6);$('#plPzOut').onclick=()=>pzZoom(1.6);$('#plPzFit').onclick=()=>{PL.pz=null;plRender()};
+$('#plSvg').addEventListener('wheel',e=>{if(!PL.sh)return;e.preventDefault();pzZoom(e.deltaY>0?1.2:0.83)},{passive:false});
+$$('[data-nudge]').forEach(b=>b.onclick=()=>{const sh=PL.sh;if(PL.selC==null)return;const px=cornerPix(sh);if(!px||!px.every(Boolean))return;const [dx,dy]=b.dataset.nudge.split(',').map(Number);const st=(PL.pfine?0.5:2)*phK(sh);
+  const T=px.map(q=>q.slice());T[PL.selC]=[T[PL.selC][0]+dx*st,T[PL.selC][1]+dy*st];solveCorners(sh,T);plRender()});$('#plTBrush').onclick=()=>{PL.tool='brush';plRender()};$('#plTErase').onclick=()=>{PL.tool='erase';plRender()};
 $('#plTClear').onclick=()=>{if(PL.sh){PL.sh.mask=[];plRender()}};
 $('#plTVeg').onclick=()=>{PL.veg=PL.veg==null?'arbre':null;PL.vegA=null;plRender()};$$('[data-veg]').forEach(b=>b.onclick=()=>{PL.veg=b.dataset.veg===''?null:b.dataset.veg;PL.vegA=null;plRender()});
 $('#plSun').onchange=e=>{const sh=PL.sh;const sf=sunFor(sh);sh.sun={mode:e.target.value,az:Math.round(sf.az),el:Math.round(sf.el)};plRender()};
@@ -2995,7 +3014,7 @@ $('#plCalReset').onclick=()=>{Object.assign(PL.sh.pose,{dh:0,dp:0,fov:66});PL.sh
 for(const[k,id]of[['w','#plPortW'],['h','#plPortH']])$(id).oninput=e=>{const c=S.clo.find(o=>o.kind==='portail');if(c){c[k]=+e.target.value;plRender()}};
 function plClose(v){const f=PL.done;PL.done=null;$('#place').hidden=true;if(v!=='ok'&&PL.backup){S.projet.x=PL.backup.x;S.projet.y=PL.backup.y;S.projet.rot=PL.backup.rot;S.clo=PL.backup.clo}f&&f(v)}
 $('#plRetake').onclick=()=>plClose('retake');$('#plCancel').onclick=()=>plClose(null);$('#plOk').onclick=()=>plClose('ok');
-function plOpen(sh,view){PL.sh=sh;PL.view=view;PL.ptrs.clear();PL.g=null;PL.zoomBB=null;PL.edit=null;PL.snap=null;PL.tool='anchor';PL.veg=null;PL.vegA=null;PL.backup={x:S.projet.x,y:S.projet.y,rot:S.projet.rot,clo:JSON.parse(JSON.stringify(S.clo))};
+function plOpen(sh,view){PL.sh=sh;PL.view=view;PL.ptrs.clear();PL.g=null;PL.zoomBB=null;PL.edit=null;PL.snap=null;PL.tool='anchor';PL.cmode=PL.cmode||'2';PL.selC=null;PL.pz=null;PL.veg=null;PL.vegA=null;PL.backup={x:S.projet.x,y:S.projet.y,rot:S.projet.rot,clo:JSON.parse(JSON.stringify(S.clo))};
   if(isPortail()&&!S.clo.some(o=>o.kind==='portail'))addClo('portail',true);$('#plRetake').hidden=!sh;$('#place').hidden=false;plRender();return new Promise(r=>PL.done=r)}
 async function placeOnPlan(){const r=await plOpen(null,'plan');if(r==='ok'){S.onsite=Object.assign(S.onsite||{},{placed:true});if(S.onsite.shot)await onsiteApply();save();return true}return false}
 function plFitCam(){if(!PL.sh)return;const th=mapTheta();const G=shotGeom(PL.sh);const pts=bat().corners.concat([G.cw]);if(isPortail()){const c=cloCenter();if(c)pts.push(c)}PL.zoomBB=bbox(pts.map(q=>mRot(q,th)),5)}
