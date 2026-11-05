@@ -904,7 +904,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
 <div class="place" id="place" hidden role="dialog" aria-modal="true" aria-label="Placer le projet">
   <div class="pl-top"><div class="pl-seg pl-seg3" id="plSeg"><button type="button" id="plVPhoto">Photo</button><button type="button" id="plVSplit">Photo + plan</button><button type="button" id="plVPlan" class="on">Plan</button></div><span id="plMsg"></span></div>
   <div class="pl-photo"><svg id="plSvg" preserveAspectRatio="xMidYMid meet" hidden></svg><svg id="plMap" preserveAspectRatio="xMidYMid meet"></svg><div class="pl-pz" id="plPz"><button type="button" id="plPzIn" aria-label="Zoomer la photo">+</button><button type="button" id="plPzOut" aria-label="Dézoomer la photo">−</button><button type="button" id="plPzFit" aria-label="Photo entière">⤢</button></div><div class="pl-loupe" id="plLoupe" hidden><svg preserveAspectRatio="xMidYMid slice"><image x="0" y="0" preserveAspectRatio="none"/><g id="plLoupeOv"></g></svg></div>
-    <div class="pl-tools" id="plTools" hidden><button type="button" id="plTAnchor" class="on">📐 Caler les coins</button><button type="button" id="plCMode">2 coins</button><button type="button" id="plPFine">Précis</button><button type="button" id="plTBrush">🖌 Premier plan</button><button type="button" id="plTErase">Gomme</button><select id="plBSize" aria-label="Taille du pinceau"><option value="12">Fin</option><option value="28" selected>Moyen</option><option value="60">Large</option></select><button type="button" id="plTClear">Effacer</button><button type="button" id="plTGuide" class="on">Limites</button><button type="button" id="plTSee">👁 Photo seule</button></div>
+    <div class="pl-tools" id="plTools" hidden><button type="button" id="plTAnchor" class="on">📐 Caler les coins</button><button type="button" id="plCMode">2 coins</button><button type="button" id="plPFine">Précis</button><button type="button" id="plTAuto">✨ Détourer</button><button type="button" id="plTWand">🪄 Baguette</button><select id="plWTol" aria-label="Tolérance de la baguette"><option value="22">Serrée</option><option value="34" selected>Normale</option><option value="50">Large</option></select><button type="button" id="plTBrush">🖌 Pinceau</button><button type="button" id="plTErase">Gomme</button><select id="plBSize" aria-label="Taille du pinceau"><option value="12">Fin</option><option value="28" selected>Moyen</option><option value="60">Large</option></select><button type="button" id="plTUndo" aria-label="Annuler">↶</button><button type="button" id="plTClear">Effacer</button><button type="button" id="plTGuide" class="on">Limites</button><button type="button" id="plTSee">👁 Photo seule</button></div>
     <div class="pl-mtools" id="plMapTools"><button type="button" id="plZin" aria-label="Zoom avant">+</button><button type="button" id="plZout" aria-label="Zoom arrière">−</button><button type="button" id="plZhouse" aria-label="Zoomer sur le projet">🎯</button><button type="button" id="plZfit" aria-label="Tout le terrain">⤢</button><button type="button" id="plTOrtho" class="on wide">Aérien</button><button type="button" id="plTVeg" class="wide">🌳<span> Végétation</span></button></div>
     <div class="pl-edit" id="plEdit" hidden><span id="plEditLbl"></span><input type="text" inputmode="decimal" id="plEditV"><span>m</span><button class="btn primary sm" type="button" id="plEditOk">OK</button><button class="btn sm" type="button" id="plEditX" aria-label="Fermer">×</button></div></div>
   <div class="pl-ctl">
@@ -1253,6 +1253,50 @@ function bldPolyLocal(){const B=bat();const p=S.projet;const a=p.L/2,b=p.W/2;con
   return out.filter((q,i)=>{const nx=out[(i+1)%out.length];return Math.hypot(q[0]-nx[0],q[1]-nx[1])>1e-6})}
 function bldPoly(){const B=bat();return bldPolyLocal().map(q=>B.w(q[0],q[1]))}
 function aileSurf(){const G=aileGeo();if(!G)return{emp:0,sdp:0};const e=0.3;return{emp:G.Ww*G.Dw,sdp:Math.max(0,G.Ww-2*e)*Math.max(0,G.Dw-e)*G.nw}}
+/* ================= Textures réalistes (procédurales, raccordables, mappées sur chaque face) ================= */
+const TEXC={};
+function texRng(seed){let s=(seed*2654435761)>>>0||1;return()=>{s^=s<<13;s>>>=0;s^=s>>>17;s^=s<<5;s>>>=0;return s/4294967296}}
+/* bruit de valeur périodique (raccord parfait sur les bords) */
+function texNoise(W,H,cell,seed){const R=texRng(seed);const gx=Math.max(1,Math.round(W/cell)),gy=Math.max(1,Math.round(H/cell));const g=[];for(let i=0;i<gx*gy;i++)g.push(R());
+  const sm=t=>t*t*(3-2*t);return(x,y)=>{const fx=x/W*gx,fy=y/H*gy;const x0=Math.floor(fx),y0=Math.floor(fy);const tx=sm(fx-x0),ty=sm(fy-y0);const G=(i,j)=>g[((j%gy+gy)%gy)*gx+((i%gx+gx)%gx)];
+    const a=G(x0,y0)+(G(x0+1,y0)-G(x0,y0))*tx,b=G(x0,y0+1)+(G(x0+1,y0+1)-G(x0,y0+1))*tx;return a+(b-a)*ty}}
+/* écrit une variation de luminance v (−1..1) sous forme de voile noir ou blanc */
+function texPut(D,i,v,amp){const a=Math.min(1,Math.abs(v)*amp);const c=v<0?0:255;D[i]=D[i+1]=D[i+2]=c;D[i+3]=Math.round(a*255)}
+function texCanvas(W,H){const c=document.createElement('canvas');c.width=W;c.height=H;return c}
+function texMake(kind){
+  if(kind==='enduit'||kind==='beton'){const W=96,H=96;const c=texCanvas(W,H),g=c.getContext('2d');const im=g.createImageData(W,H),D=im.data;const n1=texNoise(W,H,48,3),n2=texNoise(W,H,16,5),n3=texNoise(W,H,6,7);const R=texRng(11);
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){const v=(n1(x,y)-0.5)*0.9+(n2(x,y)-0.5)*0.6+(n3(x,y)-0.5)*0.35+(R()-0.5)*(kind==='beton'?0.45:0.7);texPut(D,(y*W+x)*4,v,kind==='beton'?0.2:0.13)}
+    g.putImageData(im,0,0);if(kind==='beton'){g.strokeStyle='rgba(0,0,0,.10)';g.lineWidth=1;g.beginPath();g.moveTo(0,H/2+.5);g.lineTo(W,H/2+.5);g.stroke()}return{url:c.toDataURL('image/png'),w:1.2,h:1.2}}
+  if(kind==='brique'){const W=230,H=150;const c=texCanvas(W,H),g=c.getContext('2d');const R=texRng(21);const bw=W/4,bh=H/8;g.fillStyle='rgba(255,255,255,.28)';g.fillRect(0,0,W,H);
+    for(let r=0;r<8;r++){const o=r%2?bw/2:0;for(let i=-1;i<5;i++){const x=o+i*bw;const v=R()-0.5;g.fillStyle=v<0?`rgba(0,0,0,${(-v*0.45).toFixed(3)})`:`rgba(255,255,255,${(v*0.25).toFixed(3)})`;g.clearRect(x+2,r*bh+2,bw-3,bh-3);g.fillRect(x+2,r*bh+2,bw-3,bh-3)}}
+    return{url:c.toDataURL('image/png'),w:0.92,h:0.6}}
+  if(kind==='pierre'){const W=240,H=240;const c=texCanvas(W,H),g=c.getContext('2d');const R=texRng(31);g.fillStyle='rgba(255,255,255,.22)';g.fillRect(0,0,W,H);let y=0;
+    const rows=[];while(y<H-20){const h=Math.min(H-y,22+R()*26);rows.push([y,h]);y+=h}rows[rows.length-1][1]+=H-y;
+    for(const[y0,h]of rows){let x=-R()*60;while(x<W){const w=34+R()*60;const v=R()-0.5;const col=v<0?`rgba(0,0,0,${(-v*0.5+0.06).toFixed(3)})`:`rgba(255,255,255,${(v*0.35).toFixed(3)})`;
+        for(const dx of[0,W,-W]){g.save();g.beginPath();const rr=5;const X=x+dx+2,Y=y0+2,Wd=w-4,Hd=h-4;g.moveTo(X+rr,Y);g.arcTo(X+Wd,Y,X+Wd,Y+Hd,rr);g.arcTo(X+Wd,Y+Hd,X,Y+Hd,rr);g.arcTo(X,Y+Hd,X,Y,rr);g.arcTo(X,Y,X+Wd,Y,rr);g.closePath();g.clearRect(X-1,Y-1,Wd+2,Hd+2);g.fillStyle=col;g.fill();
+          g.strokeStyle='rgba(0,0,0,.18)';g.lineWidth=1.2;g.stroke();g.restore()}x+=w}}
+    return{url:c.toDataURL('image/png'),w:2,h:2}}
+  if(kind==='bois'){const W=240,H=120;const c=texCanvas(W,H),g=c.getContext('2d');const R=texRng(41);const n=texNoise(W,H,20,43);const im=g.createImageData(W,H),D=im.data;const ph=H/4;
+    for(let y=0;y<H;y++){const pl=Math.floor(y/ph);const pv=texRng(50+pl)()-0.5;for(let x=0;x<W;x++){const s=Math.sin((y+n(x,y)*14)*1.7+pl*3)*0.35+pv*0.8+(R()-0.5)*0.15;let v=s;if(y%ph<1.2)v=-1.4;texPut(D,(y*W+x)*4,v,0.3)}}
+    g.putImageData(im,0,0);return{url:c.toDataURL('image/png'),w:1.2,h:0.6}}
+  /* toitures : rangs de tuiles avec ombre de recouvrement */
+  const roof={tile:{tw:0.25,rh:0.34,st:0,sh:0.6,a:0.2},canal:{tw:0.2,rh:0.4,st:0,sh:0.45,a:0.2},tileS:{tw:0.17,rh:0.2,st:0.5,sh:0.5,a:0.2},slate:{tw:0.25,rh:0.17,st:0.5,sh:0.55,a:0.22},green:{tw:0.5,rh:0.5,st:0,sh:0,a:0.5,green:1},rib:{tw:0.5,rh:1,st:0,sh:0,a:0.3,rib:1}}[kind];
+  if(!roof)return null;const cols=roof.green||roof.rib?2:8,rows=roof.green||roof.rib?2:6;const px=40;const W=Math.round(cols*roof.tw/roof.tw*px*(roof.tw>=0.25?1.25:1)),H=Math.round(W*rows*roof.rh/(cols*roof.tw));
+  const c=texCanvas(W,H),g=c.getContext('2d');const R=texRng(61+kind.length);const tw=W/cols,rh=H/rows;
+  if(roof.green){const im=g.createImageData(W,H),D=im.data;const n1=texNoise(W,H,24,63),n2=texNoise(W,H,6,65);for(let y=0;y<H;y++)for(let x=0;x<W;x++)texPut(D,(y*W+x)*4,(n1(x,y)-0.5)*1.1+(n2(x,y)-0.5)*0.9+(R()-0.5)*0.5,0.4);g.putImageData(im,0,0)}
+  else if(roof.rib){const gr=g.createLinearGradient(0,0,tw,0);gr.addColorStop(0,'rgba(255,255,255,.22)');gr.addColorStop(0.08,'rgba(255,255,255,0)');gr.addColorStop(0.12,'rgba(0,0,0,.22)');gr.addColorStop(0.2,'rgba(0,0,0,0)');gr.addColorStop(1,'rgba(0,0,0,.04)');for(let i=0;i<cols;i++){g.save();g.translate(i*tw,0);g.fillStyle=gr;g.fillRect(0,0,tw,H);g.restore()}}
+  else for(let r=0;r<rows;r++){const o=r%2?roof.st*tw:0;for(let i=-1;i<=cols;i++){const x=o+i*tw,y=r*rh;const v=R()-0.5;
+      g.fillStyle=v<0?`rgba(0,0,0,${(-v*roof.a).toFixed(3)})`:`rgba(255,255,255,${(v*roof.a*0.7).toFixed(3)})`;g.fillRect(x+0.5,y,tw-1,rh);
+      if(roof.canal){const gr=g.createLinearGradient(x,0,x+tw,0);gr.addColorStop(0,'rgba(0,0,0,.25)');gr.addColorStop(0.5,'rgba(255,255,255,.18)');gr.addColorStop(1,'rgba(0,0,0,.25)');g.fillStyle=gr;g.fillRect(x,y,tw,rh)}
+      else{g.fillStyle='rgba(0,0,0,.28)';g.fillRect(x,y,1,rh)}
+      const sg=g.createLinearGradient(0,y+rh*(1-roof.sh*0.4),0,y+rh);sg.addColorStop(0,'rgba(0,0,0,0)');sg.addColorStop(1,`rgba(0,0,0,${roof.sh.toFixed(2)})`);g.fillStyle=sg;g.fillRect(x,y,tw,rh)}}
+  return{url:c.toDataURL('image/png'),w:cols*roof.tw,h:rows*roof.rh,rh:roof.rh}}
+function texGet(kind){if(!kind)return null;if(!(kind in TEXC)){let t=null;try{t=texMake(kind)}catch(e){}TEXC[kind]=t}return TEXC[kind]}
+function wallTexKind(f){f=String(f||'').toLowerCase();if(/enduit/.test(f))return'enduit';if(/bardage|bois|clin/.test(f))return'bois';if(/brique/.test(f))return'brique';if(/pierre|moellon|parement/.test(f))return'pierre';if(/b[ée]ton/.test(f))return'beton';return'enduit'}
+/* motif appliqué sur une face plane : axes u (horizontal) et v (vers le bas dans le plan), origine o, en mètres */
+function texPattern(V,id,T,o,u,v,defsAdd){const S=q=>{const a=V.P(q);return[a[0],-a[1]]};const P0=S(o),Pu=S([o[0]+u[0],o[1]+u[1],o[2]+u[2]]),Pv=S([o[0]+v[0],o[1]+v[1],o[2]+v[2]]);
+  const m=[Pu[0]-P0[0],Pu[1]-P0[1],Pv[0]-P0[0],Pv[1]-P0[1],P0[0],P0[1]].map(x=>+x.toFixed(4));if(!m.every(Number.isFinite))return null;
+  defsAdd(`<pattern id="${id}" patternUnits="userSpaceOnUse" width="${T.w}" height="${T.h}" patternTransform="matrix(${m.join(' ')})"><use href="#${T.ref}"/></pattern>`);return`url(#${id})`}
 function view(fx,fy,pitch){const cp=Math.cos(pitch*D2R),sp=Math.sin(pitch*D2R);const f=[fx*cp,fy*cp,-sp];const r=[fy,-fx,0];const up=[fx*sp,fy*sp,cp];
   return{f,r,up,P:p=>[dot(r,p),dot(up,p)],depth:p=>dot(f,p),side:(n,pt)=>dot(n,f)}}
 /* Caméra perspective (repère de la construction). Les coordonnées image sont en « mètres à la distance de visée ». */
@@ -1288,6 +1332,10 @@ function renderBuilding(f2,pitch,opt={}){
   let defs=`<linearGradient id="${id}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${render?'#dfe9ee':'#d7e2e6'}"/><stop offset="1" stop-color="${render?'#8fa5b0':'#b3c3ca'}"/></linearGradient>`;
   if(render)defs+=`<filter id="${id}gr" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="${(/bardage|bois/i.test(p.facade||'')?1.2:6.5)}" numOctaves="2" seed="3" result="n"/><feColorMatrix in="n" type="saturate" values="0" result="g"/><feComponentTransfer in="g" result="g2"><feFuncA type="linear" slope="0" intercept="${/bardage|bois/i.test(p.facade||'')?0.10:0.07}"/></feComponentTransfer><feComposite in="g2" in2="SourceGraphic" operator="in" result="t"/><feBlend in="t" in2="SourceGraphic" mode="multiply"/></filter>`;
   let out='';const zb=h.zb;
+  const TXo=render&&opt.tex!==false;const TW=TXo?texGet(wallTexKind(p.facade)):null,TR=TXo?texGet(COUV_PAT[p.couv]||'tile'):null,TF=TXo?texGet('beton'):null;let tq=0;
+  const txRef={};const txUse=(T,k)=>{if(!T)return null;if(!txRef[k]){txRef[k]=`${id}t${k}`;defs+=`<image id="${txRef[k]}" href="${T.url}" width="${T.w}" height="${T.h}" preserveAspectRatio="none"/>`}return{...T,ref:txRef[k]}};
+  const texFill=(T,k,o,u,v)=>{const R=txUse(T,k);return R?texPattern(V,`${id}p${tq++}`,R,o,u,v,x=>{defs+=x}):null};
+  let gq=0;const gradPoly=(pts,from,to,a)=>{const gid=`${id}q${gq++}`;const A=V.P(from),B=V.P(to);if(![...A,...B].every(Number.isFinite))return'';defs+=`<linearGradient id="${gid}" gradientUnits="userSpaceOnUse" x1="${A[0].toFixed(3)}" y1="${(-A[1]).toFixed(3)}" x2="${B[0].toFixed(3)}" y2="${(-B[1]).toFixed(3)}"><stop offset="0" stop-color="#000" stop-opacity="${a.toFixed(3)}"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient>`;return fillOnly(pts,`url(#${gid})`)};
   // sol et ombre portée (rendu)
   if(render&&opt.ground){const ra=M.walls[1].half+7,rb=M.walls[0].half+7;const G=[];for(let i=0;i<40;i++){const t=i/40*2*Math.PI;G.push([Math.cos(t)*ra,Math.sin(t)*rb,zb])}
     defs+=`<radialGradient id="${id}s"><stop offset="0" stop-color="#cfd9c4"/><stop offset=".7" stop-color="#dfe6d7"/><stop offset="1" stop-color="#dfe6d7" stop-opacity="0"/></radialGradient>`;out+=fillOnly(G,`url(#${id}s)`)}
@@ -1303,12 +1351,15 @@ function renderBuilding(f2,pitch,opt={}){
   const walls=VW.filter(w=>V.side(w.nrm,w.pts[0])<-1e-6).sort((x,y)=>avgD(y.pts)-avgD(x.pts));
   for(const w of walls){const k=lit(w.nrm);const L2=w.len/2;const Q=(q,z,off=0)=>[w.c[0]+w.r[0]*q+w.n[0]*off,w.c[1]+w.r[1]*q+w.n[1]*off,z];
     out+=poly(w.pts,shade(wallC,k),render?`filter="url(#${id}gr)"`:'');
+    if(TW){const zs0=w.pts.map(q=>q[2]);const vert=/vertical/i.test(p.facade||'');const o=[w.c[0]+w.n[0]*0.004,w.c[1]+w.n[1]*0.004,(Math.min(...zs0)+Math.max(...zs0))/2];
+      const fl=vert?texFill(TW,'w',o,[0,0,-1],[w.r[0],w.r[1],0]):texFill(TW,'w',o,[w.r[0],w.r[1],0],[0,0,-1]);if(fl)out+=fillOnly(w.pts.map(q=>[q[0]+w.n[0]*0.004,q[1]+w.n[1]*0.004,q[2]]),fl)}
+    if(render&&opt.ao!==false)out+=gradPoly([Q(-L2,zb,0.005),Q(L2,zb,0.005),Q(L2,zb+0.7,0.005),Q(-L2,zb+0.7,0.005)],Q(0,zb,0.005),Q(0,zb+0.7,0.005),0.2);
     if(render&&/bardage|bois|clin/i.test(p.facade||'')){const P2=w.pts.map(pt=>{const d=[pt[0]-w.c[0],pt[1]-w.c[1]];return[d[0]*w.r[0]+d[1]*w.r[1],pt[2]]});const zs=P2.map(q=>q[1]);const vert=/vertical/i.test(p.facade);
       if(vert){for(let q=-L2+0.13;q<L2;q+=0.13){let lo=1e9,hi=-1e9;for(let i=0;i<P2.length;i++){const A=P2[i],B=P2[(i+1)%P2.length];if((A[0]-q)*(B[0]-q)<=0&&A[0]!==B[0]){const z=A[1]+(B[1]-A[1])*(q-A[0])/(B[0]-A[0]);lo=Math.min(lo,z);hi=Math.max(hi,z)}}if(hi>lo)out+=line(Q(q,lo,0.006),Q(q,hi,0.006),sw*0.35,shade(wallC,k*0.8))}}
       else for(let z=Math.min(...zs)+0.15;z<Math.max(...zs);z+=0.15){let lo=1e9,hi=-1e9;for(let i=0;i<P2.length;i++){const A=P2[i],B=P2[(i+1)%P2.length];if((A[1]-z)*(B[1]-z)<=0&&A[1]!==B[1]){const q=A[0]+(B[0]-A[0])*(z-A[1])/(B[1]-A[1]);lo=Math.min(lo,q);hi=Math.max(hi,q)}}if(hi>lo)out+=line(Q(lo,z,0.006),Q(hi,z,0.006),sw*0.35,shade(wallC,k*0.8))}}
     if(zb<-0.02)out+=fillOnly([Q(-L2,zb,0.005),Q(L2,zb,0.005),Q(L2,0,0.005),Q(-L2,0,0.005)],shade(wallC,k*0.8))+line(Q(-L2,0,0.006),Q(L2,0,0.006),sw*0.45,shade(wallC,k*0.62));
     const tops=w.pts.slice(2).map(q=>q[2]);const flatTop=Math.max(...tops)-Math.min(...tops)<0.01;
-    if(flatTop&&!(w.flat??p.toit==='plat')&&p.debord>0.05){const zt=tops[0];const d=Math.min(0.55,0.25+p.debord*0.5);out+=fillOnly([Q(-L2,zt-d,0.004),Q(L2,zt-d,0.004),Q(L2,zt,0.004),Q(-L2,zt,0.004)],`rgba(0,0,0,${render?0.16:0.08})`)}
+    if(flatTop&&!(w.flat??p.toit==='plat')&&p.debord>0.05){const zt=tops[0];const d=Math.min(0.55,0.25+p.debord*0.5);out+=render?gradPoly([Q(-L2,zt-d*1.6,0.004),Q(L2,zt-d*1.6,0.004),Q(L2,zt,0.004),Q(-L2,zt,0.004)],Q(0,zt,0.004),Q(0,zt-d*1.6,0.004),0.3):fillOnly([Q(-L2,zt-d,0.004),Q(L2,zt-d,0.004),Q(L2,zt,0.004),Q(-L2,zt,0.004)],'rgba(0,0,0,0.08)')}
     if(w.flat??p.toit==='plat'){const wE=w.E??h.E;const z=wE-0.4;out+=fillOnly([Q(-L2,z,0.004),Q(L2,z,0.004),Q(L2,wE,0.004),Q(-L2,wE,0.004)],shade(wallC,k*0.9))+line(Q(-L2,z,0.006),Q(L2,z,0.006),sw*0.6)}
     for(const o of w.ops){const q0=o.q-o.o.w/2,q1=o.q+o.o.w/2,fw=0.065;
       if(o.o.k==='win'){
@@ -1326,8 +1377,13 @@ function renderBuilding(f2,pitch,opt={}){
   const pat=COUV_PAT[p.couv]||'tile';
   if(th)for(const r of vis){const low=r.pts.map(q=>[q[0],q[1],q[2]-th]);const hu=hull2([...r.pts,...low].map(V.P)).map(v=>v[0].toFixed(3)+','+(-v[1]).toFixed(3));
     [...r.pts,...low].forEach(q=>pts2.push(V.P(q)));out+=`<polygon points="${hu.join(' ')}" fill="${shade(rcOf(r),render?0.5:0.62)}" stroke="${ink}" stroke-width="${sw}" stroke-linejoin="round"/>`}
-  for(const r of vis){if(Math.abs(r.dd)<1e-3)continue;const k=lit(r.nrm);out+=poly(r.pts,shade(rcOf(r),k));
-    if(pat==='none'||Math.hypot(r.nrm[0],r.nrm[1])<0.01)continue;const cid=`${id}c${vi}_${vis.indexOf(r)}`;defs+=`<clipPath id="${cid}"><polygon points="${r.pts.map(q=>{const v=V.P(q);return v[0].toFixed(3)+','+(-v[1]).toFixed(3)}).join(' ')}"/></clipPath>`;
+  for(const r of vis){if(Math.abs(r.dd)<1e-3)continue;const k=lit(r.nrm);out+=poly(r.pts,shade(rcOf(r),k));const flatR=Math.hypot(r.nrm[0],r.nrm[1])<0.01;
+    if(TXo){const n=r.nrm;const c=r.pts.reduce((a,q)=>[a[0]+q[0]/r.pts.length,a[1]+q[1]/r.pts.length,a[2]+q[2]/r.pts.length],[0,0,0]);
+      if(flatR){const fl=texFill(TF,'f',c,[1,0,0],[0,1,0]);if(fl)out+=fillOnly(r.pts,fl,'opacity=".7"')}
+      else if(TR){const hl=Math.hypot(n[0],n[1]);const u=[-n[1]/hl,n[0]/hl,0];let d=[n[0]*n[2],n[1]*n[2],-1+n[2]*n[2]];const dl=Math.hypot(...d);d=d.map(x=>x/dl);
+        const low=r.pts.reduce((a,q)=>q[2]<a[2]?q:a);const tl=(low[0]-c[0])*d[0]+(low[1]-c[1])*d[1]+(low[2]-c[2])*d[2];const rh=TR.rh||TR.h;const sh=tl-Math.floor(tl/rh)*rh;const o=[c[0]+d[0]*sh+n[0]*0.01,c[1]+d[1]*sh+n[1]*0.01,c[2]+d[2]*sh+n[2]*0.01];
+        const fl=texFill(TR,'r',o,u,d);if(fl){out+=fillOnly(r.pts,fl);continue}}}
+    if(pat==='none'||flatR)continue;const cid=`${id}c${vi}_${vis.indexOf(r)}`;defs+=`<clipPath id="${cid}"><polygon points="${r.pts.map(q=>{const v=V.P(q);return v[0].toFixed(3)+','+(-v[1]).toFixed(3)}).join(' ')}"/></clipPath>`;
     let segs=[];const zs=r.pts.map(q=>q[2]);const z0=Math.min(...zs),z1=Math.max(...zs);const sinA=Math.max(0.15,Math.hypot(r.nrm[0],r.nrm[1]));
     const step={tile:0.34,canal:0.4,tileS:0.2,slate:0.17,rib:0,green:0.5}[pat];
     if(step&&z1-z0>0.05){for(let z=z0+step*sinA;z<z1-0.01;z+=step*sinA){const sg=sliceFace(r.pts,q=>q[2],z);if(sg)segs.push(sg)}}
@@ -1338,6 +1394,8 @@ function renderBuilding(f2,pitch,opt={}){
   if(isMain)out+=drawToitItems(V,q=>{const v=V.P(q);pts2.push(v);return v[0].toFixed(3)+','+(-v[1]).toFixed(3)},sw,render,new Set(vis.filter(r=>Math.abs(r.dd)>1e-3).map(r=>r.ri)));
   // faîtage et arêtiers soulignés
   if(p.toit==='2pans'||p.toit==='4pans'){for(const r of vis){const zs=r.pts.map(q=>q[2]);const zmx=Math.max(...zs);const top=r.pts.filter(q=>q[2]>zmx-1e-6);if(top.length===2)out+=line(top[0],top[1],sw*1.6,shade(roofC,0.55))}}};
+  if(render&&opt.ao!==false)for(const w of M.walls){const L2=w.len/2;const G=(q,off)=>[w.c[0]+w.r[0]*q+w.n[0]*off,w.c[1]+w.r[1]*q+w.n[1]*off,zb];
+    out+=gradPoly([G(-L2,0),G(L2,0),G(L2+0.35,0.8),G(-L2-0.35,0.8)],G(0,0),G(0,0.8),opt.soft?0.5:0.4)}
   const VO=M.vols||[{walls:M.walls,roofs:M.roofs,main:true}];if(VO.length>1){const near=V.side(VO[1].att.n,VO[1].att.pt)<0;(near?[0,1]:[1,0]).forEach(i=>drawVol(VO[i].walls,VO[i].roofs,i,!!VO[i].main))}else drawVol(VO[0].walls,VO[0].roofs,0,true);
   const bb=bbox(pts2);return{svg:`<defs>${defs}</defs>`+out,bb};
 }
@@ -2867,9 +2925,66 @@ function photoStats(sh){if(sh.stats||sh.statsBusy)return;sh.statsBusy=true;loadI
 function matchMatrix(sh){const st=sh.stats;const k=(sh.match??70)/100;if(!st||!k)return null;const avg=(st.r+st.g+st.b)/3||0.5;const lum=0.299*st.r+0.587*st.g+0.114*st.b;
   const br=clamp(1+k*(lum-0.47)*0.8,0.68,1.2);const t=c=>clamp(1+k*0.35*(c/avg-1),0.9,1.1)*br;return[t(st.r),t(st.g),t(st.b)]}
 /* masque du premier plan peint au doigt */
-function maskInner(sh){const m=sh.mask||[];return`<rect x="0" y="0" width="${sh.w}" height="${sh.h}" fill="#fff"/>`+m.map(s=>s.pts.length?`<path d="M${s.pts.map(p=>p[0].toFixed(0)+' '+p[1].toFixed(0)).join(' L')}${s.pts.length===1?' l0.1 0':''}" fill="none" stroke="${s.e?'#fff':'#000'}" stroke-width="${(s.r*2).toFixed(0)}" stroke-linecap="round" stroke-linejoin="round"/>`:'').join('')}
-function maskVis(sh){const m=sh.mask||[];if(!m.some(s=>!s.e))return'';
-  return`<mask id="plVisM"><rect x="0" y="0" width="${sh.w}" height="${sh.h}" fill="#000"/>${m.map(s=>`<path d="M${s.pts.map(p=>p[0].toFixed(0)+' '+p[1].toFixed(0)).join(' L')}${s.pts.length===1?' l0.1 0':''}" fill="none" stroke="${s.e?'#000':'#fff'}" stroke-width="${(s.r*2).toFixed(0)}" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}</mask><rect x="0" y="0" width="${sh.w}" height="${sh.h}" fill="#3EC6FF" fill-opacity=".38" mask="url(#plVisM)"/>`}
+function maskInner(sh){const m=sh.mask||[];return`<rect x="0" y="0" width="${sh.w}" height="${sh.h}" fill="#fff"/>`+(sh.fg?`<image href="${sh.fg}" x="0" y="0" width="${sh.w}" height="${sh.h}" preserveAspectRatio="none"/>`:'')+m.map(s=>s.pts.length?`<path d="M${s.pts.map(p=>p[0].toFixed(0)+' '+p[1].toFixed(0)).join(' L')}${s.pts.length===1?' l0.1 0':''}" fill="none" stroke="${s.e?'#fff':'#000'}" stroke-width="${(s.r*2).toFixed(0)}" stroke-linecap="round" stroke-linejoin="round"/>`:'').join('')}
+function maskVis(sh){const m=sh.mask||[];if(!m.some(s=>!s.e)&&!sh.fg)return'';
+  return`<filter id="plWhite"><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0"/></filter><mask id="plVisM"><rect x="0" y="0" width="${sh.w}" height="${sh.h}" fill="#000"/>${sh.fg?`<image href="${sh.fg}" x="0" y="0" width="${sh.w}" height="${sh.h}" preserveAspectRatio="none" filter="url(#plWhite)"/>`:''}${m.map(s=>`<path d="M${s.pts.map(p=>p[0].toFixed(0)+' '+p[1].toFixed(0)).join(' L')}${s.pts.length===1?' l0.1 0':''}" fill="none" stroke="${s.e?'#000':'#fff'}" stroke-width="${(s.r*2).toFixed(0)}" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}</mask><rect x="0" y="0" width="${sh.w}" height="${sh.h}" fill="#3EC6FF" fill-opacity=".38" mask="url(#plVisM)"/>`}
+
+/* ================= Premier plan : détourage automatique et baguette ================= */
+/* silhouette du projet dans la photo (pixels de la photo) */
+function shotPx(sh){const {G,V}=shotView(sh);const s=(sh.w/2)/V.W,cx=sh.w/2,cy=sh.h/2,a=G.r*D2R,ca=Math.cos(a),sa=Math.sin(a);
+  return q=>{const v=V.P(q);if(!v||!Number.isFinite(v[0])||!Number.isFinite(v[1]))return null;const x=s*v[0],y=-s*v[1];return[cx+x*ca-y*sa,cy+x*sa+y*ca]}}
+function shotSilhouette(sh){const M=model();const pr=shotPx(sh);const pts=[...M.walls.flatMap(w=>w.pts),...M.roofs.flatMap(r=>r.pts)].map(pr).filter(Boolean);return pts.length>2?hull2(pts):null}
+/* analyse de la photo à résolution réduite (mise en cache) */
+const FGA={};
+function fgAnalyse(sh){if(FGA.src===sh.img&&FGA.p)return FGA.p;FGA.src=sh.img;FGA.p=new Promise((res,rej)=>{const im=new Image();im.onload=()=>{const W=Math.min(720,im.naturalWidth),H=Math.round(W*im.naturalHeight/im.naturalWidth);
+    const c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(im,0,0,W,H);const d=g.getImageData(0,0,W,H).data;
+    const R=new Float32Array(W*H),Gc=new Float32Array(W*H),B=new Float32Array(W*H);
+    // flou 5×5 (boîte séparable) pour lisser la texture du feuillage
+    const blur=(src,dst)=>{const t=new Float32Array(W*H);for(let y=0;y<H;y++)for(let x=0;x<W;x++){let s=0;for(let k=-2;k<=2;k++)s+=src(y*W+Math.min(W-1,Math.max(0,x+k)));t[y*W+x]=s/5}
+      for(let x=0;x<W;x++)for(let y=0;y<H;y++){let s=0;for(let k=-2;k<=2;k++)s+=t[Math.min(H-1,Math.max(0,y+k))*W+x];dst[y*W+x]=s/5}};
+    blur(i=>d[i*4],R);blur(i=>d[i*4+1],Gc);blur(i=>d[i*4+2],B);
+    const L=new Float32Array(W*H);for(let i=0;i<W*H;i++)L[i]=0.3*d[i*4]+0.59*d[i*4+1]+0.11*d[i*4+2];
+    // texture locale : écart à la moyenne lissée
+    const Tx=new Float32Array(W*H);for(let i=0;i<W*H;i++){const lm=0.3*R[i]+0.59*Gc[i]+0.11*B[i];Tx[i]=Math.abs(L[i]-lm)}const Tx2=new Float32Array(W*H);blur(i=>Tx[i],Tx2);
+    res({W,H,k:W/sh.w,R,G:Gc,B,L,T:Tx2})};im.onerror=()=>{FGA.p=null;rej(new Error('photo illisible'))};im.src=sh.img});return FGA.p}
+/* masque raster (1 = premier plan) -> image noire semi-transparente à la taille de l'analyse */
+function fgToURL(A,m){const c=document.createElement('canvas');c.width=A.W;c.height=A.H;const g=c.getContext('2d');const im=g.createImageData(A.W,A.H);for(let i=0;i<m.length;i++)if(m[i]){im.data[i*4+3]=255}g.putImageData(im,0,0);
+  // adoucit le bord
+  const c2=document.createElement('canvas');c2.width=A.W;c2.height=A.H;const g2=c2.getContext('2d');g2.filter='blur(0.7px)';g2.drawImage(c,0,0);return c2.toDataURL('image/png')}
+async function fgFromURL(A,url){if(!url)return new Uint8Array(A.W*A.H);const im=new Image();await new Promise(r=>{im.onload=im.onerror=r;im.src=url});const c=document.createElement('canvas');c.width=A.W;c.height=A.H;const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(im,0,0,A.W,A.H);
+  const d=g.getImageData(0,0,A.W,A.H).data;const m=new Uint8Array(A.W*A.H);for(let i=0;i<m.length;i++)m[i]=d[i*4+3]>110?1:0;return m}
+/* fermeture morphologique (bouche les petits trous) */
+function fgClose(A,m,r){const W=A.W,H=A.H;const dil=(src,on)=>{const o=new Uint8Array(W*H);for(let y=0;y<H;y++)for(let x=0;x<W;x++){let v=on?0:1;for(let dy=-r;dy<=r&&(on?!v:v);dy++)for(let dx=-r;dx<=r;dx++){const X=x+dx,Y=y+dy;if(X<0||Y<0||X>=W||Y>=H)continue;const s=src[Y*W+X];if(on&&s){v=1;break}if(!on&&!s){v=0;break}}o[y*W+x]=v}return o};return dil(dil(m,true),false)}
+/* baguette : croissance de région depuis le point touché */
+function fgWand(A,px,py,tol){const W=A.W,H=A.H;const x0=Math.round(px*A.k),y0=Math.round(py*A.k);if(x0<0||y0<0||x0>=W||y0>=H)return null;
+  const i0=y0*W+x0;let mr=A.R[i0],mg=A.G[i0],mb=A.B[i0],n=1;const out=new Uint8Array(W*H);const st=[i0];out[i0]=1;const T1=tol||34,T2=(tol||34)*0.62;const cap=W*H*0.4;
+  const dist=(i,r,g,b)=>{const dr=A.R[i]-r,dg=A.G[i]-g,db=A.B[i]-b;return Math.sqrt(0.3*dr*dr+0.59*dg*dg+0.11*db*db)*1.7};
+  while(st.length&&n<cap){const i=st.pop();const x=i%W,y=(i/W)|0;for(const j of[x>0?i-1:-1,x<W-1?i+1:-1,y>0?i-W:-1,y<H-1?i+W:-1]){if(j<0||out[j])continue;
+      if(dist(j,mr/1,mg/1,mb/1)<T1&&dist(j,A.R[i],A.G[i],A.B[i])<T2){out[j]=1;st.push(j);n++;mr+=(A.R[j]-mr)/n;mg+=(A.G[j]-mg)/n;mb+=(A.B[j]-mb)/n}}}
+  return n>=cap?null:fgClose(A,out,1)}
+/* détourage automatique : végétation haute qui passe devant le pied de la construction */
+function fgAuto(A,sh){const W=A.W,H=A.H;const hull=shotSilhouette(sh);if(!hull)return{m:null,why:'Calez d\'abord la construction sur la photo.'};
+  const hp=hull.map(q=>[q[0]*A.k,q[1]*A.k]);const xs=hp.map(q=>q[0]);const xa=Math.max(0,Math.floor(Math.min(...xs))),xb=Math.min(W-1,Math.ceil(Math.max(...xs)));if(xb-xa<4)return{m:null,why:'Construction hors de la photo.'};
+  // haut et bas de la silhouette pour chaque colonne
+  const top=new Float32Array(W).fill(1e9),bot=new Float32Array(W).fill(-1e9);for(let i=0;i<hp.length;i++){const P=hp[i],Q=hp[(i+1)%hp.length];const a=Math.min(P[0],Q[0]),b=Math.max(P[0],Q[0]);
+    for(let x=Math.max(xa,Math.ceil(a));x<=Math.min(xb,Math.floor(b));x++){const t=b-a<1e-6?0:(x-P[0])/(Q[0]-P[0]);const y=P[1]+(Q[1]-P[1])*t;top[x]=Math.min(top[x],y);bot[x]=Math.max(bot[x],y)}}
+  // luminance du sol au premier plan (végétation du bas de l'image)
+  const gl=[];for(let y=Math.floor(H*0.85);y<H;y++)for(let x=0;x<W;x+=3){const i=y*W+x;if(2*A.G[i]-A.R[i]-A.B[i]>12)gl.push(A.L[i])}gl.sort((a,b)=>a-b);const lawn=gl.length>50?gl[gl.length>>1]:150;
+  const veg=i=>{const exg=2*A.G[i]-A.R[i]-A.B[i];return(exg>10||(exg>2&&A.L[i]<70))&&A.L[i]<Math.max(60,lawn*0.86)&&A.T[i]>3.2};
+  const m=new Uint8Array(W*H);const hgt=new Float32Array(W);
+  for(let x=xa;x<=xb;x++){if(bot[x]<0)continue;const yb=Math.min(H-1,Math.round(bot[x]));let seed=0;for(let y=yb-2;y<=Math.min(H-1,yb+3);y++)if(y>=0&&veg(y*W+x))seed++;if(seed<4)continue;
+    let y=yb,gap=0,yt=yb;while(y>Math.max(0,top[x]-2)){if(veg(y*W+x)){gap=0;yt=y}else if(++gap>3)break;y--}hgt[x]=yb-yt}
+  // lissage horizontal (médiane) et suppression des colonnes isolées
+  const hs=new Float32Array(W);for(let x=xa;x<=xb;x++){const win=[];for(let k=-4;k<=4;k++){const X=x+k;if(X>=xa&&X<=xb)win.push(hgt[X])}win.sort((a,b)=>a-b);hs[x]=win[win.length>>1]}
+  let cols=0;for(let x=xa;x<=xb;x++){if(hs[x]<3)continue;cols++;const yb=Math.min(H-1,Math.round(bot[x])+4);const yt=Math.round(bot[x]-Math.min(hs[x],hgt[x]+2));for(let y=Math.max(0,yt);y<=yb;y++){const i=y*W+x;if(y>bot[x]-2||veg(i)||A.T[i]>2)m[i]=1}}
+  const share=cols/(xb-xa+1);if(share<0.04)return{m:null,why:'Aucun premier plan détecté devant la construction.'};
+  return{m:fgClose(A,m,2),share}}
+/* actions de l'interface */
+async function plFgAuto(){const sh=PL.sh;if(!sh)return;toast('Analyse de la photo…',1500);try{const A=await fgAnalyse(sh);const r=fgAuto(A,sh);if(!r.m){toast(r.why,5000);return}
+    const prev=await fgFromURL(A,sh.fg);for(let i=0;i<prev.length;i++)if(prev[i])r.m[i]=1;PL.hist.push({t:'fg',prev:sh.fg||null});sh.fg=fgToURL(A,r.m);PL.tool='wand';plRender();toast(`Premier plan détecté sur ${Math.round(r.share*100)} % de la largeur. Vérifiez : 🪄 pour ajouter un objet, Gomme pour corriger.`,7000)}catch(e){toast('Détourage impossible : '+e.message)}}
+async function plFgWand(px,py){const sh=PL.sh;try{const A=await fgAnalyse(sh);const r=fgWand(A,px,py,+($('#plWTol')&&$('#plWTol').value)||34);if(!r){toast('Zone trop grande : touchez l\'objet lui-même, ou réduisez la tolérance.',5000);return}
+    const prev=await fgFromURL(A,sh.fg);for(let i=0;i<prev.length;i++)if(prev[i])r[i]=1;PL.hist.push({t:'fg',prev:sh.fg||null});sh.fg=fgToURL(A,r);plRender()}catch(e){toast('Baguette impossible : '+e.message)}}
+function plUndo(){const sh=PL.sh;if(!sh)return;const h=PL.hist.pop();if(!h){if(sh.mask&&sh.mask.length){sh.mask.pop();plRender()}return}if(h.t==='fg')sh.fg=h.prev;else if(h.t==='stroke'&&sh.mask)sh.mask.pop();plRender()}
 
 /* ---------- végétation du projet (S.vege) ---------- */
 const VEGE={arbre:{n:'Arbre de haute tige',h:6,r:2.2},arbuste:{n:'Arbuste',h:2,r:0.9},haie:{n:'Haie',h:1.6,e:0.8}};
@@ -3050,7 +3165,7 @@ function loupe(sh,pt,client){const L=$('#plLoupe');if(!pt){L.hidden=true;return}
 const PL={sh:null,done:null,view:'plan',ptrs:new Map(),g:null,guides:true,op:1,ortho:true,fine:false,snap:null,edit:null};
 function plRender(){const sh=PL.sh;const port=isPortail();const split=PL.view==='split'&&sh;const photo=(PL.view==='photo'||split)&&sh;const plan=!photo||split;
   $('#plSeg').hidden=!sh;$('#plVPhoto').classList.toggle('on',PL.view==='photo');$('#plVSplit').classList.toggle('on',!!split);$('#plVPlan').classList.toggle('on',!photo);$('.pl-photo').classList.toggle('split',!!split);
-  $('#plTools').hidden=!photo;for(const[id,t]of[['#plTAnchor','anchor'],['#plTBrush','brush'],['#plTErase','erase']])$(id).classList.toggle('on',PL.tool===t);$('#plBSize').hidden=$('#plTClear').hidden=PL.tool==='anchor';
+  $('#plTools').hidden=!photo;for(const[id,t]of[['#plTAnchor','anchor'],['#plTBrush','brush'],['#plTErase','erase'],['#plTWand','wand']])$(id).classList.toggle('on',PL.tool===t);$('#plTClear').hidden=$('#plTUndo').hidden=!(PL.sh&&((PL.sh.mask&&PL.sh.mask.length)||PL.sh.fg));$('#plBSize').hidden=!(PL.tool==='brush'||PL.tool==='erase');$('#plWTol').hidden=PL.tool!=='wand';
   $('#plPz').hidden=!photo;$('#plCMode').hidden=$('#plPFine').hidden=PL.tool!=='anchor';$('#plCMode').textContent=PL.cmode==='4'?'4 coins':'2 coins';$('#plCMode').classList.toggle('on',PL.cmode==='4');$('#plPFine').classList.toggle('on',!!PL.pfine);
   $('#plNudge').hidden=!photo||PL.tool!=='anchor'||PL.selC==null;$('#plNudgeL').textContent=PL.selC==null?'':'Ajuster le coin sélectionné';
   $('#plRender').hidden=!photo;$('#plVeg').hidden=!plan||PL.veg==null;$('#plTVeg').classList.toggle('vegon',PL.veg!=null);$$('[data-veg]').forEach(b=>b.classList.toggle('on',b.dataset.veg!==''&&b.dataset.veg===PL.veg));
@@ -3063,7 +3178,7 @@ function plRender(){const sh=PL.sh;const port=isPortail();const split=PL.view===
     svg.innerHTML=`<image href="${sh.img}" x="0" y="0" width="${sh.w}" height="${sh.h}" preserveAspectRatio="none"/>`+(PL.guides?`<g transform="${tr}">${shotGuides(V)}</g>`:'')+`<g opacity="${PL.op}">${shotOverlay(sh)}</g>`+`<g id="plVis" pointer-events="none">${PL.tool==='brush'||PL.tool==='erase'?maskVis(sh):''}</g>`+(PL.tool==='anchor'?`<g id="plCorners">${cornersSVG(sh)}</g>`:'')+(()=>{return'';const a=shotProject(sh,anchorWorld());if(!a)return'';const r=sh.w/60;return`<g pointer-events="none"><circle cx="${a[0].toFixed(1)}" cy="${a[1].toFixed(1)}" r="${r.toFixed(1)}" fill="none" stroke="#ff5a4a" stroke-width="${(r/4).toFixed(1)}"/><circle cx="${a[0].toFixed(1)}" cy="${a[1].toFixed(1)}" r="${(r/4).toFixed(1)}" fill="#ff5a4a"/></g>`})()}
   if(plan){const m=$('#plMap');m.removeAttribute('hidden');m.innerHTML=plMapSVG();m.setAttribute('viewBox',PL.mapVB.join(' '))}
   const cm=isPoolMode()?(PL.cmode==='4'?'Tirez les 4 ronds sur les angles du bassin.':'Tirez les 2 ronds rouges sur deux angles du bassin (côté rue).')+' <span class="more">ⓘ</span>':(PL.cmode==='4'?(port?'Tirez les 4 ronds sur les coins du portail.':'Tirez les 4 ronds sur les angles de la maison, au pied des murs.'):(port?'Tirez les 2 ronds rouges sur le bas du portail, au sol.':'Tirez les 2 ronds rouges sur les angles de la façade avant, au pied des murs.'))+(PL.msgMore?' La taille et la perspective se règlent seules. Pincez pour zoomer la photo ; touchez un rond puis les flèches pour l\'ajuster au pixel. <span class="more" data-msgless>moins</span>':' <span class="more" data-msgmore>ⓘ</span>');
-  $('#plMsg').innerHTML=mode()==='dp-arbres'?(PL.veg==='del'?'Touchez un arbre pour le <b>retirer</b>.':'<b>Touchez chaque arbre à abattre</b> sur la vue aérienne. Deux doigts : zoom.'):photo&&PL.tool==='brush'?'<b>Peignez au doigt</b> ce qui doit rester <b>devant</b> la maison (haie, arbre, clôture, voiture) : ces zones repassent au premier plan. Zone peinte en bleu.':
+  $('#plMsg').innerHTML=mode()==='dp-arbres'?(PL.veg==='del'?'Touchez un arbre pour le <b>retirer</b>.':'<b>Touchez chaque arbre à abattre</b> sur la vue aérienne. Deux doigts : zoom.'):photo&&PL.tool==='wand'?'<b>Touchez un objet</b> qui doit passer <b>devant</b> la construction (haie, arbre, muret, voiture) : il est détouré tout seul.':photo&&PL.tool==='brush'?'<b>Peignez au doigt</b> ce qui doit rester <b>devant</b> la maison (haie, arbre, clôture, voiture) : ces zones repassent au premier plan. Zone peinte en bleu.':
     photo&&PL.tool==='erase'?'<b>Gomme</b> : repassez sur une zone peinte pour la retirer.':
     split?cm+' En bas : d\'où la photo a été prise (📷).':photo?cm:
     port?'Glissez le doigt n\'importe où pour faire coulisser le portail. Deux doigts : zoom.':PL.sh?'📷 = d\'où la photo a été prise (déplaçable). Ailleurs, le doigt déplace la maison.':'Glissez le doigt <b>n\'importe où</b> : la maison suit sans être cachée. Deux doigts : zoom. <b>Touchez une cote</b> pour saisir la distance exacte.';
@@ -3139,7 +3254,8 @@ function moveBy(d){if(isPortail()){const c=S.clo.find(o=>o.kind==='portail');con
   else{S.projet.x+=d[0];S.projet.y+=d[1]}}
 function ptrDown(e,which){e.preventDefault();const el=e.currentTarget;try{el.setPointerCapture(e.pointerId)}catch(_){}PL.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(PL.ptrs.size===2){const [a,b]=[...PL.ptrs.values()];if(which==='photo'){const sh=PL.sh;PL.g={pz:true,dist:Math.hypot(b.x-a.x,b.y-a.y),mid:[(a.x+b.x)/2,(a.y+b.y)/2],vb:(PL.pz||[0,0,sh.w,sh.h]).slice()};loupe(sh,null);return}PL.g={two:true,dist:Math.hypot(b.x-a.x,b.y-a.y),mid:[(a.x+b.x)/2,(a.y+b.y)/2],fov:PL.sh?+PL.sh.pose.fov||66:66,bb:PL.zoomBB&&PL.zoomBB.slice()};return}
-  if(which==='photo'&&(PL.tool==='brush'||PL.tool==='erase')){const [px,py]=svgPtOf($('#plSvg'),e);const r=+$('#plBSize').value*phK(PL.sh);PL.sh.mask=PL.sh.mask||[];const st={e:PL.tool==='erase'?1:0,r:Math.round(r),pts:[[px,py]]};PL.sh.mask.push(st);PL.g={stroke:st};plMaskLive();return}
+  if(which==='photo'&&PL.tool==='wand'){const [px,py]=svgPtOf($('#plSvg'),e);plFgWand(px,py);return}
+  if(which==='photo'&&(PL.tool==='brush'||PL.tool==='erase')){const [px,py]=svgPtOf($('#plSvg'),e);const r=+$('#plBSize').value*phK(PL.sh);PL.sh.mask=PL.sh.mask||[];const st={e:PL.tool==='erase'?1:0,r:Math.round(r),pts:[[px,py]]};PL.sh.mask.push(st);PL.hist.push({t:'stroke'});PL.g={stroke:st};plMaskLive();return}
   if(which==='photo'){const [px,py]=svgPtOf($('#plSvg'),e);const pix=cornerPix(PL.sh);if(!pix||!pix.every(Boolean)){PL.g=null;return}const k=phK(PL.sh);const CPf=cornerPlane().front;
     let bi=-1,bd=48*k;pix.forEach((q,i)=>{if(PL.cmode!=='4'&&!CPf.includes(i))return;const d=Math.hypot(q[0]-px,q[1]-py);if(d<bd){bd=d;bi=i}});
     if(bi>=0){PL.selC=bi;PL.g={ch:bi,fixed:pix.map(q=>q.slice()),start:[px,py],base:pix[bi].slice()};loupe(PL.sh,pix[bi],[e.clientX,e.clientY]);return}
@@ -3192,7 +3308,7 @@ $('#plPzIn').onclick=()=>pzZoom(0.6);$('#plPzOut').onclick=()=>pzZoom(1.6);$('#p
 $('#plSvg').addEventListener('wheel',e=>{if(!PL.sh)return;e.preventDefault();pzZoom(e.deltaY>0?1.2:0.83)},{passive:false});
 $$('[data-nudge]').forEach(b=>b.onclick=()=>{const sh=PL.sh;if(PL.selC==null)return;const px=cornerPix(sh);if(!px||!px.every(Boolean))return;const [dx,dy]=b.dataset.nudge.split(',').map(Number);const st=(PL.pfine?0.5:2)*phK(sh);
   const T=px.map(q=>q.slice());T[PL.selC]=[T[PL.selC][0]+dx*st,T[PL.selC][1]+dy*st];solveCorners(sh,T);plRender()});$('#plTBrush').onclick=()=>{PL.tool='brush';plRender()};$('#plTErase').onclick=()=>{PL.tool='erase';plRender()};
-$('#plTClear').onclick=()=>{if(PL.sh){PL.sh.mask=[];plRender()}};
+$('#plTClear').onclick=()=>{if(PL.sh){PL.hist.push({t:'fg',prev:PL.sh.fg||null});PL.sh.mask=[];PL.sh.fg=null;plRender()}};$('#plTWand').onclick=()=>{PL.tool='wand';plRender()};$('#plTAuto').onclick=()=>plFgAuto();$('#plTUndo').onclick=()=>plUndo();
 $('#plTVeg').onclick=()=>{PL.veg=PL.veg==null?'arbre':null;PL.vegA=null;plRender()};$$('[data-veg]').forEach(b=>b.onclick=()=>{PL.veg=b.dataset.veg===''?(mode()==='dp-arbres'?'abat':null):b.dataset.veg;PL.vegA=null;plRender()});
 $('#plSun').onchange=e=>{const sh=PL.sh;const sf=sunFor(sh);sh.sun={mode:e.target.value,az:Math.round(sf.az),el:Math.round(sf.el)};plRender()};
 $('#plSunAz').oninput=e=>{PL.sh.sun={...(PL.sh.sun||{}),mode:'manuel',az:+e.target.value};plRender()};$('#plSunEl').oninput=e=>{PL.sh.sun={...(PL.sh.sun||{}),mode:'manuel',el:+e.target.value};plRender()};
@@ -3221,7 +3337,7 @@ $('#plRetake').onclick=()=>plClose('retake');$('#plCancel').onclick=()=>plClose(
 function isLand(){return innerWidth>innerHeight&&innerHeight<=620}
 function plLayout(){const land=isLand();$('#place').classList.toggle('land',land);document.body.classList.toggle('land',land);const host=$('#plSide');for(const id of['#plTools','#plPz','#plMapTools']){const el=$(id);if(el&&el.parentNode!==host)host.appendChild(el)}}
 addEventListener('resize',()=>{plLayout();if(!$('#place').hidden)plRender()});addEventListener('orientationchange',()=>setTimeout(()=>{plLayout();if(!$('#place').hidden)plRender()},250));plLayout();
-function plOpen(sh,view){plLayout();PL.sh=sh;PL.view=view;PL.ptrs.clear();PL.g=null;PL.zoomBB=null;PL.edit=null;PL.snap=null;PL.tool='anchor';PL.cmode=PL.cmode||'2';PL.selC=null;PL.pz=null;PL.veg=mode()==='dp-arbres'?'abat':null;PL.vegA=null;PL.backup={x:S.projet.x,y:S.projet.y,rot:S.projet.rot,clo:JSON.parse(JSON.stringify(S.clo))};
+function plOpen(sh,view){plLayout();PL.sh=sh;PL.hist=[];PL.view=view;PL.ptrs.clear();PL.g=null;PL.zoomBB=null;PL.edit=null;PL.snap=null;PL.tool='anchor';PL.cmode=PL.cmode||'2';PL.selC=null;PL.pz=null;PL.veg=mode()==='dp-arbres'?'abat':null;PL.vegA=null;PL.backup={x:S.projet.x,y:S.projet.y,rot:S.projet.rot,clo:JSON.parse(JSON.stringify(S.clo))};
   if(isPortail()&&!S.clo.some(o=>o.kind==='portail'))addClo('portail',true);$('#plRetake').hidden=!sh;$('#place').hidden=false;plRender();return new Promise(r=>PL.done=r)}
 async function placeOnPlan(){const r=await plOpen(null,'plan');if(r==='ok'){S.onsite=Object.assign(S.onsite||{},{placed:true});if(S.onsite.shot)await onsiteApply();save();return true}return false}
 function plFitCam(){if(!PL.sh)return;const th=mapTheta();const G=shotGeom(PL.sh);const pts=bat().corners.concat([G.cw]);if(isPortail()){const c=cloCenter();if(c)pts.push(c)}PL.zoomBB=bbox(pts.map(q=>mRot(q,th)),5)}
