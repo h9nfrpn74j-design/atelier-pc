@@ -218,6 +218,8 @@ a.btn{text-decoration:none;color:inherit}
 .seg-state label:has(input:checked){background:#7a4e1d}
 body[data-mode="dp-facade"] .pc-only,body[data-mode="dp-toiture"] .pc-only{display:none!important}
 .wz-forme{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:4px 0 8px}.wz-forme label{display:grid;justify-items:center;gap:2px;padding:6px 4px;border:1.5px solid var(--line,#ddd);border-radius:12px;cursor:pointer;font-weight:600;font-size:13px;color:var(--ink,#18211F)}.wz-forme input{position:absolute;opacity:0;pointer-events:none}.wz-forme label:has(input:checked){border-color:var(--acc,#1E5A56);background:rgba(30,90,86,.08);color:var(--acc,#1E5A56)}
+.fready{position:fixed;inset:0;z-index:300;background:rgba(10,14,13,.45);display:grid;place-items:end center;padding:12px 12px max(12px,env(safe-area-inset-bottom))}.fr-box{background:var(--panel,#fff);color:var(--ink,#18211F);border-radius:16px;padding:16px;display:grid;gap:10px;width:min(440px,100%);box-shadow:0 20px 60px rgba(0,0,0,.35)}.fr-n{font-size:13px;color:var(--mut,#5b6763);word-break:break-all}
+.ios-hint{position:fixed;left:10px;right:10px;bottom:calc(70px + env(safe-area-inset-bottom));z-index:120;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;background:#18211F;color:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 12px 40px rgba(0,0,0,.35);font-size:13.5px;line-height:1.4}.ios-hint>div>b:first-child{display:block;margin-bottom:3px}.ios-hint button{background:none;border:0;color:#fff;font-size:22px;line-height:1;padding:0 4px;cursor:pointer}
 .aile-box{border:1px solid var(--line,#ddd);border-radius:10px;padding:8px 10px;margin:8px 0;display:grid;gap:6px}.aile-box:not(.on) .aile-f{display:none}.aile-f{display:grid;gap:6px}body:not(.has-aile) .aile-row{display:none}
 .arb-only{display:none!important}body[data-mode="dp-arbres"] .arb-only{display:inline-flex!important}body[data-mode="dp-arbres"] #plVeg [data-veg="arbre"],body[data-mode="dp-arbres"] #plVeg [data-veg="arbuste"],body[data-mode="dp-arbres"] #plVeg [data-veg="haie"],body[data-mode="dp-arbres"] #plVeg [data-veg=""],body[data-mode="dp-arbres"] #plMove,body[data-mode="dp-arbres"] #plDist,body[data-mode="dp-arbres"] #plTVeg,body[data-mode="dp-arbres"] #plDial,body[data-mode="dp-arbres"] #plSnap,body[data-mode="dp-arbres"] #plRotV{display:none!important}
 .arb-grid{display:grid;gap:4mm;height:100%;grid-template-columns:1fr 1fr;align-content:start}.arb-grid.n1{grid-template-columns:1fr}.arb-ph{margin:0;display:grid;gap:1.5mm}.arb-ph img{width:100%;height:62mm;object-fit:cover;border:0.3mm solid #999}.arb-grid.n1 .arb-ph img{height:140mm;object-fit:contain}.arb-ph figcaption{font:8pt var(--f-ui)}.arb-th{width:100%;max-height:160px;object-fit:cover;border-radius:8px;margin:6px 0}
@@ -938,7 +940,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
   <div class="here-bar"><button class="btn primary" type="button" id="hrOk" disabled>📍 Ici</button></div>
 </div>
 <div class="dos" id="dos" hidden role="dialog" aria-modal="true" aria-labelledby="dosT"><div class="dos-box">
-  <div class="dos-head"><h2 id="dosT">Mes dossiers</h2><button class="btn primary sm" type="button" id="dosNew">+ Nouveau dossier</button><button class="wz-x" type="button" id="dosClose" aria-label="Fermer">×</button></div>
+  <div class="dos-head"><h2 id="dosT">Mes dossiers</h2><button class="btn primary sm" type="button" id="dosNew">+ Nouveau dossier</button><label class="btn sm" id="dosImp">Importer<input type="file" accept=".json,application/json" hidden></label><button class="wz-x" type="button" id="dosClose" aria-label="Fermer">×</button></div>
   <div class="dos-list" id="dosList"></div>
   <p class="hint dos-note">Les dossiers sont enregistrés automatiquement dans ce navigateur, photos comprises. Pour les garder ailleurs, utilisez « Enregistrer » (fichier projet).</p>
 </div></div>
@@ -2782,8 +2784,8 @@ $('#bParse').onclick=()=>{const got=parseDesc(S.projet.desc||'');const ul=$('#un
   S.notice=null;fillInputs();renderAll();save();goTab('pcmi2')};
 
 // Fichiers
-$('#bSave').onclick=()=>{const blob=new Blob([packS()],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download=`permis-${(S.terrain.commune||'projet').toLowerCase().replace(/[^a-z0-9]+/g,'-')}-${parcelRefs().replace(/[^A-Za-z0-9]+/g,'')}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);toast('Projet enregistré dans vos téléchargements.')};
+$('#bSave').onclick=()=>{const blob=new Blob([packS()],{type:'application/json'});
+  saveBlob(blob,`permis-${(S.terrain.commune||'projet').toLowerCase().replace(/[^a-z0-9]+/g,'-')}-${parcelRefs().replace(/[^A-Za-z0-9]+/g,'')}.json`);if(!(IOS&&canShareFiles()))toast('Projet enregistré dans vos téléchargements.')};
 $('#bOpen').onclick=()=>$('#fOpen').click();
 $('#fOpen').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const j=unpackS(JSON.parse(await f.text()));if(!j.terrain||!j.projet)throw new Error('fichier non reconnu');S=Object.assign(demoState(),j);if(!j.existants)S.existants=[];mapCache={};fillInputs();renderExList();renderAll();save();toast('Projet ouvert.')}catch(err){toast('Impossible d\'ouvrir ce fichier : '+err.message)}e.target.value=''});
 function doPrint(only){$$('.wrap').forEach(w=>w.classList.toggle('skip',w.id==='w-checks'||(only&&w.id!=='w-'+only)));window.print();setTimeout(()=>$$('.wrap').forEach(w=>w.classList.remove('skip')),500)}
@@ -3621,7 +3623,6 @@ const LIBS={h2c:'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2c
 const libP={};
 function loadLib(k){if(libP[k])return libP[k];libP[k]=new Promise((res,rej)=>{const sc=document.createElement('script');sc.src=LIBS[k];sc.onload=()=>res();sc.onerror=()=>{libP[k]=null;rej(new Error('bibliothèque PDF non chargée (connexion ?)'))};document.head.appendChild(sc)});return libP[k]}
 const fileSafe=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9-]+/g,'_').replace(/^_|_$/g,'');
-function saveBlob(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000)}
 function pdfBusy(msg){let b=$('#pdfBusy');if(!msg){if(b)b.remove();return}if(!b){b=document.createElement('div');b.id='pdfBusy';b.className='pdf-busy';document.body.appendChild(b)}b.innerHTML=`<div><b>${esc(msg)}</b><span>Ne fermez pas la page.</span></div>`}
 /* une planche -> image haute définition */
 async function sheetCanvas(id){renderSheet(id);const src=$('#w-'+id+' .sheet');if(!src)return null;const host=document.createElement('div');host.className='pdf-host';const cl=src.cloneNode(true);cl.style.transform='none';cl.style.boxShadow='none';
@@ -3893,6 +3894,32 @@ $('#wzPrev').onclick=()=>wzGo(WZ.step-1);$('#wzClose').onclick=wzClose;$('#bExpr
 $('#pkOk').addEventListener('click',()=>{if($('#wiz').hidden)return;const t=setInterval(()=>{if(!S.demo&&S.terrain.parcels.length){clearInterval(t);if(S.wz)S.wz.done=false;if(S.onsite)S.onsite.placed=false;wzRender();setTimeout(wzRender,2500);setTimeout(wzRender,6000)}},400);setTimeout(()=>clearInterval(t),15000)});
 document.addEventListener('input',e=>{if($('#wiz').hidden)return;if(e.target.closest('#wzBody [data-b^="regles."]'))setTimeout(wzRefresh,150)});
 
+/* ================= iPhone / iPad : application web installée ================= */
+const IOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const STANDALONE=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;
+function canShareFiles(){try{return!!(navigator.canShare&&navigator.canShare({files:[new File(['x'],'x.txt',{type:'text/plain'})]}))}catch(e){return false}}
+/* sur iPhone, un fichier se range par la feuille de partage (Fichiers, Mail, AirDrop…) */
+function fileReady(blob,name){let el=$('#fReady');if(el)el.remove();el=document.createElement('div');el.id='fReady';el.className='fready';el.setAttribute('role','dialog');el.setAttribute('aria-label','Fichier prêt');
+  const kb=blob.size>1048576?fmt(blob.size/1048576,1)+' Mo':Math.max(1,Math.round(blob.size/1024))+' Ko';
+  el.innerHTML=`<div class="fr-box"><b>Fichier prêt</b><span class="fr-n">${esc(name)} · ${kb}</span>
+    <button class="btn primary" type="button" data-fr="share">Enregistrer ou envoyer…</button>
+    <span class="hint">Choisissez « Enregistrer dans Fichiers » pour le garder sur l'iPhone, ou Mail pour l'envoyer.</span>
+    <div class="btns">${/pdf/.test(blob.type)?'<button class="btn sm" type="button" data-fr="open">Ouvrir</button>':''}<button class="btn sm" type="button" data-fr="close">Fermer</button></div></div>`;
+  document.body.appendChild(el);const url=URL.createObjectURL(blob);
+  el.onclick=async e=>{const b=e.target.closest('[data-fr]');if(!b){if(e.target===el){el.remove();URL.revokeObjectURL(url)}return}const k=b.dataset.fr;
+    if(k==='share'){try{await navigator.share({files:[new File([blob],name,{type:blob.type||'application/octet-stream'})],title:name})}catch(err){if(err&&err.name!=='AbortError')toast('Partage impossible : '+err.message)}}
+    else if(k==='open'){window.open(url,'_blank')}
+    else{el.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}}}
+function saveBlob(blob,name){if(IOS&&canShareFiles()){fileReady(blob,name);return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000)}
+/* demande au navigateur de ne pas effacer les dossiers */
+let persistAsked=false;function askPersist(){if(persistAsked)return;persistAsked=true;try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist().catch(()=>{})}catch(e){}}
+/* invitation à installer l'appli sur l'écran d'accueil (Safari n'a pas de bouton d'installation) */
+function iosHint(){if(!IOS||STANDALONE)return;try{if(localStorage.getItem('atelier-ios-hint'))return}catch(e){return}
+  const el=document.createElement('div');el.className='ios-hint';el.setAttribute('role','note');
+  el.innerHTML=`<div><b>Installez Atelier PC sur votre iPhone</b><span>Touchez <svg viewBox="0 0 24 24" width="17" height="17" aria-label="Partager" style="vertical-align:-3px"><path d="M12 3v12M7 8l5-5 5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 11v9h14v-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg> en bas de Safari, puis <b>« Sur l'écran d'accueil »</b>. L'appli s'ouvre alors en plein écran et vos dossiers sont mieux protégés (Safari efface les données d'un site non installé après 7 jours sans visite).</span></div><button type="button" aria-label="Fermer">×</button>`;
+  el.querySelector('button').onclick=()=>{el.remove();try{localStorage.setItem('atelier-ios-hint','1')}catch(e){}};document.body.appendChild(el)}
+setTimeout(iosHint,3500);
 /* ================= Mes dossiers : sauvegarde sûre (IndexedDB) et dossiers multiples ================= */
 const IDBS={p:null};
 function idb(){if(!window.indexedDB)return Promise.reject(new Error('stockage indisponible'));return IDBS.p||(IDBS.p=new Promise((res,rej)=>{const r=indexedDB.open('atelier-pc',1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('dossiers'))r.result.createObjectStore('dossiers',{keyPath:'id'})};r.onsuccess=()=>res(r.result);r.onerror=()=>{IDBS.p=null;rej(r.error)}}))}
@@ -3902,7 +3929,7 @@ function dossierId(){S.meta=S.meta||{};if(!S.meta.id)S.meta.id='d'+Date.now().to
 function dossierTitle(x){const T=x.terrain||{};const D=x.dem||{};const t=x.dossier&&x.dossier.type||'pc';const k={pc:'Permis',['dp-facade']:'DP façade',['dp-toiture']:'DP toiture',['dp-cloture']:'DP clôture',['dp-piscine']:'DP piscine',['dp-constr']:'DP construction',['dp-arbres']:'DP arbres'}[t]||'Dossier';
   const lieu=[T.num,T.street].filter(Boolean).join(' ')||T.label||'Terrain non choisi';return{k,lieu,commune:T.commune||'',nom:[D.prenom,D.nom].filter(Boolean).join(' ')}}
 let idbT=null;
-function idbSave(){if(S.demo)return;clearTimeout(idbT);idbT=setTimeout(()=>{const id=dossierId();S.meta.saved=Date.now();try{localStorage.setItem('atelier-pc-cur',id)}catch(e){}
+function idbSave(){if(S.demo)return;askPersist();clearTimeout(idbT);idbT=setTimeout(()=>{const id=dossierId();S.meta.saved=Date.now();try{localStorage.setItem('atelier-pc-cur',id)}catch(e){}
   let thumb=null;try{thumb=S.photos.insMode==='image'?S.photos.insImg:null}catch(e){}
   idbPut({id,updated:S.meta.saved,data:JSON.parse(JSON.stringify(S)),thumb:thumb&&thumb.length<400000?thumb:null}).catch(()=>{})},700)}
 /* au démarrage : la version complète (avec photos) vient d'IndexedDB */
@@ -3917,15 +3944,18 @@ async function openDossiers(){const M=$('#dos');M.hidden=false;const box=$('#dos
   L.sort((a,b)=>b.updated-a.updated);const cur=S.meta&&S.meta.id;
   box.innerHTML=L.length?L.map(r=>{const t=dossierTitle(r.data);return`<div class="dos-it${r.id===cur?' cur':''}"><div class="th">${r.thumb?`<img src="${r.thumb}" alt="">`:'<span>🏠</span>'}</div>
     <div class="tx"><b>${esc(t.lieu)}</b><span>${esc([t.k,t.commune,t.nom].filter(Boolean).join(' · '))}</span><small>Modifié le ${new Date(r.updated).toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'short'})}${r.id===cur?' · ouvert':''}</small></div>
-    <div class="ac"><button class="btn sm primary" type="button" data-dopen="${r.id}"${r.id===cur?' disabled':''}>Ouvrir</button><button class="btn sm" type="button" data-ddup="${r.id}">Dupliquer</button><button class="btn sm" type="button" data-ddel="${r.id}">Supprimer</button></div></div>`}).join(''):'<p class="hint">Aucun dossier enregistré pour l\'instant : ils apparaissent ici dès que vous choisissez un terrain.</p>';
+    <div class="ac"><button class="btn sm primary" type="button" data-dopen="${r.id}"${r.id===cur?' disabled':''}>Ouvrir</button><button class="btn sm" type="button" data-ddup="${r.id}">Dupliquer</button><button class="btn sm" type="button" data-dexp="${r.id}">Exporter</button><button class="btn sm" type="button" data-ddel="${r.id}">Supprimer</button></div></div>`}).join(''):'<p class="hint">Aucun dossier enregistré pour l\'instant : ils apparaissent ici dès que vous choisissez un terrain.</p>';
   box.onclick=async e=>{const b=e.target.closest('button');if(!b)return;
     if(b.dataset.dopen){const rec=await idbGet(b.dataset.dopen);if(rec){openDossierData(rec.data);try{localStorage.setItem('atelier-pc-cur',rec.id)}catch(_){}closeDossiers()}}
+    if(b.dataset.dexp){const rec=await idbGet(b.dataset.dexp);if(rec){const t=dossierTitle(rec.data);saveBlob(new Blob([JSON.stringify(rec.data)],{type:'application/json'}),`AtelierPC_${fileSafe(t.lieu)}_${new Date(rec.updated).toISOString().slice(0,10)}.json`)}return}
     if(b.dataset.ddup){const rec=await idbGet(b.dataset.ddup);if(rec){const d=JSON.parse(JSON.stringify(rec.data));d.meta.id='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);d.meta.indice='A';d.meta.date=today();d.meta.saved=Date.now();
       await idbPut({id:d.meta.id,updated:Date.now(),data:d,thumb:rec.thumb});toast('Copie créée.');openDossiers()}}
     if(b.dataset.ddel){if(b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent='Confirmer';b.classList.add('danger');setTimeout(()=>{b.dataset.armed='';b.textContent='Supprimer';b.classList.remove('danger')},3500);return}
       await idbDel(b.dataset.ddel);if(b.dataset.ddel===cur){S.meta.id=null}openDossiers()}}}
 function closeDossiers(){$('#dos').hidden=true}
-$('#bDos').onclick=openDossiers;$('#dosClose').onclick=closeDossiers;$('#dosNew').onclick=newDossier;
+$('#bDos').onclick=openDossiers;
+$('#dosImp input').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const d=unpackS(JSON.parse(await f.text()));if(!d.terrain||!d.projet)throw new Error('fichier non reconnu');d.meta=d.meta||{};d.meta.id='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);d.meta.saved=Date.now();
+  await idbPut({id:d.meta.id,updated:Date.now(),data:d,thumb:null});toast('Dossier importé.');openDossiers()}catch(err){toast('Import impossible : '+err.message)}});$('#dosClose').onclick=closeDossiers;$('#dosNew').onclick=newDossier;
 setTimeout(idbRestore,50);
 
 // application installable : copie locale et mise à jour automatique
