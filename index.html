@@ -221,6 +221,7 @@ body[data-mode="dp-facade"] .pc-only,body[data-mode="dp-toiture"] .pc-only{displ
 .fready{position:fixed;inset:0;z-index:300;background:rgba(10,14,13,.45);display:grid;place-items:end center;padding:12px 12px max(12px,env(safe-area-inset-bottom))}.fr-box{background:var(--panel,#fff);color:var(--ink,#18211F);border-radius:16px;padding:16px;display:grid;gap:10px;width:min(440px,100%);box-shadow:0 20px 60px rgba(0,0,0,.35)}.fr-n{font-size:13px;color:var(--mut,#5b6763);word-break:break-all}
 .ios-hint{position:fixed;left:10px;right:10px;bottom:calc(70px + env(safe-area-inset-bottom));z-index:120;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;background:#18211F;color:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 12px 40px rgba(0,0,0,.35);font-size:13.5px;line-height:1.4}.ios-hint>div>b:first-child{display:block;margin-bottom:3px}.ios-hint button{background:none;border:0;color:#fff;font-size:22px;line-height:1;padding:0 4px;cursor:pointer}
 @keyframes tzp{0%{stroke-opacity:1}50%{stroke-opacity:.25}100%{stroke-opacity:1}}.tz-pulse{animation:tzp 1.1s infinite}
+.bud{display:grid;gap:8px}.bud-t{width:100%;border-collapse:collapse;font-size:13.5px}.bud-t td{padding:6px 4px;border-bottom:1px solid var(--line,#ddd);vertical-align:top}.bud-t td.v{text-align:right;white-space:nowrap}.bud-t small{color:var(--mut,#5b6763)}.bud-r{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}.bud-r label{display:grid;gap:3px;font-size:12.5px;color:var(--mut,#5b6763)}.bud-r input{width:100%}.checks h3{font-size:14px;margin:10px 0 2px}.jal{margin:0;padding-left:18px;display:grid;gap:4px;font-size:13.5px}.jal li.past{color:var(--mut,#8a9591);text-decoration:line-through}
 .aile-box{border:1px solid var(--line,#ddd);border-radius:10px;padding:8px 10px;margin:8px 0;display:grid;gap:6px}.aile-box:not(.on) .aile-f{display:none}.aile-f{display:grid;gap:6px}body:not(.has-aile) .aile-row{display:none}
 .arb-only{display:none!important}body[data-mode="dp-arbres"] .arb-only{display:inline-flex!important}body[data-mode="dp-arbres"] #plVeg [data-veg="arbre"],body[data-mode="dp-arbres"] #plVeg [data-veg="arbuste"],body[data-mode="dp-arbres"] #plVeg [data-veg="haie"],body[data-mode="dp-arbres"] #plVeg [data-veg=""],body[data-mode="dp-arbres"] #plMove,body[data-mode="dp-arbres"] #plDist,body[data-mode="dp-arbres"] #plTVeg,body[data-mode="dp-arbres"] #plDial,body[data-mode="dp-arbres"] #plSnap,body[data-mode="dp-arbres"] #plRotV{display:none!important}
 .arb-grid{display:grid;gap:4mm;height:100%;grid-template-columns:1fr 1fr;align-content:start}.arb-grid.n1{grid-template-columns:1fr}.arb-ph{margin:0;display:grid;gap:1.5mm}.arb-ph img{width:100%;height:62mm;object-fit:cover;border:0.3mm solid #999}.arb-grid.n1 .arb-ph img{height:140mm;object-fit:contain}.arb-ph figcaption{font:8pt var(--f-ui)}.arb-th{width:100%;max-height:160px;object-fit:cover;border-radius:8px;margin:6px 0}
@@ -1502,7 +1503,7 @@ async function adoptParcels(feats,addrProps){
   await refreshContext(true);
 }
 async function refreshContext(place){
-  const res=await Promise.allSettled([fetchNeighbors(),fetchZone(),fetchGrid(),fetchExisting(),fetchProtect()]);
+  const res=await Promise.allSettled([fetchNeighbors(),fetchZone(),fetchGrid(),fetchExisting(),fetchProtect(),fetchRisques()]);
   const errs=res.filter(r=>r.status==='rejected').map(r=>r.reason.message);
   if(res[0].status==='fulfilled'&&!S.terrain.voie.length)autoVoie();
   if(place){centerBuilding();if(boundary().E.some(e=>e.voie))placeFromVoie()}
@@ -1540,7 +1541,7 @@ function checks(){if(mode()!=='pc'&&mode()!=='dp-constr')return dpChecks();
   const out=[];const T=S.terrain,R=S.regles,P=S.projet;const add=(lvl,t,s='')=>out.push({lvl,t,s});
   if(!T.parcels.length){add('bad','Aucune parcelle chargée','Recherchez une adresse ou une référence cadastrale.');return out}
   if(S.demo)add('warn','Données d\'exemple','Le terrain affiché est fictif. Chargez votre parcelle avant d\'imprimer.');
-  formCheck(add);protectCheck(add);
+  formCheck(add);protectCheck(add);risqueChecks(add);
   const D=distances(),h=heights(),sf=surfaces(),A=parcelArea();
   add(D.inside?'ok':'bad',D.inside?'La construction est entièrement sur le terrain':'La construction dépasse les limites du terrain',D.inside?'':'Déplacez-la sur le plan de masse.');
   if(!boundary().E.some(e=>e.voie))add('warn','Voie non désignée','Activez « Désigner la voie » et cliquez sur la limite bordant la rue.');
@@ -1980,7 +1981,7 @@ function noticeHTML(){
   const demTxt=DM.length?`<p>Le projet prévoit la démolition de : ${DM.map(e=>`${esc((e.usage||'construction').toLowerCase())} (${fmt(exArea(e),0)} m² d'emprise)`).join(', ')}.</p>`:'';
   const exDistTxt=ne?(ne.d<0.1?` Elle est accolée à la construction existante (${esc((ne.e.usage||'').toLowerCase())}).`:` Elle est implantée à ${fmt(ne.d)} m de la construction existante la plus proche (${esc((ne.e.usage||'').toLowerCase())}).`):'';
   return`<h2>1. Présentation de l'état initial du terrain et de ses abords</h2>
-<p>Le terrain est situé ${esc(adresseTerrain()||'—')}${T.commune?` sur la commune de ${esc(T.commune)}`:''}. Il est cadastré ${esc(refs)}, pour une superficie totale de ${fmt(A,0)} m². ${T.zone&&T.zone.libelle!=='?'?`Il est classé en zone ${esc(T.zone.libelle)} du ${esc(T.zone.doc)}${T.zone.libelong?` (${esc(T.zone.libelong)})`:''}.`:'<span class="todo">[Préciser la zone du document d\'urbanisme.]</span>'}</p>
+<p>Le terrain est situé ${esc(adresseTerrain()||'—')}${T.commune?` sur la commune de ${esc(T.commune)}`:''}. Il est cadastré ${esc(refs)}, pour une superficie totale de ${fmt(A,0)} m². ${T.zone&&T.zone.libelle!=='?'?`Il est classé en zone ${esc(T.zone.libelle)} du ${esc(T.zone.doc)}${T.zone.libelong?` (${esc(T.zone.libelong)})`:''}.`:'<span class="todo">[Préciser la zone du document d\'urbanisme.]</span>'}${risqueNotice()}</p>
 <p>${relief} ${voieTxt}</p>
 <p>${exTxt} ${P.etatInitial?esc(P.etatInitial):'<span class="todo">[Décrire la végétation et les éléments paysagers du terrain.]</span>'} ${P.abords?'Les abords sont constitués de '+esc(P.abords)+'.':'Les abords sont constitués de parcelles <span class="todo">[bâties / agricoles / boisées]</span>.'}</p>
 <h2>2. Partis retenus pour assurer l'insertion du projet</h2>
@@ -2031,7 +2032,7 @@ function pcToDp(h){if(mode()!=='dp-constr')return h;return h.replace(/PCMI([1-8]
 function renderSheet(id){const sh=activeSheets().find(s=>s.id===id)||SHEETS.find(s=>s.id===id);let w=$('#w-'+id);if(!w){w=document.createElement('div');w.className='wrap';w.id='w-'+id;$('#stage').appendChild(w)}
   w.innerHTML=`<div class="sheet ${sh.o}">${pcToDp(/^dp/.test(id)?sheetHTML(sh):withVariant('apres',()=>sheetHTML(sh)))}</div>`;w.classList.toggle('on',S.ui.tab===id);if(S.ui.tab===id)fit()}
 function renderChecks(){let w=$('#w-checks');if(!w){w=document.createElement('div');w.id='w-checks';w.className='wrap';$('#stage').appendChild(w)}
-  const C=checks().map(c=>({...c,t:pcToDp(c.t),s:pcToDp(c.s)}));w.innerHTML=`<div class="checks"><h2>Contrôles de cohérence</h2>${C.map(c=>`<div class="ck ${c.lvl}"><div class="ic">${{ok:'✓',warn:'!',bad:'×',info:'i'}[c.lvl]}</div><div><b>${c.t}</b><span>${c.s}</span></div></div>`).join('')}</div>`;
+  const C=checks().map(c=>({...c,t:pcToDp(c.t),s:pcToDp(c.s)}));const ae=document.activeElement;const keep=ae&&ae.dataset&&ae.dataset.suivi;w.innerHTML=`<div class="checks"><h2>Contrôles de cohérence</h2>${C.map(c=>`<div class="ck ${c.lvl}"><div class="ic">${{ok:'✓',warn:'!',bad:'×',info:'i'}[c.lvl]}</div><div><b>${c.t}</b><span>${c.s}</span></div></div>`).join('')}${budgetHTML()}</div>`;if(keep){const n=w.querySelector(`[data-suivi="${keep}"]`);if(n)n.focus()}
   w.classList.toggle('on',S.ui.tab==='checks');
   const nb=C.filter(c=>c.lvl==='bad').length,nw=C.filter(c=>c.lvl==='warn').length;const ch=$('#chkChip');
   ch.innerHTML=`<span class="d" style="background:${nb?'#E07A6F':nw?'#E3B04B':'#7CC39A'}"></span>${nb?nb+' non-conformité'+(nb>1?'s':''):nw?nw+' point'+(nw>1?'s':'')+' à compléter':'Dossier cohérent'}`;
@@ -2272,7 +2273,9 @@ const THEMES=[
   {k:'h',t:'Hauteur des constructions',re:/hauteur/i,need:/(\d\s*m(?![a-z²])|m[eè]tres?|niveaux?|R\s*\+)/i,field:'hMax',num:NUMM,rng:[2.5,40],unit:'m',neg:/(cl[ôo]tures?|m[âa]ts?|antennes?|[ée]oliennes?|pyl[ôo]nes?|murets?|haies?|annexes?|carports?|abris?)/i},
   {k:'ces',t:'Emprise au sol',re:/emprise\s+au\s+sol/i,need:/(%|pour\s*cent|non\s+r[ée]glement|pas\s+(?:r[ée]glement|fix))/i,field:'ces',num:NUMP,rng:[1,100],unit:'%'},
   {k:'toit',t:'Toitures et aspect extérieur',re:/(toitures?|pentes?\s+de|couvertures?)/i,need:/(%|°|degr|tuile|ardoise|pente|zinc|bac)/i},
-  {k:'stat',t:'Stationnement',re:/stationnement/i,need:/(place|logement|véhicule)/i}];
+  {k:'stat',t:'Stationnement',re:/stationnement/i,need:/(place|logement|véhicule)/i},
+  {k:'clo',t:'Clôtures',re:/cl[ôo]tures?/i,need:/(hauteur|m[eè]tres?|\d\s*m(?![a-z²]))/i,field:'hClo',num:NUMM,rng:[0.5,3.5],unit:'m',neg:/(piscines?)/i},
+  {k:'pt',t:'Espaces verts et pleine terre',re:/(pleine\s+terre|espaces?\s+(?:verts?|libres?)|biotope)/i,need:/(%|pour\s*cent|arbres?|plant)/i}];
 function themeHits(paras,th){const scored=[];for(const x of paras){if(x.t.length<40||!th.re.test(x.t)||!th.need.test(x.t))continue;
     let sc=1;if(th.num&&new RegExp(th.num.source).test(x.t))sc+=3;if(STRONG.test(x.t))sc+=2;if(th.neg&&th.neg.test(x.t))sc-=4;if(x.t.length>900)sc-=1;scored.push({...x,sc})}
   return scored.sort((a,b)=>b.sc-a.sc).slice(0,4).filter(x=>x.sc>0).sort((a,b)=>a.p-b.p)}
@@ -2583,7 +2586,7 @@ function dpChecks(){const out=[];const add=(l,t,s='')=>out.push({lvl:l,t,s});con
   if(!T.parcels.length){add('bad','Aucune parcelle chargée','Recherchez l\'adresse du terrain.');return out}
   if(S.demo)add('warn','Données d\'exemple','Le terrain affiché est fictif. Chargez votre parcelle avant d\'imprimer.');
   if(m==='dp-arbres'){arbChecks(add);add(S.dem.nom?'ok':'warn','Identité du déclarant',S.dem.nom?'Renseignée.':'À compléter.');return out}
-  add('info',DMODES[m],'Formulaire : cerfa 16702*03. Instruction en principe en 1 mois (2 mois en secteur protégé).');protectCheck(add);
+  add('info',DMODES[m],'Formulaire : cerfa 16702*03. Instruction en principe en 1 mois (2 mois en secteur protégé).');protectCheck(add);risqueChecks(add);
   if(m==='dp-piscine'){const a=poolItem();if(!a)add('bad','Aucune piscine','Ajoutez la piscine à l\'étape 03.');else{const b=polyArea(poolPoly(a));const d=poolDists(a)[0];const ins=poolPoly(a,+a.marg||0).every(q=>inParcel(q,boundary().rings));
     add(ins?'ok':'bad',ins?'La piscine est entièrement sur le terrain':'La piscine dépasse les limites du terrain','');add(b>100?'bad':b<=10?'warn':'ok',`Bassin de ${fmt(b,1)} m²`,poolSeuil());
     add(d&&S.regles.reculLim&&d.d<+S.regles.reculLim-0.01?'warn':'info',`Distance à la limite la plus proche : ${d?fmt(d.d,2):'—'} m`,'Le PLU fixe souvent un recul propre aux piscines : vérifiez-le dans le règlement.');
@@ -3576,6 +3579,82 @@ function formCard(){const r=formNeeded();const m=mode();const forced=S.dossier&&
     <div class="btns" style="margin-top:6px"><button class="btn sm${m==='pc'?' primary':''}" type="button" data-form="pc">Permis</button><button class="btn sm${m==='dp-constr'?' primary':''}" type="button" data-form="dp">Déclaration</button>${forced?'<button class="btn sm" type="button" data-form="auto">Choix automatique</button>':''}</div>
     <span class="hint">Seuils indicatifs : la mairie tranche en cas de doute.${forced?' Choix imposé par vous.':''}</span></div>`}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-form]');if(!b)return;ensureDossier();const v=b.dataset.form;if(v==='auto'){S.dossier.formForced=null;autoForm()}else{S.dossier.formForced=v;setMode(v==='pc'?'pc':'dp-constr')}save();if(!$('#wiz').hidden)wzRender()});
+
+/* ================= Risques du terrain (Géorisques) ================= */
+async function fetchRisques(){const T=S.terrain;if(!T.parcels.length)return;const c=parcelCentroid(T.parcels.flatMap(p=>p.rings));const ll=c&&c.length===2&&Math.abs(c[0])<=180?c:null;
+  const lon=ll?ll[0]:null,lat=ll?ll[1]:null;if(lon==null)return;
+  try{const j=await getJSON(`https://georisques.gouv.fr/api/v1/resultats_rapport_risque?latlon=${lon.toFixed(6)},${lat.toFixed(6)}`);const N=j.risquesNaturels||{},Tq=j.risquesTechnologiques||{};
+    const pick=o=>o?{p:!!o.present,s:o.libelleStatutAdresse||o.libelleStatutCommune||'',sc:o.libelleStatutCommune||''}:null;
+    T.risques={ok:true,t:Date.now(),url:j.url||'',n:Object.fromEntries(Object.entries(N).map(([k,v])=>[k,pick(v)])),tq:Object.fromEntries(Object.entries(Tq).map(([k,v])=>[k,pick(v)]))}}
+  catch(e){T.risques={ok:false,t:Date.now()};throw new Error('Géorisques indisponible')}}
+function rgaLevel(){const R=S.terrain.risques;const g=R&&R.ok&&R.n.retraitGonflementArgile;if(!g)return null;const s=(g.s||'').toLowerCase();return/fort/.test(s)?'forte':/moyen/.test(s)?'moyenne':/faible/.test(s)?'faible':g.p?'présente':'nulle'}
+function seismeZone(){const R=S.terrain.risques;const g=R&&R.ok&&R.n.seisme;const m=g&&/([1-5])/.exec(g.sc||g.s||'');return m?+m[1]:null}
+function risqueList(){const R=S.terrain.risques;if(!R||!R.ok)return[];const N=R.n,Q=R.tq,out=[];const rg=rgaLevel();const build=!noBuild()&&mode()!=='dp-arbres';
+  if(!build&&!isPoolMode()){if(N.inondation&&N.inondation.p)out.push({k:'inond',lvl:'info',t:'Terrain concerné par un risque d\'inondation',s:'Une clôture pleine peut être interdite (libre écoulement des eaux) : vérifiez le règlement du PPRI.'});return out}
+  if(rg==='forte'||rg==='moyenne')out.push({k:'rga',lvl:'warn',t:`Argiles : exposition ${rg}`,s:`Le sol peut gonfler et se rétracter selon l'humidité, ce qui fissure les maisons mal fondées. ${build?'Pour une maison, une étude de sol G2 est obligatoire avant les fondations (environ 1 200 à 3 000 €), et le vendeur d\'un terrain doit fournir une étude G1.':''}`});
+  else if(rg==='faible')out.push({k:'rga',lvl:'ok',t:'Argiles : exposition faible',s:'Pas d\'étude de sol imposée ; elle reste conseillée.'});
+  if(N.inondation&&N.inondation.p)out.push({k:'inond',lvl:'warn',t:'Terrain concerné par un risque d\'inondation',s:`${esc(N.inondation.s||'')} — Un plan de prévention peut imposer une hauteur minimale de plancher ou interdire certaines constructions : vérifiez le règlement du PPRI en mairie.`});
+  if(N.remonteeNappe&&N.remonteeNappe.p&&/fort|débord|cave/i.test(N.remonteeNappe.s||''))out.push({k:'nappe',lvl:'info',t:'Remontée de nappe possible',s:'Évitez le sous-sol, prévoyez un vide sanitaire et un drainage.'});
+  if(N.mouvementTerrain&&N.mouvementTerrain.p)out.push({k:'mvt',lvl:'warn',t:'Mouvements de terrain recensés',s:`${esc(N.mouvementTerrain.s||'')} — Une étude de sol est fortement conseillée.`});
+  const z=seismeZone();if(z)out.push({k:'seisme',lvl:z>=3?'info':'ok',t:`Séisme : zone ${z} (${['','très faible','faible','modérée','moyenne','forte'][z]})`,s:z>=3?'Les règles parasismiques s\'appliquent à la construction (chaînages, liaisons) : le constructeur doit les connaître.':'Pas de règle parasismique particulière pour une maison.'});
+  if(N.radon&&/3/.test(N.radon.s||N.radon.sc||''))out.push({k:'radon',lvl:'info',t:'Radon : potentiel élevé (catégorie 3)',s:'Prévoyez une bonne étanchéité du plancher bas et une ventilation adaptée.'});
+  if(N.reculTraitCote&&N.reculTraitCote.p)out.push({k:'cote',lvl:'warn',t:'Recul du trait de côte',s:'Des règles spéciales de constructibilité et de démontabilité peuvent s\'appliquer.'});
+  if(N.feuForet&&N.feuForet.p)out.push({k:'feu',lvl:'info',t:'Feux de forêt',s:'Obligation de débroussaillement possible autour des constructions.'});
+  if(N.avalanche&&N.avalanche.p)out.push({k:'aval',lvl:'warn',t:'Avalanches',s:'Consultez le plan de prévention des risques.'});
+  if(Q.canalisationsMatieresDangereuses&&Q.canalisationsMatieresDangereuses.p)out.push({k:'canal',lvl:'info',t:'Canalisation de matières dangereuses à proximité',s:'Des distances de sécurité peuvent s\'imposer : vérifiez avec la mairie.'});
+  if(Q.pollutionSols&&Q.pollutionSols.p)out.push({k:'pol',lvl:'info',t:'Pollution des sols recensée à proximité',s:'Renseignez-vous sur l\'historique du terrain.'});
+  if(Q.risqueMinier&&Q.risqueMinier.p)out.push({k:'mine',lvl:'warn',t:'Risque minier',s:'Consultez le plan de prévention des risques miniers.'});
+  return out}
+function risqueChecks(add){const R=S.terrain.risques;if(!S.terrain.parcels.length)return;if(!R){add('info','Risques du terrain','Lecture de Géorisques en cours ou impossible.');return}
+  if(!R.ok){add('warn','Risques du terrain non vérifiés','Géorisques ne répond pas. Consultez georisques.gouv.fr (« Connaître les risques près de chez moi ») avec l\'adresse du terrain.');return}
+  const L=risqueList();if(!L.length)add('ok','Risques naturels','Aucun risque notable relevé par Géorisques à cette adresse.');for(const r of L)add(r.lvl,r.t,r.s)}
+function risqueNotice(){const R=S.terrain.risques;if(!R||!R.ok)return'';const t=[];const rg=rgaLevel();const z=seismeZone();
+  if(rg&&rg!=='nulle')t.push(`en zone d'exposition ${rg} au retrait-gonflement des argiles${rg==='forte'||rg==='moyenne'?' ; une étude géotechnique de conception (G2) est réalisée avant les travaux de fondation':''}`);
+  if(z)t.push(`en zone de sismicité ${z}`);const N=R.n;if(N.inondation&&N.inondation.p)t.push('dans un secteur concerné par le risque d\'inondation');
+  return t.length?` D'après Géorisques, le terrain est situé ${t.join(', ')}.`:''}
+
+/* ================= Coûts et calendrier ================= */
+function suivi(){return(S.suivi=S.suivi||{tc:3,td:1.5,dep:'',acc:'',aff:'',doc:'',fin:''})}
+function idf(){const p=S.terrain.parcels[0];const d=p&&String(p.insee||'').slice(0,2);return['75','77','78','91','92','93','94','95'].includes(d)}
+const VF={y:2026,m2:892,m2idf:1011,pisc:251,park:2928,rap:0.4};
+function couts(){const m=mode(),P=S.projet,sf=surfaces(),TT=totals(),U=suivi();const build=m==='pc'||m==='dp-constr';const vf=idf()?VF.m2idf:VF.m2;const taux=(+U.tc||0)+(+U.td||0)+(idf()?1:0);
+  const tax=build?Math.max(0,sf.taxable||0):0;const abat=build&&P.nature!=='annexe'?Math.min(tax,Math.max(0,100-(P.nature==='extension'?TT.sdpEx:0))):0;
+  const base=(tax-abat)*vf+abat*vf*0.5;const pis=poolBassin?(poolBassin()||0):0;const park=build&&P.nature==='maison'?(+P.park||0):0;
+  const bTot=base+pis*VF.pisc+park*VF.park;const ta=bTot*taux/100,rap=bTot*VF.rap/100;
+  const et=[];const rg=rgaLevel();if(build&&(rg==='forte'||rg==='moyenne'))et.push(['Étude de sol G2 (obligatoire)',1200,3000]);else if(build&&P.nature==='maison')et.push(['Étude de sol (conseillée)',800,2000]);
+  if(m==='pc'&&(P.nature==='maison'||P.nature==='extension'))et.push(['Étude thermique RE2020 (attestation PCMI14-1)',400,1200]);
+  if(build&&P.assain==='individuel')et.push(['Étude de filière d\'assainissement + contrôle SPANC',500,1000]);
+  if(m==='pc'&&TT.sdpTot>150)et.push(['Architecte (obligatoire au-delà de 150 m²)',null,null]);
+  if(build&&P.nature==='maison')et.push(['Assurance dommages-ouvrage (obligatoire)',2500,6000]);
+  return{vf,taux,tax,abat,pis,park,bTot,ta,rap,et}}
+function addMonths(iso,n){if(!iso)return null;const d=new Date(iso+'T12:00:00');const day=d.getDate();d.setMonth(d.getMonth()+n);if(d.getDate()<day)d.setDate(0);return d.toISOString().slice(0,10)}
+function addDays(iso,n){if(!iso)return null;const d=new Date(iso+'T12:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)}
+function delaiInstr(){const m=mode();const base=m==='pc'?2:1;const prot=!!(S.terrain.protect&&S.terrain.protect.ok&&S.terrain.protect.sup.length);return base+(prot?1:0)}
+function jalons(){const U=suivi();const prot=!!(S.terrain.protect&&S.terrain.protect.ok&&S.terrain.protect.sup.length);const J=[];
+  if(U.dep){J.push([addDays(U.dep,30),'Fin du délai pour une éventuelle demande de pièces manquantes']);J.push([addMonths(U.dep,delaiInstr()),'Fin du délai d\'instruction (sans réponse : accord tacite, demandez l\'attestation en mairie)'])}
+  if(U.acc){J.push([addMonths(U.acc,3),'Fin du délai de retrait de l\'autorisation par la mairie']);J.push([addMonths(U.acc,36),'Péremption si les travaux n\'ont pas commencé (prolongeable deux fois un an)'])}
+  if(U.aff)J.push([addMonths(U.aff,2),'Fin du délai de recours des voisins (affichage continu de 2 mois)']);
+  if(U.fin){J.push([addDays(U.fin,0),'Déposer la déclaration d\'achèvement (DAACT, cerfa 13408)']);J.push([addDays(U.fin,90),'Dernier jour pour déclarer la taxe d\'aménagement (impots.gouv.fr, « Biens immobiliers »)']);J.push([addMonths(U.fin,prot?5:3),'Fin du délai de contestation de la conformité par la mairie (après dépôt de la DAACT)'])}
+  return J.filter(j=>j[0]).sort((a,b)=>a[0]<b[0]?-1:1)}
+function budgetHTML(){if(S.demo&&!S.terrain.parcels.length)return'';const C=couts(),U=suivi();const e=x=>Math.round(x).toLocaleString('fr-FR')+' €';const m=mode();
+  const et=C.et.map(([t,a,b])=>`<tr><td>${esc(t)}</td><td class="v">${a==null?'sur devis':e(a)+' à '+e(b)}</td></tr>`).join('');const J=jalons();const today0=today();
+  return`<h2>Coûts et calendrier</h2><div class="bud">
+  ${C.bTot>0?`<table class="bud-t"><tbody><tr><td>Taxe d'aménagement estimée<br><small>${C.tax?fmt(C.tax,0)+' m² taxables'+(C.abat?' (dont '+fmt(C.abat,0)+' m² à demi-tarif)':''):''}${C.pis?' · piscine '+fmt(C.pis,0)+' m²':''}${C.park?' · '+C.park+' place'+(C.park>1?'s':'')+' extérieure'+(C.park>1?'s':''):''} · valeur ${VF.y} : ${e(C.vf)}/m²</small></td><td class="v"><b>${e(C.ta)}</b></td></tr>
+    <tr><td>Redevance d'archéologie préventive (0,4 %)</td><td class="v">${e(C.rap)}</td></tr></tbody></table>
+    <div class="bud-r"><label>Taux communal (%)<input type="number" step="0.1" min="0" max="20" data-suivi="tc" value="${U.tc}"></label><label>Taux départemental (%)<input type="number" step="0.1" min="0" max="2.5" data-suivi="td" value="${U.td}"></label></div>
+    <p class="hint">Taux à vérifier sur la délibération de votre commune ou le simulateur impots.gouv.fr. Payable après les travaux : en une fois sous 1 500 €, sinon en deux échéances.</p>`:'<p class="hint">Pas de taxe d\'aménagement pour ces travaux (aucune surface taxable créée).</p>'}
+  ${et?`<table class="bud-t"><tbody>${et}</tbody></table><p class="hint">Fourchettes indicatives : demandez au moins deux devis.</p>`:''}
+  <h3>Délais</h3><p>Instruction : <b>${delaiInstr()} mois</b> à compter du dépôt du dossier complet${delaiInstr()>(m==='pc'?2:1)?' (secteur protégé : avis de l\'architecte des Bâtiments de France)':''}. Ensuite : 2 mois de recours des voisins après affichage, 3 ans pour commencer les travaux.</p>
+  <h3>Suivi de votre dossier</h3><div class="bud-r">
+    <label>Dépôt en mairie<input type="date" data-suivi="dep" value="${U.dep||''}"></label><label>Autorisation obtenue<input type="date" data-suivi="acc" value="${U.acc||''}"></label>
+    <label>Début de l'affichage<input type="date" data-suivi="aff" value="${U.aff||''}"></label><label>Fin des travaux<input type="date" data-suivi="fin" value="${U.fin||''}"></label></div>
+  ${J.length?`<ul class="jal">${J.map(([d,t])=>`<li class="${d<today0?'past':''}"><b>${frDate(d)}</b> ${esc(t)}</li>`).join('')}</ul><div class="btns"><button class="btn sm" type="button" data-ics>📅 Ajouter ces dates à mon agenda</button></div>`:'<p class="hint">Saisissez la date de dépôt : les échéances suivantes se calculent toutes seules.</p>'}
+  </div>`}
+function icsExport(){const J=jalons();if(!J.length)return;const st=new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z';const lieu=adresseTerrain()||S.terrain.commune||'';
+  const ev=J.map(([d,t],i)=>['BEGIN:VEVENT',`UID:apc-${S.meta&&S.meta.id||'x'}-${i}-${d}@atelier-pc`,`DTSTAMP:${st}`,`DTSTART;VALUE=DATE:${d.replace(/-/g,'')}`,`SUMMARY:${('Urbanisme : '+t).replace(/[,;]/g,m=>'\\'+m).slice(0,250)}`,`LOCATION:${lieu.replace(/[,;]/g,m=>'\\'+m)}`,'BEGIN:VALARM','TRIGGER:-P3D','ACTION:DISPLAY','DESCRIPTION:Rappel','END:VALARM','END:VEVENT'].join('\r\n'));
+  saveBlob(new Blob([['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Atelier PC//FR',...ev,'END:VCALENDAR'].join('\r\n')],{type:'text/calendar'}),'Echeances_urbanisme.ics')}
+document.addEventListener('change',e=>{const el=e.target.closest('[data-suivi]');if(!el)return;suivi()[el.dataset.suivi]=el.type==='number'?+el.value:el.value;save();renderChecks()});
+document.addEventListener('click',e=>{if(e.target.closest('[data-ics]'))icsExport()});
 
 /* ================= Coupe et abattage d'arbres ================= */
 var ESSENCES=['Chêne','Frêne','Érable','Platane','Tilleul','Bouleau','Peuplier','Saule','Charme','Hêtre','Noyer','Châtaignier','Pin','Sapin','Épicéa','Cèdre','Thuya','Cyprès','Robinier','Marronnier','Fruitier','Autre'];
