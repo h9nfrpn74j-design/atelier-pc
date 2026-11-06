@@ -273,7 +273,7 @@ body[data-mode="dp-facade"] .pc-only,body[data-mode="dp-toiture"] .pc-only{displ
   .app{height:100dvh;grid-template-rows:auto 1fr auto}
   header.top{padding:8px max(12px,env(safe-area-inset-left)) 8px max(12px,env(safe-area-inset-right));gap:8px;flex-wrap:nowrap;padding-top:max(8px,env(safe-area-inset-top))}
   .top .addr{font-size:12px}
-  #bOpen,#bSave,#bPrintOne,#bPrint,#bZip,#bPdf,#bDos{display:none}
+  #bOpen,#bSave,#bPrintOne,#bPrint,#bZip,#bPdf,#bDos,#bCerfa{display:none}
   .mmenu-b{display:inline-flex;font-size:20px;line-height:1;padding:4px 12px;min-height:40px}
   #chkChip{font-size:11px;padding:4px 8px;max-width:42vw;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
   .mmenu{position:fixed;right:10px;top:calc(56px + env(safe-area-inset-top));z-index:80;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.25);display:grid;min-width:230px;overflow:hidden}
@@ -562,6 +562,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
   <button class="btn" id="bSave" type="button">Enregistrer</button>
   <button class="btn" id="bPrintOne" type="button">Imprimer la pièce</button>
   <button class="btn" id="bPrint" type="button">Imprimer</button>
+  <button class="btn" id="bCerfa" type="button" title="Le formulaire officiel, pré-rempli avec votre dossier">Cerfa rempli</button>
   <button class="btn" id="bZip" type="button" title="Un PDF par pièce, pour la plateforme de la mairie">Dépôt en ligne</button>
   <button class="btn primary" id="bPdf" type="button">PDF du dossier</button>
   <button class="btn mmenu-b" id="bMenu" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Menu">⋯</button>
@@ -573,7 +574,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
   <button type="button" data-mm="bOpen">Ouvrir un projet</button>
   <button type="button" data-mm="bSave">Enregistrer le projet</button>
   <button type="button" data-mm="bPrintOne">Imprimer la planche affichée</button>
-  <button type="button" data-mm="bPdf">📄 Télécharger le dossier en PDF</button>
+  <button type="button" data-mm="bPdf">📄 Télécharger le dossier en PDF</button><button type="button" data-mm="bCerfa">📝 Formulaire cerfa pré-rempli</button>
   <button type="button" data-mm="bZip">📦 Fichiers pour le dépôt en ligne</button>
   <button type="button" data-mm="bPrint">Imprimer tout le dossier</button>
 </div>
@@ -590,7 +591,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
         <label><input type="radio" name="dmode" value="dp-toiture" class="dmode"><b>Modifier une toiture</b><span>Couverture, fenêtres de toit, panneaux solaires · DP cerfa 16702</span></label>
         <label><input type="radio" name="dmode" value="dp-cloture" class="dmode"><b>Clôture et portail</b><span>Portail, portillon, clôture, mur · DP cerfa 16702</span></label>
         <label><input type="radio" name="dmode" value="dp-constr" class="dmode"><b>Petite construction ou extension</b><span>Abri, garage, extension sous les seuils · DP cerfa 16702</span></label>
-        <label><input type="radio" name="dmode" value="dp-arbres" class="dmode"><b>Abattage d'arbres</b><span>Arbres protégés par le PLU ou en secteur protégé · DP cerfa 16703</span></label>
+        <label><input type="radio" name="dmode" value="dp-arbres" class="dmode"><b>Abattage d'arbres</b><span>Arbres protégés par le PLU ou en secteur protégé · DP cerfa 16702</span></label>
       </div>
       <p class="hint" id="modeHint"></p>
     </div>
@@ -1868,12 +1869,15 @@ const SHEETS=[
 ];
 const facSolo=()=>S.ui.facLayout==='solo';
 const DP_MAP={pcmi1:['DP1','Plan de situation du terrain'],pcmi2:['DP2','Plan de masse'],pcmi6:['DP6','Document graphique d\'insertion du projet'],pcmi7:['DP7','Photographie de l\'environnement proche'],pcmi8:['DP8','Photographie de l\'environnement lointain']};
-function activeSheets(){const m=typeof mode==='function'?mode():'pc';const by=id=>SHEETS.find(s=>s.id===id);
+function dpProtected(){const P=S.terrain.protect;return!!(P&&P.ok&&P.sup.length)}
+function activeSheets(){const L=activeSheets0();if((typeof mode==='function'?mode():'pc')==='pc')return L;const prot=dpProtected();
+  return L.map(o=>{let c=o.code;if(c==='DP11')c=prot?'DPC11':'Notice';else c=c.replace(/^DP(\d)/,'DPC$1');return c===o.code?o:{...o,code:c}})}
+function activeSheets0(){const m=typeof mode==='function'?mode():'pc';const by=id=>SHEETS.find(s=>s.id===id);
   if(m==='pc')return SHEETS.filter(s=>!/^dp|cerfadp/.test(s.id)&&(facSolo()||(s.id!=='pcmi5c'&&s.id!=='pcmi5d')));
   if(m==='dp-constr'){const fc=['pcmi5a','pcmi5b',...(facSolo()?['pcmi5c','pcmi5d']:[])];let n=0;
     return['pcmi1','cad','pcmi2','pcmi3',...fc,'pcmi4','pcmi6','pcmi7','pcmi8','cerfadp'].map(id=>{const o={...by(id)};if(DP_MAP[id]){o.code=DP_MAP[id][0];o.t=DP_MAP[id][1]}
       if(id==='pcmi3'){o.code='DP3';o.t='Plan en coupe du terrain et de la construction'}if(/^pcmi5/.test(id)){n++;o.code=fc.length>1?'DP4-'+n:'DP4';o.t='Plan des façades et des toitures'}if(id==='pcmi4'){o.code='DP11';o.t='Notice décrivant le terrain et le projet'}return o})}
-  if(m==='dp-arbres')return['pcmi1','cad','pcmi2','dparb','dp5','cerfadp'].map(id=>{const o={...by(id)};if(DP_MAP[id]){o.code=DP_MAP[id][0];o.t=DP_MAP[id][1]}if(id==='pcmi2')o.t='Plan des arbres à abattre et des replantations';if(id==='dp5'){o.code='DP4';o.t='Notice : arbres concernés et motifs'}if(id==='cerfadp')o.t='Récapitulatif pour le formulaire 16703';return o});
+  if(m==='dp-arbres')return['pcmi1','cad','pcmi2','dparb','dp5','cerfadp'].map(id=>{const o={...by(id)};if(DP_MAP[id]){o.code=DP_MAP[id][0];o.t=DP_MAP[id][1]}if(id==='pcmi2')o.t='Plan des arbres à abattre et des replantations';if(id==='dparb'){o.code='DP7';o.t='Photographies des arbres à abattre'}if(id==='dp5'){o.code='DP11';o.t='Notice : arbres concernés et motifs'}if(id==='cerfadp')o.t='Récapitulatif pour le formulaire 16702';return o});
   const ids=m==='dp-piscine'?['pcmi1','cad','pcmi2','dppisc','dp5','pcmi6','pcmi7','pcmi8','cerfadp']:m==='dp-cloture'?['pcmi1','cad','pcmi2','dpclo','dp5','pcmi6','pcmi7','pcmi8','cerfadp']:['pcmi1','cad','pcmi2',...(m==='dp-toiture'?['dpt']:[]),'dpf1','dpf2','dpf3','dpf4','dp5','pcmi6','pcmi7','pcmi8','cerfadp'];
   let n4=0;const tot4=ids.filter(i=>/^dp[ft]/.test(i)).length;
   return ids.map(id=>{const b=by(id);const o={...b};if(DP_MAP[id]){o.code=DP_MAP[id][0];o.t=DP_MAP[id][1]}if(/^dp[ft]/.test(id)){n4++;o.code=tot4>1?'DP4-'+n4:'DP4'}return o})}
@@ -2023,7 +2027,7 @@ function renderScaleBar(){const key=SC_KEY[S.ui.tab];const bar=$('#scaleBar');if
   $('#scSel').innerHTML=`<option value="auto">Auto · 1/${inf.auto} (pleine page)</option>`+STD_SC.filter(v=>v>=20&&v<=2500).map(v=>`<option value="${v}">1/${v}${v===inf.auto?' · conseillée':''}</option>`).join('');
   $('#scSel').value=String(cur);const fl=$('#facLay');fl.hidden=key!=='pcmi5'||(mode()!=='pc'&&mode()!=='dp-constr');fl.value=facSolo()?'solo':'duo';$('#scWarn').textContent=inf.fits?'':'Le dessin dépasse la page : choisissez une échelle plus petite (1/'+inf.auto+' ou au-delà).'}
 function renderTabs(){const t=$('#tabs');t.innerHTML=activeSheets().map(s=>`<button type="button" data-tab="${s.id}" class="${S.ui.tab===s.id?'on':''}"><span class="d" style="background:${sheetReady(s.id)?'var(--ok)':'var(--warn)'}"></span>${s.code}</button>`).join('')+`<button type="button" data-tab="checks" class="${S.ui.tab==='checks'?'on':''}">Contrôles</button>`}
-function pcToDp(h){if(mode()!=='dp-constr')return h;return h.replace(/PCMI([1-8])(-\d)?(?!\d)/g,(m0,n,suf)=>n==='4'?'DP11':n==='5'?'DP4'+(suf||''):'DP'+n)}
+function pcToDp(h){if(mode()!=='dp-constr')return h;return h.replace(/PCMI([1-8])(-\d)?(?!\d)/g,(m0,n,suf)=>n==='4'?(dpProtected()?'DPC11':'la notice'):n==='5'?'DPC4'+(suf||''):'DPC'+n)}
 function renderSheet(id){const sh=activeSheets().find(s=>s.id===id)||SHEETS.find(s=>s.id===id);let w=$('#w-'+id);if(!w){w=document.createElement('div');w.className='wrap';w.id='w-'+id;$('#stage').appendChild(w)}
   w.innerHTML=`<div class="sheet ${sh.o}">${pcToDp(/^dp/.test(id)?sheetHTML(sh):withVariant('apres',()=>sheetHTML(sh)))}</div>`;w.classList.toggle('on',S.ui.tab===id);if(S.ui.tab===id)fit()}
 function renderChecks(){let w=$('#w-checks');if(!w){w=document.createElement('div');w.id='w-checks';w.className='wrap';$('#stage').appendChild(w)}
@@ -2567,14 +2571,14 @@ function dpCerfa(){const T=S.terrain,D=S.dem;const r=(a,b)=>`<tr><td>${a}</td><t
       if(JSON.stringify(A.ouv)!==JSON.stringify(B.ouv))t.push('création ou modification d\'ouvertures');if(A.couv!==B.couv||A.couvCouleur!==B.couvCouleur||A.pente!==B.pente||A.toit!==B.toit)t.push('réfection de la toiture ('+(B.toit==='plat'?'toiture-terrasse':B.couv.toLowerCase())+')');
       const n=(x,k)=>(x.toitItems||[]).filter(i=>i.t===k).reduce((s,i)=>s+(+i.n||0),0);if(n(B,'velux')!==n(A,'velux'))t.push(`pose de ${n(B,'velux')} fenêtre${n(B,'velux')>1?'s':''} de toit`);if(n(B,'pv')!==n(A,'pv'))t.push(`installation de ${n(B,'pv')} panneaux photovoltaïques en toiture`);return t.join(', ')||''})();
   const list=activeSheets().filter(s=>s.code&&/^DP/.test(s.code));
-  return`${demoMark(1)}<div class="cerfa"><div class="hd"><div><div class="code">Cerfa ${m==='dp-arbres'?'16703':'16702*03'}</div><h1>Données à reporter dans la déclaration préalable</h1></div><div class="meta">${m==='dp-arbres'?'Aménagements — à confirmer en mairie':'Constructions et travaux non soumis à permis de construire'}<br>${frDate(S.meta.date)}</div></div>
+  return`${demoMark(1)}<div class="cerfa"><div class="hd"><div><div class="code">Cerfa 16702*03</div><h1>Données à reporter dans la déclaration préalable</h1></div><div class="meta">${m==='dp-arbres'?'Aménagements — à confirmer en mairie':'Constructions et travaux non soumis à permis de construire'}<br>${frDate(S.meta.date)}</div></div>
   <table><tbody>${sec('Identité du déclarant')}${r('Civilité',D.civ)}${r('Nom',D.nom)}${r('Prénom',D.prenom)}${r('Date de naissance',frDate(D.naissance))}
   ${sec('Coordonnées')}${r('Adresse',D.adresse)}${r('Code postal',D.cp)}${r('Localité',D.ville)}${r('Téléphone',D.tel)}${r('Courriel',D.email)}
   ${sec('Le terrain')}${r('Adresse',adresseTerrain())}${T.parcels.map((p,i)=>r(`Référence cadastrale ${i+1}`,`${p.prefixe||'000'} · ${p.section} · ${p.numero} — ${fmt(p.contenance||0,0)} m²`)).join('')}${r('Document d\'urbanisme',T.zone?`${T.zone.doc} — zone ${T.zone.libelle}`:'')}
   ${sec('Le projet')}${r('Nature des travaux',m==='dp-arbres'?'Coupe et abattage d\'arbres':m==='dp-constr'?(S.projet.nature==='extension'?'Extension d\'une construction existante':'Construction nouvelle (annexe)'):m==='dp-piscine'?'Construction d\'une piscine non couverte':m==='dp-cloture'?'Édification d\'une clôture / d\'un portail':'Travaux sur construction existante modifiant l\'aspect extérieur')}${r('Courte description',desc?desc.charAt(0).toUpperCase()+desc.slice(1)+'.':'')}
   ${m==='dp-arbres'?r('Nombre d\'arbres abattus',String(arbList().length))+r('Arbres replantés',String(arbList().filter(t=>t.replant).length)):m==='dp-constr'?r('Surface de plancher créée',fmt(TT.sdp,1)+' m²')+r('Emprise au sol créée',fmt(TT.emprise+TT.empAm,1)+' m²')+r('Surface de plancher existante',fmt(TT.sdpEx,1)+' m²'):r('Surface de plancher créée','0 m²')+r('Emprise au sol créée',fmt(amEmprise(),1)+' m²')}${m==='dp-piscine'?r('Piscine : surface du bassin',fmt(poolBassin(),1)+' m²'):''}
   ${sec('Pièces jointes')}${list.map(s=>`<tr><td>${esc(s.code)}</td><td>${esc(s.t)} — <span class="pc-ok">générée</span></td></tr>`).join('')}
-  </tbody></table><p style="font:8pt var(--f-ui);color:#555;margin-top:5mm">${m==='dp-arbres'?'Formulaire : en principe cerfa 16703 « Déclaration préalable — lotissements et autres divisions foncières non soumis à permis d\'aménager », qui couvre les aménagements. Certaines mairies acceptent ou demandent le 16702 : confirmez avant le dépôt.':'Formulaire officiel : cerfa 16702*03 « Déclaration préalable — constructions et travaux non soumis à permis de construire », valable depuis le 1er juillet 2026.'} Vérifiez la numérotation des pièces dans la notice du formulaire et auprès de votre mairie.</p></div>`}
+  </tbody></table><p style="font:8pt var(--f-ui);color:#555;margin-top:5mm">Formulaire officiel : cerfa 16702*03 « Déclaration préalable — constructions, travaux, installations et aménagements non soumis à permis », valable depuis le 1er juillet 2026. Vérifiez la numérotation des pièces dans la notice du formulaire et auprès de votre mairie.</p></div>`}
 function dpChecks(){const out=[];const add=(l,t,s='')=>out.push({lvl:l,t,s});const T=S.terrain,m=mode();
   if(!T.parcels.length){add('bad','Aucune parcelle chargée','Recherchez l\'adresse du terrain.');return out}
   if(S.demo)add('warn','Données d\'exemple','Le terrain affiché est fictif. Chargez votre parcelle avant d\'imprimer.');
@@ -2591,11 +2595,11 @@ function dpChecks(){const out=[];const add=(l,t,s='')=>out.push({lvl:l,t,s});con
     if(S.regles.hClo){for(const c of S.clo){const hh=Math.max(+c.h||0,c.pil?+c.h+0.15:0);add(hh<=+S.regles.hClo+1e-6?'ok':'bad',`${KLBL[c.kind]} : hauteur ${fmt(hh,2)} m`,`Maximum autorisé : ${fmt(+S.regles.hClo,2)} m.`)}}
     else add('warn','Hauteur maximale des clôtures non renseignée','Reportez la règle du PLU à l\'étape 02.')}
   if(T.zone)add('info',`Zone ${T.zone.libelle} — ${T.zone.doc}`,`${esc(T.zone.libelong||'')}${reglementUrl(T.zone)?` <a href="${esc(reglementUrl(T.zone))}" target="_blank" rel="noopener">Ouvrir le règlement écrit</a>`:''}`);
-  const ph=S.photos;add(ph.p7?'ok':'warn','Photographie proche (DP7)',ph.p7?'Ajoutée.':'Photo à ajouter.');add(ph.p8?'ok':'warn','Photographie lointaine (DP8)',ph.p8?'Ajoutée.':'Photo à ajouter.');
-  add((ph.insMode==='image'?ph.insImg:ph.ins)?'ok':'warn','Document d\'insertion (DP6)',(ph.insMode==='image'?ph.insImg:ph.ins)?'Présent.':'Vue de principe générée : ajoutez une photo ou importez votre insertion.');
+  const ph=S.photos;add(ph.p7?'ok':'warn','Photographie proche (DPC7)',ph.p7?'Ajoutée.':'Photo à ajouter.');add(ph.p8?'ok':'warn','Photographie lointaine (DPC8)',ph.p8?'Ajoutée.':'Photo à ajouter.');
+  add((ph.insMode==='image'?ph.insImg:ph.ins)?'ok':'warn','Document d\'insertion (DPC6)',(ph.insMode==='image'?ph.insImg:ph.ins)?'Présent.':'Vue de principe générée : ajoutez une photo ou importez votre insertion.');
   add(S.dem.nom?'ok':'warn','Identité du déclarant',S.dem.nom?'Renseignée.':'À compléter (étape 05).');return out}
 function renderModeUI(){ensureDossier();const m=mode();document.body.dataset.mode=m;$('#sumMode').textContent={pc:'PC','dp-facade':'DP façade','dp-toiture':'DP toiture','dp-cloture':'DP clôture','dp-piscine':'DP piscine','dp-constr':'DP construction','dp-arbres':'DP arbres'}[m];
-  $('#modeHint').textContent={pc:'Construction neuve, extension ou annexe : dossier PCMI1 à PCMI8.','dp-facade':'Ravalement, changement de teinte, de menuiseries ou d\'ouvertures : pièces DP1, DP2, DP4 (existant / projeté), DP6, DP7, DP8 et notice DP11.','dp-toiture':'Réfection de couverture, fenêtres de toit, panneaux solaires : pièces DP1, DP2, DP4 (façades et plan de toiture, existant / projeté), DP6 à DP8 et notice DP11.','dp-cloture':'Portail, portillon, clôture ou mur : pièces DP1, DP2, DP4 (élévations), DP6 à DP8 et notice DP11.','dp-piscine':'Piscine non couverte de 10 à 100 m² de bassin : pièces DP1, DP2, DP3 (plan et coupe), DP6 à DP8 et notice DP11.','dp-constr':'Abri, garage ou extension sous les seuils du permis : mêmes dessins, numérotés DP1 à DP8, notice DP11, formulaire 16702.','dp-arbres':'Coupe ou abattage d\'arbres protégés (espace boisé classé, élément de paysage, secteur patrimonial) : plan, photos, notice.'}[m];
+  $('#modeHint').textContent={pc:'Construction neuve, extension ou annexe : dossier PCMI1 à PCMI8.','dp-facade':'Ravalement, changement de teinte, de menuiseries ou d\'ouvertures : pièces DPC1, DPC2, DPC4 (existant / projeté), DPC6, DPC7, DPC8 et notice.','dp-toiture':'Réfection de couverture, fenêtres de toit, panneaux solaires : pièces DPC1, DPC2, DPC4 (façades et plan de toiture, existant / projeté), DPC6 à DPC8 et notice.','dp-cloture':'Portail, portillon, clôture ou mur : pièces DPC1, DPC2, DPC4 (élévations), DPC6 à DPC8 et notice.','dp-piscine':'Piscine non couverte de 10 à 100 m² de bassin : pièces DPC1, DPC2, DPC3 (plan et coupe), DPC6 à DPC8 et notice.','dp-constr':'Abri, garage ou extension sous les seuils du permis : mêmes dessins, numérotés DPC1 à DPC8, notice, formulaire 16702.','dp-arbres':'Coupe ou abattage d\'arbres protégés (espace boisé classé, élément de paysage, secteur patrimonial) : plan, photos, notice.'}[m];
   $('#dpBat').hidden=!isDPb();$('#cloEditor').hidden=m!=='dp-cloture';$('#projBody').hidden=m==='dp-cloture'||m==='dp-piscine'||m==='dp-arbres';{const ab=$('#arbStep');if(ab){ab.hidden=m!=='dp-arbres';const ae=$('#arbEditor');if(ae&&!ae.contains(document.activeElement))ae.innerHTML=arbEditorHTML();const pb=$('#protBox');if(pb)pb.innerHTML=verdictCard()}}{const ae=$('#amEditor');if(ae&&!ae.contains(document.activeElement))ae.innerHTML=amEditorHTML();const as=$('#amStep');if(as)as.hidden=m==='dp-cloture'||m==='dp-arbres'||isDPb()}
   if(isDPb()){const C=dpCandidates();$('#dpEx').innerHTML=C.length?C.map(e=>`<option value="${esc(e.id)}"${e.id===S.dossier.exId?' selected':''}>${esc(e.usage||'Construction')} · ${fmt(exArea(e),0)} m² au sol${e.hauteur?' · H '+fmt(+e.hauteur,1)+' m':''}</option>`).join(''):'<option value="">Aucune construction existante (étape 01)</option>';
     const st=curState();$('#esAvant').checked=st==='avant';$('#esApres').checked=st==='apres';$('#stateHint').textContent=st==='avant'?'Vous décrivez l\'ÉTAT EXISTANT : matériaux, couleurs, ouvertures et toiture actuels.':'Vous décrivez l\'ÉTAT PROJETÉ : ce qui sera réalisé.';
@@ -2790,7 +2794,7 @@ $('#bSave').onclick=()=>{const blob=new Blob([packS()],{type:'application/json'}
 $('#bOpen').onclick=()=>$('#fOpen').click();
 $('#fOpen').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const j=unpackS(JSON.parse(await f.text()));if(!j.terrain||!j.projet)throw new Error('fichier non reconnu');S=Object.assign(demoState(),j);if(!j.existants)S.existants=[];mapCache={};fillInputs();renderExList();renderAll();save();toast('Projet ouvert.')}catch(err){toast('Impossible d\'ouvrir ce fichier : '+err.message)}e.target.value=''});
 function doPrint(only){$$('.wrap').forEach(w=>w.classList.toggle('skip',w.id==='w-checks'||(only&&w.id!=='w-'+only)));window.print();setTimeout(()=>$$('.wrap').forEach(w=>w.classList.remove('skip')),500)}
-$('#bPdf').onclick=()=>pdfDossier();$('#bZip').onclick=()=>zipDepot();
+$('#bPdf').onclick=()=>pdfDossier();$('#bZip').onclick=()=>zipDepot();$('#bCerfa').onclick=()=>cerfaRempli();
 $('#bPrint').onclick=()=>{toast('Choisissez « Enregistrer au format PDF » et désactivez les marges et en-têtes du navigateur.',6000);setTimeout(()=>doPrint(null),300)};
 $('#bPrintOne').onclick=()=>{if(S.ui.tab==='checks'){toast('Sélectionnez une pièce à imprimer.');return}doPrint(S.ui.tab)};
 
@@ -3616,7 +3620,7 @@ async function arbPhoto(id){const t=arbList().find(x=>x.id===id);if(!t)return;co
     const c=e.target.closest('[data-arbcam]');if(c){await arbPhoto(c.dataset.arbcam);after();return}
     if(e.target.closest('[data-arbhere]')){await arbAddHere();after();return}
     if(e.target.closest('[data-arbplan]')){PL.vegPreset='abat';await placeOnPlan();after()}})}
-function cerfaNum(){const m=mode();return m==='pc'?'13406':m==='dp-arbres'?'16703':'16702'}
+function cerfaNum(){const m=mode();return m==='pc'?'13406':'16702'}
 function verdictCard(){const v=protectVerdict();return`<div class="wz-card ${v.lvl==='ok'?'ok':v.lvl==='bad'?'bad':''}"><b>${esc(v.t)}</b>${esc(v.s)}</div>`}
 function protectCheck(add){const P=S.terrain.protect;if(!P||!P.ok)return;const m=mode();
   if(m==='dp-arbres')return;
@@ -3627,14 +3631,14 @@ function formCheck(add){const m=mode();if(m!=='pc'&&m!=='dp-constr')return;const
   else add('warn',m==='pc'?'Une déclaration préalable suffirait peut-être':'Ce projet relève sans doute du permis de construire',esc(r.why)+` <button class="btn sm" type="button" data-form="${want==='pc'?'pc':'dp'}">Passer en ${want==='pc'?'permis':'déclaration'}</button>`)}
 function arbChecks(add){const v=protectVerdict();add(v.lvl==='ok'?'ok':v.lvl==='bad'?'info':'warn',v.t,v.s);const L=arbList();
   add(L.length?'ok':'bad',L.length?`${L.length} arbre${L.length>1?'s':''} à abattre`:'Aucun arbre','Ajoutez les arbres : au pied de l\'arbre avec le GPS, ou sur la vue aérienne.');
-  const np=L.filter(t=>!t.photo).length;if(L.length)add(np?'warn':'ok',np?`${np} photo${np>1?'s':''} d'arbre manquante${np>1?'s':''}`:'Chaque arbre est photographié',np?'Prenez une photo de chaque arbre (DP3).':'');
+  const np=L.filter(t=>!t.photo).length;if(L.length)add(np?'warn':'ok',np?`${np} photo${np>1?'s':''} d'arbre manquante${np>1?'s':''}`:'Chaque arbre est photographié',np?'Prenez une photo de chaque arbre (DPC7).':'');
   const nl=L.filter(t=>!t.p).length;if(nl)add('bad',`${nl} arbre${nl>1?'s':''} sans position`,'Placez-le sur la vue aérienne.');
   const out=L.filter(t=>t.p&&!inParcel(toLocal(...t.p),boundary().rings)).length;if(out)add('warn',`${out} arbre${out>1?'s':''} hors du terrain`,'Un arbre du voisin ou du domaine public ne se coupe pas sans accord de son propriétaire.');
-  add('info','Formulaire à confirmer en mairie','Coupe et abattage d\'arbres : en principe déclaration préalable cerfa 16703 (aménagements). Certaines mairies demandent le cerfa 16702 : demandez-leur avant le dépôt.')}
+  add('info','Formulaire 16702','Coupe et abattage d\'arbres : déclaration préalable cerfa 16702*03, qui couvre aussi les aménagements. Faites confirmer la liste des pièces par la mairie.')}
 function arbNotice(){const T=S.terrain;const P=T.protect;const L=arbList();const n=L.length;
   const pr=P&&P.ok?[...(P.ebc.length?['un espace boisé classé du PLU']:[]),...(P.pays.length?['un élément de paysage protégé par le PLU']:[]),...P.sup.map(x=>x.toLowerCase())]:[];
   return naddBox('dp-terrain')+(pr.length?`<p>Le terrain est concerné par ${esc(pr.join(', '))}, ce qui soumet la coupe et l'abattage d'arbres à déclaration préalable.</p>`:'')+
-  `<h2>2. Description des travaux</h2><p>La déclaration porte sur l'abattage de ${n} arbre${n>1?'s':''}, repéré${n>1?'s':''} A1${n>2?' à A'+n:n>1?' et A2':''} sur le plan (DP2) et photographié${n>1?'s':''} (DP3).</p>
+  `<h2>2. Description des travaux</h2><p>La déclaration porte sur l'abattage de ${n} arbre${n>1?'s':''}, repéré${n>1?'s':''} A1${n>2?' à A'+n:n>1?' et A2':''} sur le plan (DPC2) et photographié${n>1?'s':''} (DPC7).</p>
   <table class="dpt"><thead><tr><th>Repère</th><th>Essence et dimensions</th><th>Motif</th><th>Remplacement</th></tr></thead><tbody>${L.map((t,i)=>`<tr><td>A${i+1}</td><td>${esc(t.ess)}, ${fmt(+t.h||0,0)} m de haut, tronc Ø ${fmt(+t.diam||0,0)} cm</td><td>${esc(MOTIFS[t.motif]||'')}</td><td>${t.replant?esc(t.ressence||'Replantation')+' (R'+(i+1)+' sur le plan)':'Aucun'}</td></tr>`).join('')}</tbody></table>`+naddBox('dp-travaux')+
   `<h2>3. Effet sur le paysage</h2><p>${L.some(t=>t.replant)?'Les arbres abattus sont remplacés sur le terrain par des essences adaptées, afin de conserver le caractère boisé des lieux.':'Les arbres abattus ne sont pas remplacés : précisez ci-dessous ce qui justifie l\'absence de replantation.'} Les souches sont ${'rognées'} et les déchets de coupe évacués ou broyés sur place.</p>`+naddBox('dp-insertion')}
 
@@ -3667,9 +3671,54 @@ async function zipDepot(){try{pdfBusy('Préparation des fichiers…');await Prom
     for(const s of L){pdfBusy(`Pièce ${++i} sur ${L.length} : ${s.code}…`);const c=await sheetCanvas(s.id);if(!c)continue;const d=newDoc();addCanvas(d,c);
       let nm=s.code==='Cerfa'?'Recapitulatif_cerfa':s.code==='Annexe'?'Annexe_extrait_cadastral':fileSafe(s.code);if(used[nm]){used[nm]++;nm+='_'+used[nm]}else used[nm]=1;
       zip.file(nm+'.pdf',d.output('arraybuffer'))}
+    try{const cf=await cerfaBytes();zip.file(`Cerfa_${cf.num}_pre-rempli.pdf`,cf.bytes)}catch(e){}
     zip.file('LISEZ-MOI.txt',`Pièces du dossier, une par fichier, à déposer sur la plateforme de votre mairie (guichet numérique des autorisations d'urbanisme).\nChaque fichier porte le code de la pièce demandé par le formulaire cerfa.\nLe fichier Recapitulatif_cerfa.pdf n'est pas une pièce : il sert à remplir le formulaire.\n`);
     saveBlob(await zip.generateAsync({type:'blob'}),dossierName()+'_pieces.zip');toast('Fichiers du dépôt en ligne enregistrés (un PDF par pièce).')}
   catch(e){toast('Export impossible : '+e.message,8000)}finally{pdfBusy(null)}}
+/* ================= Cerfa officiel pré-rempli (13406*17 ou 16702*03) ================= */
+const CERFA_PDF={'13406':'cerfa/cerfa_13406-17.pdf','16702':'cerfa/cerfa_16702-03.pdf'};
+function loadLocalLib(src,test){if(test())return Promise.resolve();return new Promise((res,rej)=>{const sc=document.createElement('script');sc.src=src;sc.onload=()=>res();sc.onerror=()=>rej(new Error('module PDF non chargé'));document.head.appendChild(sc)})}
+function recapValue(label){try{const html=mode()==='pc'?cerfaHTML():dpCerfa();const doc=new DOMParser().parseFromString(html,'text/html');for(const tr of doc.querySelectorAll('tr')){const td=tr.querySelectorAll('td');if(td.length===2&&td[0].textContent.trim()===label&&!td[1].querySelector('.pc-no'))return td[1].textContent.trim()}}catch(e){}return''}
+const ddmmyyyy=iso=>{const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(iso||'');return m?m[3]+m[2]+m[1]:''};
+const winAnsi=s=>String(s??'').replace(/[≤]/g,'<=').replace(/[≥]/g,'>=').replace(/[≈]/g,'~').replace(/[  ]/g,' ').replace(/[^\x00-\xFFŒœŠšŸŽž–—‘’‚“”„†‡•…‰‹›€™]/g,'');
+function cerfaData(){const m=mode(),T=S.terrain,D=S.dem,P=S.projet,TT=totals(),sf=surfaces();const num=m==='pc'?'13406':'16702';const v={},c=[];
+  const tel=String(D.tel||'').replace(/\D/g,'').replace(/^33(?=\d{9}$)/,'0');
+  Object.assign(v,{D1N_nom:(D.nom||'').toUpperCase(),D1P_prenom:D.prenom,D1A_naissance:ddmmyyyy(D.naissance),D3V_voie:D.adresse,D3L_localite:D.ville,D3C_code:String(D.cp||'').replace(/\D/g,'').slice(0,5),D3T_telephone:tel.length===10?tel:''});
+  if(D.email&&/@/.test(D.email)){const [a,b]=D.email.split('@');v.D5GE1_email=a;v.D5GE2_email=b}
+  Object.assign(v,{T2Q_numero:T.num,T2V_voie:T.street,T2L_localite:T.commune,T2C_code:String(T.cp||'').slice(0,5)});
+  const suf=['','P2','P3'];(T.parcels||[]).slice(0,3).forEach((p,i)=>{v[`T2F${suf[i]}_prefixe`]=String(p.prefixe||'000').padStart(3,'0');v[`T2S${suf[i]}_section`]=String(p.section||'').padStart(2,'0').slice(-2);v[`T2N${suf[i]}_numero`]=String(p.numero||'').padStart(4,'0').slice(-4);if(p.contenance)v[i?`T2T${suf[i]}_superficie`:'T2T_superficie']=String(Math.round(p.contenance))});
+  if(T.parcels&&T.parcels.length)v.D5T_total=String(Math.round(parcelArea()));
+  const desc=recapValue('Courte description');if(desc)v.C2ZD1_description=desc.slice(0,1000);
+  const build=m==='pc'||m==='dp-constr';const ext=build&&P.nature==='extension';
+  if(build){c.push(ext?'C2ZB1_existante':'C2ZA1_nouvelle');if(ext)c.push('C5ZK1_extension');if(P.nature==='annexe')c.push((P.garageSurf||/garage/i.test(projetTitle()))?'C5ZE2_garage':'C5ZE5_annexes');if(poolBassin&&poolBassin())c.push('C5ZE1_piscine');
+    if(P.nature==='maison'){v.C5ZA1_logements='1';if(num==='16702')v.C5ZA2_individuels='1'}
+    const nv=String(P.niveaux+(P.combles&&P.toit!=='plat'?1:0));if(num==='13406'&&P.nature==='maison')v.C5ZB2_niveaux=nv;if(num==='16702')v.C5ZJ1_niveaux=nv;
+    const r1=x=>String(Math.round(x*10)/10).replace('.',',');
+    Object.assign(v,{W3ES1_avanttravaux:r1(TT.empEx),W3ES2_creee:r1(sf.emprise+TT.empAm),W3ES3_supprimee:'0'});
+    Object.assign(v,{W2LA1:r1(TT.sdpEx),W2LB1:r1(sf.sdp),W2LD1:r1(TT.sdpDem),W2LF1:r1(TT.sdpTot),W2SA1:r1(TT.sdpEx),W2SB1:r1(sf.sdp),W2SD1:r1(TT.sdpDem),W2SF1:r1(TT.sdpTot)});
+    if(num==='13406'&&TT.sdpTot<=150)c.push('H1H_honneur')}
+  else if(m==='dp-cloture')c.push('C2ZC3_cloture');
+  else if(m==='dp-piscine'){c.push('C2ZA1_nouvelle','C5ZE1_piscine')}
+  else if(m==='dp-facade'||m==='dp-toiture')c.push('C2ZB1_existante');
+  if(num==='16702'&&m!=='dp-arbres')c.push('C5ZD1_personnel');
+  // législations connexes : non par défaut ; périmètres de protection d'après le Géoportail
+  c.push('X1A0_ABF','X1U0_raccordement','X1L0_legislation');if(num==='16702')c.push('X1T0_eau','X1E0_environnement','X1D0_derogation','X1C0_classe','X1V0_toiture');
+  const Pr=T.protect;if(Pr&&Pr.ok){const s=Pr.sup.join(' ').toLowerCase();if(/patrimonial/.test(s))c.push('X2R_remarquable');if(/monument/.test(s))c.push('X2H_historique');if(/site class|inscrit/.test(s))c.push('X2C_classe')}
+  v.E1L_lieu=D.ville||T.commune||'';v.E1D_date=ddmmyyyy(today());
+  // bordereau des pièces jointes
+  const codes=new Set(activeSheets().map(s=>s.code.replace(/-\d+$/,'')));const ph=S.photos;
+  const has=k=>codes.has(k);
+  if(num==='13406'){const B={PCMI1:'P3GA1',PCMI2:'P3GC1',PCMI3:'P3GE1',PCMI4:'P3GB1',PCMI5:'P3GD1',PCMI6:'P3GF1',PCMI7:'P3GG1',PCMI8:'P3GH1'};const ok={PCMI6:ph.insMode==='image'?!!ph.insImg:!!ph.ins,PCMI7:!!ph.p7,PCMI8:!!ph.p8};for(const[k,f]of Object.entries(B))if(has(k)&&ok[k]!==false)c.push(f)}
+  else{const B={DPC1:'P5PA2',DPC2:'P5PB1',DPC3:'P3GE1',DPC4:'P3GD1',DPC6:'P3GF1',DPC7:'P3GG1',DPC8:'P3GH1',DPC11:'P4CD1'};const ok={DPC6:ph.insMode==='image'?!!ph.insImg:!!ph.ins,DPC7:m==='dp-arbres'?arbList().some(t=>t.photo):!!ph.p7,DPC8:!!ph.p8};for(const[k,f]of Object.entries(B))if(has(k)&&ok[k]!==false)c.push(f)}
+  return{num,v,c}}
+async function cerfaBytes(){const {num,v,c}=cerfaData();await loadLocalLib('lib/pdf-lib.min.js',()=>!!window.PDFLib);
+  const r=await fetch(CERFA_PDF[num]);if(!r.ok)throw new Error('formulaire introuvable');const pdf=await PDFLib.PDFDocument.load(await r.arrayBuffer());const form=pdf.getForm();const miss=[];
+  for(const[n,val]of Object.entries(v)){if(val==null||val==='')continue;try{const f=form.getTextField(n);let s=winAnsi(val);if(!f.isMultiline())s=s.replace(/\s*\n\s*/g,' ');const ml=f.getMaxLength();if(ml&&s.length>ml)s=s.slice(0,ml);f.setText(s)}catch(e){miss.push(n)}}
+  for(const n of c){try{form.getCheckBox(n).check()}catch(e){miss.push(n)}}
+  pdf.setTitle(`Cerfa ${num} pré-rempli`);pdf.setCreator('Atelier PC');
+  return{num,bytes:await pdf.save({updateFieldAppearances:true}),miss}}
+async function cerfaRempli(){try{pdfBusy('Remplissage du formulaire officiel…');const {num,bytes}=await cerfaBytes();saveBlob(new Blob([bytes],{type:'application/pdf'}),`Cerfa_${num}_${fileSafe(S.dem.nom||'demandeur')}.pdf`);
+    toast('Formulaire pré-rempli. Relisez-le, complétez les cases restantes, puis datez et signez.',7000)}catch(e){toast('Formulaire impossible : '+e.message,7000)}finally{pdfBusy(null)}}
 /* page de garde avec le sommaire */
 async function gardeCanvas(){const host=document.createElement('div');host.className='pdf-host';const T=S.terrain,D=S.dem,M=S.meta;const L=exportSheets();
   host.innerHTML=`<div class="sheet port garde"><div class="g-top">${M.logo?`<img src="${M.logo}" alt="">`:''}<span>${M.auteur?'Dossier établi par<br><b>'+esc(M.auteur)+'</b>':''}</span></div>
@@ -3863,7 +3912,7 @@ function wzRender(){const el=$('#wiz');if(!el||el.hidden)return;const keys=wzKey
     h=`<div class="wz-card ${nb.length?'bad':'ok'}"><b>${nb.length?`${nb.length} point${nb.length>1?'s':''} à corriger avant dépôt`:'Dossier cohérent'}</b>Temps passé : ${wzTime()}.${nw.length?` ${nw.length} élément${nw.length>1?'s':''} à compléter.`:''}</div>
       ${nb.concat(nw).slice(0,6).map(c=>`<div class="ck ${c.lvl}"><div class="ic">${c.lvl==='bad'?'×':'!'}</div><div><b>${c.t}</b><span>${c.s}</span></div></div>`).join('')}
       <div class="wz-pieces">${sh.map(s=>`<span class="${sheetReady(s.id)?'ok':'warn'}">${esc(s.code)}</span>`).join('')}</div>
-      <div class="btns wz-final"><button class="btn primary" type="button" id="wzPrint">Télécharger le dossier en PDF</button><button class="btn" type="button" id="wzZip">Fichiers pour le dépôt en ligne</button><button class="btn" type="button" id="wzSee">Voir les planches</button><button class="btn" type="button" id="wzSaveP">Enregistrer le projet</button></div>
+      <div class="btns wz-final"><button class="btn primary" type="button" id="wzPrint">Télécharger le dossier en PDF</button><button class="btn" type="button" id="wzZip">Fichiers pour le dépôt en ligne</button><button class="btn" type="button" id="wzCerfa">Formulaire cerfa pré-rempli</button><button class="btn" type="button" id="wzSee">Voir les planches</button><button class="btn" type="button" id="wzSaveP">Enregistrer le projet</button></div>
       ${mode()==='dp-arbres'?verdictCard():''}<p class="hint">${mode()!=='pc'?'Le formulaire cerfa '+cerfaNum()+' se remplit avec les données du récapitulatif.':`Restent à joindre par vous : l'attestation RE2020 (PCMI14-1)${w.kind==='garage'?' si le garage est chauffé':''}${S.projet.assain==='individuel'?' et l\'attestation du SPANC':''}. Le formulaire cerfa se remplit avec les données du récapitulatif.`}</p>`}
   $('#wzBody').innerHTML=h;
   $('#wzPrev').hidden=st===0;$('#wzNext').hidden=st===keys.length-1;$('#wzNext').textContent=st===0?'Commencer':'Continuer';$('#wzNext').disabled=!wzCanNext();
@@ -3903,7 +3952,7 @@ function wzBind(){const k=wzKey(),w=wzState();
       if(kk==='p7'||kk==='p8'){if(!S.photos[kk+'pos'])$(`[data-placepv="${kk}"]`).click()}if(kk==='ins'){S.photos.insMode='auto';if(!S.photos.pv6pos)$('[data-placepv="pv6"]').click()}save();wzRender()});
     $$('[data-wzcam]').forEach(b=>b.onclick=async()=>{const kk=b.dataset.wzcam;if(kk==='ins'){wzGo(wzKeys().indexOf('implant'));$('#wzCam').click();return}await onsitePhoto(kk);wzRender()})}
   if(k==='abords')$$('[data-ab]').forEach(b=>b.onclick=()=>{const A=wzAb();const key=b.dataset.ab,v=b.dataset.v;if(b.dataset.m==='1'){const L=A[key]||[];A[key]=L.includes(v)?L.filter(x=>x!==v):[...L,v]}else A[key]=A[key]===v?null:v;abApply();save();wzRender()});
-  if(k==='fin'){$('#wzPrint').onclick=()=>pdfDossier();$('#wzZip').onclick=()=>zipDepot();$('#wzSee').onclick=()=>{wzClose();if(isMobile())setView('sheets');goTab('pcmi2')};$('#wzSaveP').onclick=()=>$('#bSave').click()}}
+  if(k==='fin'){$('#wzPrint').onclick=()=>pdfDossier();$('#wzCerfa').onclick=()=>cerfaRempli();$('#wzZip').onclick=()=>zipDepot();$('#wzSee').onclick=()=>{wzClose();if(isMobile())setView('sheets');goTab('pcmi2')};$('#wzSaveP').onclick=()=>$('#bSave').click()}}
 $('#wzNext').onclick=async()=>{const k=wzKey();
   if(k==='terrain'&&!S.demo){const w=wzState();if(!w.done){wzDefaults();w.done=true}else if(w.kind!=='portail'){if(!(S.onsite&&S.onsite.placed))autoImplant();if(!w.ouvEdited)autoOuvertures()}
     if(w.kind!=='portail'&&reglementUrl(S.terrain.zone)&&!WZ.plu)wzReadPLU()}
