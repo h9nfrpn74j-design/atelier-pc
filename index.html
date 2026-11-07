@@ -66,6 +66,30 @@ body.fs header.top,body.fs .mnav,body.fs aside,body.fs #scaleBar,body.fs .tabs{d
 .lh{display:flex;align-items:center;gap:0}.hq{display:inline-grid;place-items:center;width:17px;height:17px;margin-left:5px;border-radius:50%;border:1px solid var(--accent);background:transparent;color:var(--accent);font:700 11px var(--f-ui);cursor:pointer;padding:0;vertical-align:1px}
 .hpop{position:fixed;z-index:95;max-width:300px;background:var(--head);color:#fff;border-radius:12px;padding:10px 12px;box-shadow:0 12px 30px rgba(0,0,0,.3);font-size:13px}.hpop b{display:block;margin-bottom:3px}.hpop p{margin:0;opacity:.9;line-height:1.4}
 .home-rem{display:grid;grid-template-columns:auto 1fr;gap:10px;border:1px solid #E3C14B;background:rgba(227,193,75,.12);border-radius:14px;padding:12px 14px}.home-rem svg.ic{width:22px;height:22px;color:#B8901A}.home-rem div{display:grid;gap:3px;font-size:13px}.home-rem .lnk{justify-self:start}
+/* présentation animée */
+.promo{position:relative;border-radius:18px;overflow:hidden;background:#18211F;box-shadow:0 14px 40px rgba(0,0,0,.18);cursor:pointer;user-select:none}
+.pm-stage{aspect-ratio:16/9;background:#EEF0EC}.pm-stage svg{width:100%;height:100%;display:block}
+.pm-bars{position:absolute;top:8px;left:10px;right:10px;display:flex;gap:4px;z-index:2}.pm-bars span{flex:1;height:3px;border-radius:3px;background:rgba(24,33,31,.25);overflow:hidden}.pm-bars i{display:block;height:100%;width:0;background:#1E5A56}
+.pm-bars .done i{width:100%}.pm-bars .on i{animation:pmbar 5.2s linear forwards}.promo.paused .pm-bars .on i,.promo.paused .pm-s *{animation-play-state:paused}
+@keyframes pmbar{to{width:100%}}
+.pm-cap{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 14px;color:#fff}.pm-cap b{display:block;font-size:16px}.pm-cap small{display:block;color:#B9C7C3;font-size:12.5px;margin-top:2px}
+.pm-n{font:600 11px var(--f-mono);color:#8FC7C0}.pm-pp{border:1px solid #3d4b48;background:transparent;color:#fff;border-radius:999px;width:34px;height:34px;cursor:pointer;font-size:11px}
+.pm-s{animation:pmIn .45s ease both}@keyframes pmIn{from{opacity:0}}
+.pm-s *{transform-box:view-box}
+.pm-s1 .pm-map{transform-origin:162px 65px;animation:pmZoom 4.6s ease .2s both}@keyframes pmZoom{to{transform:scale(1.25)}}
+.pm-type{clip-path:inset(0 100% 0 0);animation:pmType 1.5s steps(32) .4s forwards}@keyframes pmType{to{clip-path:inset(0 0 0 0)}}
+.pm-caret{animation:pmCaret 1.5s steps(32) .4s forwards,pmBlink .8s steps(1) infinite}@keyframes pmCaret{to{transform:translateX(152px)}}@keyframes pmBlink{50%{opacity:0}}
+.pm-draw{stroke-dasharray:240;stroke-dashoffset:240;animation:pmDraw 1.2s ease 2s forwards}@keyframes pmDraw{to{stroke-dashoffset:0}}
+.pm-pin{opacity:0;transform:translateY(-30px);animation:pmDrop .5s cubic-bezier(.3,1.6,.6,1) 1.8s forwards}@keyframes pmDrop{to{opacity:1;transform:none}}
+.pm-tag,.pm-ok,.pm-dims{opacity:0;animation:pmFade .5s ease forwards}.pm-tag{animation-delay:3s}.pm-dims{animation-delay:1.5s}.pm-ok{animation-delay:2.6s}@keyframes pmFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.pm-house{animation:pmSlide 1.1s cubic-bezier(.2,.8,.2,1) .2s both}@keyframes pmSlide{from{transform:translate(-70px,-45px) rotate(-8deg);opacity:.3}to{transform:none;opacity:1}}
+.pm-wipe{transform-origin:0 0;animation:pmWipe 4.4s ease-in-out .3s both}@keyframes pmWipe{0%{transform:scaleX(0)}45%{transform:scaleX(2)}100%{transform:scaleX(1)}}
+.pm-wline{animation:pmLine 4.4s ease-in-out .3s both}@keyframes pmLine{0%{transform:translateX(-160px)}45%{transform:translateX(160px)}100%{transform:translateX(0)}}
+.pm-sh{opacity:0;animation:pmSh .55s cubic-bezier(.2,.8,.2,1) calc(var(--i)*.38s + .2s) forwards}@keyframes pmSh{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:none}}
+.pm-ck{opacity:0;animation:pmFade .4s ease calc(var(--i)*.45s + .3s) forwards}
+.pm-fill{transform-origin:206px 0;animation:pmFill 2.6s ease .3s both}@keyframes pmFill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.pm-pdf{transform-origin:251px 113px;animation:pmPulse 1.2s ease 3s 2}@keyframes pmPulse{50%{transform:scale(1.08)}}
+@media (prefers-reduced-motion:reduce){.pm-s *{animation-duration:.01s!important;animation-delay:0s!important}}
 svg.ic{width:1.15em;height:1.15em;vertical-align:-.2em;flex:none}svg.ic.big{width:44px;height:44px;opacity:.55}
 .prog{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.08)}.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#8FC7C0,#E3C14B);transition:width .4s}
 .brand{cursor:pointer;white-space:nowrap}
@@ -1006,6 +1030,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
 <div class="home" id="home" hidden><div class="home-box">
   <div class="home-top"><div class="brand">Atelier <b>PC</b></div><span class="sp"></span><button type="button" data-home="theme"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg>Thème</button><button type="button" data-home="close"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h8l4 4v14H7z"/><path d="M15 3v4h4M10 12h6M10 16h6"/></svg>Continuer</button></div>
   <h1>Votre projet, du terrain au dossier déposé.</h1><p>Permis de construire et déclarations préalables, conformes aux cerfa, partout en France.</p>
+  <div id="promoHost"></div>
   <button class="home-new" type="button" data-home="new"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><b>Nouveau projet</b><small>Guidé pas à pas, environ 10 minutes</small></button>
   <div class="home-list" id="homeList"></div>
   <div class="home-links"><button type="button" data-home="demo"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>Voir l'exemple</button><button type="button" data-home="import"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5h6l2 2h10v4"/><path d="M3 7v12h16l3-8H6z"/></svg>Importer un dossier</button></div>
@@ -2232,14 +2257,14 @@ function themeCycle(){const k=Object.keys(UITHEMES);const n=k[(k.indexOf(themeGe
 themeApply();
 /* ================= Écran d'accueil ================= */
 const KIND_IC={pc:'home','dp-facade':'facade','dp-piscine':'pool','dp-division':'scissors','dp-pergola':'pergola','dp-toiture':'roof','dp-cloture':'gate','dp-constr':'shed','dp-arbres':'tree'};
-async function homeOpen(){{const hp=document.querySelector('.hpop');if(hp)hp.remove()}const H=$('#home');if(!H)return;H.hidden=false;document.body.classList.add('home-on');const box=$('#homeList');box.innerHTML='<p class="hint">Chargement…</p>';let L=[];try{L=await idbAll()}catch(e){}
+async function homeOpen(){{const ph=$('#promoHost');if(ph&&!ph.firstChild){ph.innerHTML=promoHTML()}setTimeout(promoStart,60)}{const hp=document.querySelector('.hpop');if(hp)hp.remove()}const H=$('#home');if(!H)return;H.hidden=false;document.body.classList.add('home-on');const box=$('#homeList');box.innerHTML='<p class="hint">Chargement…</p>';let L=[];try{L=await idbAll()}catch(e){}
   L.sort((a,b)=>b.updated-a.updated);const cur=S.meta&&S.meta.id;
   const rem=remindersHTML();box.innerHTML=rem+(L.length?`<h2>Vos projets</h2>`+L.map(r=>{const t=dossierTitle(r.data);const m=r.data&&r.data.dossier&&r.data.dossier.type||'pc';const p=r.prog??null;
     return`<button class="home-card${r.id===cur?' cur':''}" type="button" data-hopen="${r.id}"><div class="th">${r.thumb?`<img src="${r.thumb}" alt="">`:r.mini?r.mini:ICO(KIND_IC[m]||'home','ic big')}</div>
       <div class="tx"><span class="k">${ICO(KIND_IC[m]||'home')}${esc(t.k||'')}</span><b>${esc(t.lieu||'Projet')}</b><small>${esc([t.commune,t.nom].filter(Boolean).join(' · '))}</small>
       ${p!=null?`<span class="pg"><i style="width:${p}%"></i></span><small>${p} % · modifié le ${new Date(r.updated).toLocaleDateString('fr-FR')}</small>`:`<small>Modifié le ${new Date(r.updated).toLocaleDateString('fr-FR')}</small>`}</div></button>`}).join('')+`<button class="home-all" type="button" data-home="dos">${ICO('folder')}Gérer mes dossiers (dupliquer, exporter, supprimer)</button>`
     :`<div class="home-empty">${ICO('sheets','ic big')}<p>Aucun projet pour l'instant. Commencez par « Nouveau projet » : l'appli vous guide de l'adresse du terrain jusqu'au dossier complet.</p></div>`)}
-function homeClose(){const H=$('#home');if(H)H.hidden=true;document.body.classList.remove('home-on');requestAnimationFrame(()=>{try{fit()}catch(e){}})}
+function homeClose(){clearTimeout(PM.t);const H=$('#home');if(H)H.hidden=true;document.body.classList.remove('home-on');requestAnimationFrame(()=>{try{fit()}catch(e){}})}
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-hopen],[data-home]');if(!b||!b.closest('#home'))return;
   if(b.dataset.hopen){const rec=await idbGet(b.dataset.hopen);if(rec){if(!(S.meta&&S.meta.id===rec.id))openDossierData(rec.data);try{localStorage.setItem('atelier-pc-cur',rec.id)}catch(_){}homeClose()}return}
   const k=b.dataset.home;if(k==='new'){homeClose();newDossier()}else if(k==='demo'){homeClose();if(!S.demo){const bd=$('#bDemo');if(bd)bd.click()}}else if(k==='import'){$('#dosImp input').click()}else if(k==='dos'){homeClose();openDossiers()}else if(k==='theme')themeCycle();else if(k==='ics')icsExport();else if(k==='close')homeClose()});
@@ -2382,6 +2407,54 @@ document.addEventListener('click',e=>{const b=e.target.closest('.hq');const old=
 /* ================= Rappels ================= */
 function soonJalons(days=21){try{const t=today();const lim=addDays(t,days);return jalons().filter(([d])=>d>=t&&d<=lim)}catch(e){return[]}}
 function remindersHTML(){const J=soonJalons();if(!J.length||S.demo)return'';return`<div class="home-rem">${ICO('bell')}<div><b>À faire bientôt — ${esc(dossierTitle(S).lieu||'projet en cours')}</b>${J.map(([d,t])=>`<span>${frDate(d)} · ${esc(t)}</span>`).join('')}<button class="lnk" type="button" data-home="ics">Ajouter à mon agenda (avec rappels)</button></div></div>`}
+
+/* ================= Présentation animée (accueil) ================= */
+const PROMO=[
+ {t:'Tapez l\'adresse du terrain',s:'Le cadastre, le PLU et les risques se chargent tout seuls.',svg:`
+  <rect x="0" y="0" width="320" height="180" fill="#E9EEE6"/>
+  <g class="pm-map">${[...Array(7)].map((_,i)=>`<path d="M${-20+i*55} 180 L${30+i*55} 0" stroke="#DCE3D7" stroke-width="10"/>`).join('')}
+   <path d="M0 120 Q120 95 320 130" stroke="#fff" stroke-width="9" fill="none"/><path d="M0 120 Q120 95 320 130" stroke="#D8D2C2" stroke-width="7" fill="none"/>
+   <path d="M60 40h60l10 50h-80z" fill="#F4F1E8" stroke="#C9C3B3"/><path d="M200 30h70v60h-80z" fill="#F4F1E8" stroke="#C9C3B3"/><path d="M135 35h55l-5 60h-45z" fill="#FFF6D6" stroke="#C9C3B3"/></g>
+  <path class="pm-draw" d="M135 35h55l-5 60h-45z" fill="none" stroke="#E3A82B" stroke-width="3" stroke-linejoin="round"/>
+  <g class="pm-pin"><path d="M162 50c-7 0-12 5-12 12 0 9 12 20 12 20s12-11 12-20c0-7-5-12-12-12z" fill="#AE3328"/><circle cx="162" cy="62" r="4" fill="#fff"/></g>
+  <g class="pm-search"><rect x="40" y="10" width="240" height="26" rx="13" fill="#fff" stroke="#1E5A56" stroke-width="1.5"/><circle cx="56" cy="23" r="5" fill="none" stroke="#1E5A56" stroke-width="1.6"/><path d="M60 27l4 4" stroke="#1E5A56" stroke-width="1.6"/>
+   <text x="70" y="27" class="pm-type" font-size="10" fill="#18211F">12 chemin des Vignes, Bassillac</text><rect class="pm-caret" x="71" y="16" width="1.2" height="13" fill="#1E5A56"/></g>
+  <g class="pm-tag"><rect x="186" y="100" width="124" height="38" rx="8" fill="#18211F"/><text x="196" y="115" font-size="8.5" fill="#8FC7C0" font-weight="700">Parcelle A 123 · 1 182 m²</text><text x="196" y="129" font-size="8" fill="#fff">Zone UB du PLU · risques vérifiés</text></g>`},
+ {t:'Dessinez votre maison',s:'Glissez-la sur le terrain : distances et règles se vérifient en direct.',svg:`
+  <rect width="320" height="180" fill="#F7F6F1"/>
+  <path d="M60 20h180l30 140H40z" fill="#fff" stroke="#18211F" stroke-width="1.6" stroke-dasharray="8 3 2 3"/>
+  <rect x="40" y="160" width="230" height="16" fill="#E6E2D8"/><text x="155" y="171" font-size="7" text-anchor="middle" fill="#555" letter-spacing="1">CHEMIN DES VIGNES</text>
+  <g class="pm-house"><rect x="110" y="62" width="96" height="62" fill="url(#pmh)" stroke="#18211F" stroke-width="2"/><path d="M110 93h96" stroke="#18211F" stroke-width="1"/></g>
+  <g class="pm-dims"><path d="M110 132h96" stroke="#18211F" stroke-width=".8"/><text x="158" y="141" font-size="8" text-anchor="middle" font-weight="700">13,00 m</text>
+   <path d="M158 124v34" stroke="#1E5A56" stroke-width=".8" stroke-dasharray="3 2"/><text x="163" y="152" font-size="7.5" fill="#1E5A56" font-weight="700">recul 5,00 m</text>
+   <path d="M53 93h57" stroke="#1E5A56" stroke-width=".8" stroke-dasharray="3 2"/><text x="58" y="88" font-size="7.5" fill="#1E5A56" font-weight="700">8,65 m</text></g>
+  <g class="pm-ok"><rect x="216" y="24" width="94" height="44" rx="8" fill="#fff" stroke="#D3D9D5"/><text x="226" y="40" font-size="8" fill="#2C7A4B" font-weight="700">✓ Recul voie</text><text x="226" y="52" font-size="8" fill="#2C7A4B" font-weight="700">✓ Hauteur 6,8 m</text><text x="226" y="63" font-size="8" fill="#2C7A4B" font-weight="700">✓ Emprise 18 %</text></g>`},
+ {t:'Voyez-la sur votre photo',s:'Prenez une photo sur place : le projet s\'y incruste, avant / après.',svg:`
+  <defs><linearGradient id="pmsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A9CBE3"/><stop offset="1" stop-color="#EAF1F2"/></linearGradient><clipPath id="pmclip"><rect class="pm-wipe" x="0" y="0" width="160" height="180"/></clipPath></defs>
+  <rect width="320" height="180" fill="url(#pmsky)"/><path d="M0 120h320v60H0z" fill="#8FA86B"/><path d="M0 150 L320 140 L320 180 L0 180z" fill="#9C9C96"/>
+  <g fill="#6E8A55"><circle cx="40" cy="98" r="18"/><circle cx="280" cy="92" r="22"/><circle cx="250" cy="104" r="14"/></g><rect x="38" y="110" width="4" height="14" fill="#6b5034"/>
+  <g clip-path="url(#pmclip)"><g class="pm-3d"><path d="M110 120V88l50-10 60 12v30z" fill="#E7DCC7"/><path d="M220 90v30l18-6V86z" fill="#CDBFA4"/><path d="M104 90l58-36 64 36z" fill="#A65A3F"/><path d="M226 90l-64-36 80 30z" fill="#8a4630"/><path d="M226 90l16-6-80-30z" fill="#7a3e2a"/>
+   <rect x="125" y="96" width="14" height="16" fill="#4d5b63"/><rect x="185" y="96" width="14" height="16" fill="#4d5b63"/><rect x="152" y="98" width="13" height="22" fill="#3A3F44"/></g></g>
+  <line class="pm-wline" x1="160" y1="0" x2="160" y2="180" stroke="#fff" stroke-width="2"/>
+  <g font-size="8" font-weight="700"><rect x="8" y="8" width="44" height="15" rx="7" fill="rgba(0,0,0,.55)"/><text x="30" y="18.5" text-anchor="middle" fill="#fff">APRÈS</text><rect x="268" y="8" width="44" height="15" rx="7" fill="rgba(0,0,0,.55)"/><text x="290" y="18.5" text-anchor="middle" fill="#fff">AVANT</text></g>`},
+ {t:'Toutes les pièces sont dessinées',s:'Plans, coupes, façades, notice et cerfa, aux normes et au bon nom.',svg:`
+  <rect width="320" height="180" fill="#EEF0EC"/>
+  ${['PCMI1','PCMI2','PCMI3','PCMI4','PCMI5','PCMI6','PCMI7','Cerfa'].map((c,i)=>`<g class="pm-sh" style="--i:${i}"><text x="${17+i*37+17}" y="${(i%2)*8+124}" font-size="7.5" font-weight="800" text-anchor="middle" fill="#18211F">${c}</text><g transform="translate(${17+i*37} ${(i%2)*8+60}) scale(.53)"><rect width="64" height="92" rx="3" fill="#fff" stroke="#C9CFCB"/><rect x="5" y="6" width="38" height="56" fill="none" stroke="#18211F" stroke-width=".6"/>${i===1?'<rect x="14" y="22" width="18" height="12" fill="#1E5A56" opacity=".7"/>':i===4?'<path d="M10 48h28M12 48V34l12-8 12 8v14" stroke="#18211F" fill="#E7DCC7" stroke-width=".6"/>':i===5?'<rect x="6" y="7" width="36" height="54" fill="#A9CBE3"/><path d="M14 44l10-8 10 8v8H14z" fill="#A65A3F"/>':i===7?'<path d="M10 16h28M10 24h28M10 32h20M10 40h28" stroke="#888" stroke-width="1"/>':'<path d="M12 18l20 4-4 26-18-6z" fill="none" stroke="#18211F" stroke-width=".6" stroke-dasharray="3 1"/>'}<rect x="46" y="6" width="13" height="80" fill="#F5F7F4"/></g></g>`).join('')}`},
+ {t:'Vérifié, prêt à déposer',s:'Les contrôles vous guident. PDF, fichiers et cerfa en un toucher.',svg:`
+  <rect width="320" height="180" fill="#F7F6F1"/>
+  <rect x="30" y="22" width="160" height="136" rx="10" fill="#fff" stroke="#D3D9D5"/>
+  ${['Terrain et PLU','Plans PCMI1 à PCMI8','Insertion avant / après','Cerfa pré-rempli','Relecture terminée'].map((t,i)=>`<g class="pm-ck" style="--i:${i}"><circle cx="50" cy="${46+i*24}" r="8" fill="#2C7A4B"/><path d="M46 ${46+i*24}l3 3 6-6" stroke="#fff" stroke-width="1.8" fill="none"/><text x="64" y="${49+i*24}" font-size="9" fill="#18211F">${t}</text></g>`).join('')}
+  <g class="pm-bar"><rect x="206" y="40" width="90" height="8" rx="4" fill="#D3D9D5"/><rect class="pm-fill" x="206" y="40" width="90" height="8" rx="4" fill="#1E5A56"/><text x="251" y="64" font-size="15" font-weight="800" text-anchor="middle" fill="#1E5A56">100 %</text></g>
+  <g class="pm-pdf"><rect x="210" y="96" width="82" height="34" rx="10" fill="#1E5A56"/><text x="251" y="117" font-size="10" font-weight="700" text-anchor="middle" fill="#fff">Dossier PDF</text></g>`}];
+const PM={i:0,t:0,dur:5200,paused:false};
+function promoHTML(){return`<div class="promo" id="promo" role="region" aria-label="Présentation en 30 secondes"><div class="pm-bars">${PROMO.map((_,i)=>`<span><i></i></span>`).join('')}</div>
+  <div class="pm-stage"><svg viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" font-family="Archivo, system-ui, sans-serif"><defs><pattern id="pmh" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)"><rect width="6" height="6" fill="#DDEAE7"/><line x1="0" y1="0" x2="0" y2="6" stroke="#1E5A56" stroke-width="1"/></pattern></defs><g id="pmScene"></g></svg></div>
+  <div class="pm-cap"><span class="pm-n" id="pmN">1/${PROMO.length}</span><div><b id="pmT"></b><small id="pmS"></small></div><button type="button" class="pm-pp" id="pmPP" aria-label="Pause">❚❚</button></div></div>`}
+function promoShow(i){const P=$('#promo');if(!P)return;PM.i=(i+PROMO.length)%PROMO.length;const sc=PROMO[PM.i];const g=$('#pmScene');g.innerHTML=`<g class="pm-s pm-s${PM.i+1}">${sc.svg}</g>`;$('#pmT').textContent=sc.t;$('#pmS').textContent=sc.s;$('#pmN').textContent=`${PM.i+1}/${PROMO.length}`;
+  P.querySelectorAll('.pm-bars span').forEach((b,k)=>{b.className=k<PM.i?'done':k===PM.i?'on':'';const f=b.firstElementChild;f.style.animation='none';void f.offsetWidth;f.style.animation=''});P.classList.toggle('paused',PM.paused);
+  clearTimeout(PM.t);if(!PM.paused)PM.t=setTimeout(()=>{if($('#home')&&!$('#home').hidden)promoShow(PM.i+1)},PM.dur)}
+function promoStart(){const P=$('#promo');if(!P)return;PM.paused=matchMedia('(prefers-reduced-motion: reduce)').matches;promoShow(0);
+  P.onclick=e=>{if(e.target.closest('#pmPP')){PM.paused=!PM.paused;$('#pmPP').textContent=PM.paused?'▶':'❚❚';$('#pmPP').setAttribute('aria-label',PM.paused?'Lecture':'Pause');promoShow(PM.i);return}const r=P.getBoundingClientRect();promoShow(PM.i+(e.clientX<r.left+r.width/3?-1:1))}}
 
 /* insertion : avant / après sur la même planche */
 function insBefore(far){const ph=S.photos,o=S.onsite||{};if(far)return ph.insFromShot2&&o.shot2?o.shot2.img:null;
