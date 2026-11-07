@@ -41,6 +41,23 @@ body.fs header.top,body.fs .mnav,body.fs aside,body.fs #scaleBar,body.fs .tabs{d
 .v3d-view{min-height:0;touch-action:none;cursor:grab;overflow:hidden}.v3d-view svg{width:100%;height:100%;display:block}
 .v3d-tools{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:10px 12px calc(12px + env(safe-area-inset-bottom))}
 .zoombar svg.ic{width:18px;height:18px;vertical-align:-4px}
+/* annuler, enregistrement, relecture */
+.hbtn{border:1px solid #3d4b48;background:transparent;color:#fff;border-radius:8px;width:34px;height:32px;display:inline-grid;place-items:center;cursor:pointer;padding:0}.hbtn:disabled{opacity:.35;cursor:default}
+.saved{font-size:12px;color:#9fc9c2;display:inline-flex;gap:5px;align-items:center;white-space:nowrap}.saved[data-st=saving]{color:#c9c9c9}.saved[data-st=err]{color:#f0a196}.saved[data-st=demo]{color:#d9c37a}
+.saved i{width:8px;height:8px;border-radius:50%;background:#c9c9c9;animation:pulse 1s infinite}@keyframes pulse{50%{opacity:.3}}
+@media (max-width:820px){.saved{display:none}.saved[data-st=err]{display:inline-flex;font-size:11px}.hbtn{display:none}}
+.histpill{position:fixed;left:10px;bottom:calc(64px + env(safe-area-inset-bottom));z-index:60;display:none;gap:4px;background:var(--head);border-radius:999px;padding:4px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.histpill button{border:0;background:transparent;color:#fff;width:38px;height:34px;border-radius:999px;display:grid;place-items:center}.histpill button:disabled{opacity:.35}
+@media (max-width:820px){body[data-view=panel] .histpill.on,body[data-view=split] .histpill.on{display:flex}}
+.rev{position:fixed;z-index:75;right:16px;bottom:16px;width:min(400px,calc(100vw - 20px));max-height:min(70vh,560px);overflow:auto;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.3);padding:12px 14px 14px}
+@media (max-width:820px){.rev{left:8px;right:8px;width:auto;bottom:calc(60px + env(safe-area-inset-bottom));max-height:52vh}}
+.rev-top{display:flex;align-items:center;gap:8px;color:var(--accent)}.rev-top .sp{flex:1}.rev-top button{border:0;background:none;font-size:18px;cursor:pointer;color:var(--muted)}
+.rev-h{display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin:8px 0 6px}.rev-h b{font-size:15px}.rev-h span{color:var(--muted);font-size:12px;white-space:nowrap}
+.rev-prog{height:4px;background:var(--line);border-radius:9px;overflow:hidden}.rev-prog i{display:block;height:100%;background:var(--accent)}
+.rev-l{margin:10px 0;padding-left:20px;display:grid;gap:5px;font-size:13.5px}.rev-w{margin:8px 0 0;color:var(--warn);font-weight:600;font-size:13px}
+.rev-nav{display:grid;grid-template-columns:auto 1fr 1fr auto;gap:6px;margin-top:6px}.rev-nav .btn.on{box-shadow:0 0 0 2px var(--accent-soft)}.rev-nav .btn.on-bad{border-color:var(--bad);color:var(--bad)}
+.lnk{border:0;background:none;color:var(--accent);font-weight:600;cursor:pointer;padding:6px 0;text-decoration:underline}
+.rev-cta{width:100%;margin:4px 0 12px;display:flex;gap:8px;justify-content:center}
 svg.ic{width:1.15em;height:1.15em;vertical-align:-.2em;flex:none}svg.ic.big{width:44px;height:44px;opacity:.55}
 .prog{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.08)}.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#8FC7C0,#E3C14B);transition:width .4s}
 .brand{cursor:pointer;white-space:nowrap}
@@ -604,6 +621,8 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
 <header class="top">
   <div class="brand" id="brandHome" title="Accueil : vos projets">Atelier <b>PC</b></div>
   <div class="addr" id="topAddr">—</div>
+  <span class="saved" id="savedInd" aria-live="polite"></span>
+  <button class="hbtn" id="bUndo" type="button" title="Annuler (Ctrl+Z)" aria-label="Annuler" disabled><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-4"/></svg></button><button class="hbtn" id="bRedo" type="button" title="Rétablir (Ctrl+Maj+Z)" aria-label="Rétablir" disabled><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h4"/></svg></button>
   <button class="chip" id="chkChip" type="button"></button>
   <button class="btn express" id="bExpress" type="button" title="Permis de construire guidé en 10 minutes"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg> Express</button>
   <button class="btn" id="bDos" type="button">Mes dossiers</button>
@@ -629,6 +648,8 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
   <button type="button" data-mm="bPrint"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="8" rx="1"/><path d="M7 14h10v7H7z"/></svg>Imprimer tout le dossier</button>
   <button type="button" id="mShare"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>Partager par lien</button>
   <button type="button" id="mOffline"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Préparer la visite hors connexion</button>
+  <button type="button" data-rev><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg>Relecture avant dépôt</button>
+  <button type="button" data-mmundo><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-4"/></svg>Annuler la dernière modification</button>
   <button type="button" data-v3d="open"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 12l9-5M12 12v10M12 12L3 7"/></svg>Vue 3D du projet</button>
   <button type="button" id="mHome"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>Accueil : mes projets</button>
   <button type="button" id="mTheme"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg>Thème : automatique</button>
@@ -966,6 +987,8 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
   <button type="button" data-view="split"><span class="ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M11 4v16"/></svg></span>Côte à côte</button>
 </nav>
 </div>
+<div class="histpill" id="histPill"><button type="button" data-mmundo aria-label="Annuler"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-4"/></svg></button><button type="button" data-mmredo aria-label="Rétablir"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h4"/></svg></button></div>
+<div class="rev" id="rev" hidden role="dialog" aria-label="Relecture avant dépôt"><div class="rev-top"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg><b>Relecture avant dépôt</b><span class="sp"></span><button type="button" data-revclose aria-label="Fermer">✕</button></div><div id="revBody"></div></div>
 <div class="v3d" id="v3d" hidden role="dialog" aria-label="Vue 3D"><div class="v3d-bar"><b><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 12l9-5M12 12v10M12 12L3 7"/></svg> Vue 3D</b><span class="hint">Glissez pour tourner, pincez pour zoomer</span><span class="sp"></span><button type="button" data-v3d="close">✕ Fermer</button></div>
   <div class="v3d-view" id="v3dView"></div>
   <div class="v3d-tools"><button type="button" data-v3d="left">↺ 45°</button><button type="button" data-v3d="rue">Depuis la rue</button><button type="button" data-v3d="eye">À hauteur d'homme</button><button type="button" data-v3d="top">Vue de dessus</button><button type="button" data-v3d="right">↻ 45°</button></div></div>
@@ -1153,7 +1176,7 @@ let saveT;
 let quotaWarned=false;
 function packS(){const o=S.onsite&&S.onsite.shot,o2=S.onsite&&S.onsite.shot2;const r1=o&&o.img&&o.img===S.photos.p7,r2=o2&&o2.img&&o2.img===S.photos.p8;const i1=r1&&o.img,i2=r2&&o2.img;if(r1)o.img='@p7';if(r2)o2.img='@p8';try{return JSON.stringify(S)}finally{if(r1)o.img=i1;if(r2)o2.img=i2}}
 function unpackS(x){if(x&&x.onsite&&x.onsite.shot&&x.onsite.shot.img==='@p7')x.onsite.shot.img=x.photos&&x.photos.p7||null;if(x&&x.onsite&&x.onsite.shot2&&x.onsite.shot2.img==='@p8')x.onsite.shot2.img=x.photos&&x.photos.p8||null;return x}
-function saveLocal(){if(typeof idbSave==='function')idbSave();clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem('atelier-pc',packS())}catch(e){try{const c=JSON.parse(JSON.stringify(S));for(const k of['p7','p8','ins','insImg'])c.photos[k]=null;if(c.onsite)c.onsite.shot=null;localStorage.setItem('atelier-pc',JSON.stringify(c));
+function saveLocal(){if(typeof idbSave==='function')idbSave();if(typeof histRecord==='function'){histRecord();savedUI(S.demo?'demo':'saving')}clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem('atelier-pc',packS())}catch(e){try{const c=JSON.parse(JSON.stringify(S));for(const k of['p7','p8','ins','insImg'])c.photos[k]=null;if(c.onsite)c.onsite.shot=null;localStorage.setItem('atelier-pc',JSON.stringify(c));
   if(!quotaWarned&&!window.indexedDB){quotaWarned=true;toast('Vos images sont trop lourdes pour la sauvegarde automatique du navigateur. Elles restent affichées : utilisez « Enregistrer » pour les conserver dans un fichier projet.',8000)}}catch(_){}}},400)}
 
 /* ================= Géométrie locale ================= */
@@ -2254,6 +2277,57 @@ function v3dClose(){VIEW3D=null;$('#v3d').hidden=true}
   box.addEventListener('wheel',e=>{if(!VIEW3D)return;e.preventDefault();VIEW3D.dist=clamp(VIEW3D.dist*(e.deltaY>0?1.1:0.9),6,120);redraw()},{passive:false})})();
 document.addEventListener('click',e=>{const b=e.target.closest('[data-v3d]');if(!b)return;const k=b.dataset.v3d;if(k==='open')v3dOpen();else if(k==='close')v3dClose();else if(VIEW3D){if(k==='top'){VIEW3D.el=78}else if(k==='eye'){VIEW3D.el=4}else if(k==='rue'){const ve=voieMain();if(ve){const B=bat();const u=dot(ve.n,B.U),v=dot(ve.n,B.V);VIEW3D.az=Math.atan2(v,u)/D2R}VIEW3D.el=12}else if(k==='left')VIEW3D.az-=45;else if(k==='right')VIEW3D.az+=45;v3dDraw()}});
 
+/* ================= Annuler / rétablir (tout le projet) ================= */
+const HIST={past:[],future:[],last:null,blob:new Map(),t:0,lock:false};
+function histSnap(){return JSON.stringify(S,function(k,v){if(this===S&&(k==='ui'||k==='review'))return undefined;if(k==='saved'&&this===S.meta)return undefined;if(typeof v==='string'&&v.length>2000&&v.startsWith('data:')){let id=null;for(const[i,x]of HIST.blob)if(x===v){id=i;break}if(id==null){id='§'+HIST.blob.size;HIST.blob.set(id,v)}return id}return v})}
+function histRestore(js){const o=JSON.parse(js,(k,v)=>typeof v==='string'&&v.startsWith('§')&&HIST.blob.has(v)?HIST.blob.get(v):v);o.ui=S.ui;o.review=S.review;o.meta={...(o.meta||{}),saved:S.meta&&S.meta.saved};HIST.lock=true;try{S=o;mapCache={};fillInputs();renderExList();renderAll();saveLocal()}finally{HIST.lock=false}histUI()}
+function histRecord(){if(HIST.lock)return;clearTimeout(HIST.t);HIST.t=setTimeout(()=>{if(HIST.lock)return;const s=histSnap();if(s===HIST.last)return;if(HIST.last!=null){HIST.past.push(HIST.last);if(HIST.past.length>40)HIST.past.shift();HIST.future=[]}HIST.last=s;histUI()},500)}
+function histUndo(){clearTimeout(HIST.t);const cur=histSnap();if(cur!==HIST.last&&HIST.last!=null){HIST.past.push(HIST.last)}if(!HIST.past.length){toast('Rien à annuler.',1500);return}HIST.future.push(cur);const s=HIST.past.pop();HIST.last=s;histRestore(s);toast('Modification annulée.',1200)}
+function histRedo(){if(!HIST.future.length){toast('Rien à rétablir.',1500);return}const cur=histSnap();HIST.past.push(cur);const s=HIST.future.pop();HIST.last=s;histRestore(s);toast('Modification rétablie.',1200)}
+function histUI(){const u=!HIST.past.length,r=!HIST.future.length;for(const el of[$('#bUndo'),...document.querySelectorAll('#histPill [data-mmundo]')])if(el)el.disabled=u;for(const el of[$('#bRedo'),...document.querySelectorAll('#histPill [data-mmredo]')])if(el)el.disabled=r;const p=$('#histPill');if(p)p.classList.toggle('on',!u||!r)}
+function histReset(){HIST.past=[];HIST.future=[];HIST.blob.clear();HIST.last=histSnap();histUI()}
+function histSnapCheap(){return HIST.last}
+document.addEventListener('keydown',e=>{if(!(e.ctrlKey||e.metaKey)||e.altKey)return;const t=e.target;if(t&&(t.matches('input,textarea,select')||t.isContentEditable))return;if(e.key.toLowerCase()==='z'&&!e.shiftKey){e.preventDefault();histUndo()}else if(e.key.toLowerCase()==='y'||(e.key.toLowerCase()==='z'&&e.shiftKey)){e.preventDefault();histRedo()}});
+/* ================= Indicateur d'enregistrement ================= */
+function savedUI(st){const el=$('#savedInd');if(!el)return;el.dataset.st=st;el.innerHTML=st==='saving'?'<i></i>Enregistrement…':st==='saved'?ICO('check')+'Enregistré':st==='demo'?'Exemple (non enregistré)':st==='err'?'⚠ Non enregistré':'';el.title=st==='saved'?'Votre dossier est enregistré sur cet appareil':''}
+/* ================= Relecture avant dépôt ================= */
+const REV_CRIT={pcmi1:['Le terrain est repéré clairement dans la commune','Le nord et l\'échelle sont indiqués'],
+  pcmi2:['Distances aux limites et à la voie cotées','Accès, stationnement et réseaux figurés','Altitudes NGF (terrain naturel et fini)','Points de vue des photos 7, 8 et de l\'insertion reportés','Arbres conservés, abattus ou plantés'],
+  pcmi3:['Terrain naturel et terrain fini représentés','Hauteurs à l\'égout et au faîtage cotées','Trait de coupe repéré sur le plan de masse'],
+  pcmi4:['L\'état initial du terrain est décrit','Matériaux et teintes précis (références)','Aucun texte entre crochets ne reste à compléter'],
+  pcmi5:['Toutes les façades modifiées ou créées sont présentes','Matériaux repérés par flèches, cotes de hauteur','Ouvertures dessinées et cotées'],
+  pcmi6:['Vue depuis l\'espace public (rue)','Le projet est à la bonne place et à la bonne taille','Les abords (allée, clôture, plantations) sont représentés'],
+  pcmi7:['Photo prise à quelques mètres : le terrain et ses voisins immédiats','Point de vue reporté sur le plan de masse'],
+  pcmi8:['Photo du paysage lointain : le terrain dans son quartier','Point de vue reporté sur le plan de masse'],
+  cerfa:['Identité, adresse et contact du demandeur complets','Surfaces cohérentes avec les plans','Date et signature à apposer sur le formulaire'],
+  autre:['La pièce est lisible et complète']};
+function revCrit(id){if(/^pcmi5|^dpf|^dpt/.test(id))return REV_CRIT.pcmi5;if(id==='dp5')return REV_CRIT.pcmi4;if(/^cerfa/.test(id))return REV_CRIT.cerfa;if(id==='pcmi6b')return REV_CRIT.pcmi6;return REV_CRIT[id]||REV_CRIT.autre}
+const REV={i:0,on:false};
+function revState(){return(S.review=S.review||{})}
+function revSheets(){return activeSheets().filter(s=>s.id!=='cad')}
+function revOpen(){const mm=$('#mMenu');if(mm)mm.hidden=true;homeClose();REV.on=true;REV.i=0;const L=revSheets();const R=revState();const k=L.findIndex(s=>!R[s.id]);REV.i=k>=0?k:0;$('#rev').hidden=false;document.body.classList.add('rev-on');if(isMobile()&&document.body.dataset.view!=='split')setView('sheets');revRender()}
+function revClose(){REV.on=false;$('#rev').hidden=true;document.body.classList.remove('rev-on');requestAnimationFrame(fit)}
+function revRender(){const L=revSheets();const box=$('#revBody');if(!box)return;const R=revState();
+  if(REV.i>=L.length){const ok=L.filter(s=>R[s.id]==='ok').length,fix=L.filter(s=>R[s.id]==='fix');const C=checks();const bad=C.filter(c=>c.lvl==='bad');const ready=ok===L.length&&!bad.length;
+    box.innerHTML=`<div class="rev-h"><b>${ready?'✓ Prêt à déposer':'Bilan de la relecture'}</b><span>${ok} / ${L.length} pièces vérifiées</span></div>
+    ${L.filter(s=>!R[s.id]).length?`<p><b>Pas encore vérifiées :</b> ${L.filter(s=>!R[s.id]).map(s=>`<button class="lnk" type="button" data-revgo="${L.indexOf(s)}">${esc(s.code)}</button>`).join(', ')}</p>`:''}${fix.length?`<p><b>À corriger :</b> ${fix.map(s=>`<button class="lnk" type="button" data-revgo="${L.indexOf(s)}">${esc(s.code)}</button>`).join(', ')}</p>`:''}
+    ${bad.length?`<p><b>${bad.length} non-conformité${bad.length>1?'s':''} :</b> ${bad.map(c=>esc(c.t)).join(' ; ')}</p>`:''}
+    ${ready?`<p>Le dossier est complet et cohérent. Téléchargez-le, imprimez le cerfa, signez-le, puis déposez le tout en mairie ou sur le guichet numérique de la commune.</p><div class="btns"><button class="btn primary" type="button" data-revdo="pdf">${ICO('pdf')} Dossier PDF</button><button class="btn" type="button" data-revdo="zip">${ICO('zip')} Fichiers pour le dépôt en ligne</button><button class="btn" type="button" data-revdo="cerfa">${ICO('form')} Cerfa pré-rempli</button></div>`:'<p class="hint">Corrigez les points ci-dessus, puis relancez la relecture des pièces concernées.</p>'}
+    <div class="rev-nav"><button class="btn" type="button" data-revgo="0">Recommencer</button><button class="btn" type="button" data-revclose>Fermer</button></div>`;return}
+  const sh=L[REV.i];if(S.ui.tab!==sh.id)goTab(sh.id);const el=document.getElementById('w-'+sh.id);const todo=el?el.querySelectorAll('.todo').length:0;const rd=sheetReady(sh.id);const st=R[sh.id];
+  box.innerHTML=`<div class="rev-h"><b>${esc(sh.code)} · ${esc(sh.t||'')}</b><span>${REV.i+1} / ${L.length}</span></div>
+   <div class="rev-prog"><i style="width:${Math.round(REV.i/L.length*100)}%"></i></div>
+   ${!rd?`<p class="rev-w">⚠ Pièce incomplète : il manque une information ou une photo.</p>`:''}${todo?`<p class="rev-w">⚠ ${todo} élément${todo>1?'s':''} entre crochets à compléter.</p>`:''}
+   <ul class="rev-l">${revCrit(sh.id).map(c=>`<li>${esc(c)}</li>`).join('')}</ul>
+   <div class="rev-nav"><button class="btn" type="button" data-revgo="${REV.i-1}"${REV.i?'':' disabled'}>‹</button><button class="btn${st==='fix'?' on-bad':''}" type="button" data-revset="fix">À corriger</button><button class="btn primary${st==='ok'?' on':''}" type="button" data-revset="ok">✓ Vérifiée</button><button class="btn" type="button" data-revgo="${REV.i+1}">›</button></div>
+   ${st==='fix'||!rd||todo?`<button class="lnk" type="button" data-revedit>✎ Aller au réglage de cette pièce</button>`:''}`}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-revgo],[data-revset],[data-revclose],[data-revedit],[data-revdo],[data-rev]');if(!b)return;
+  if(b.dataset.rev!=null){revOpen();return}if(b.dataset.revclose!=null){revClose();return}
+  if(b.dataset.revgo!=null){REV.i=clamp(+b.dataset.revgo,0,revSheets().length);revRender();return}
+  if(b.dataset.revset){const L=revSheets();const sh=L[REV.i];revState()[sh.id]=b.dataset.revset;save();if(b.dataset.revset==='ok'){REV.i++;}revRender();return}
+  if(b.dataset.revedit!=null){const sh=revSheets()[REV.i];const T=editTarget(null,sh.id);revClose();if(T)stepOpen(T[0],T[1]);return}
+  if(b.dataset.revdo){revClose();const id={pdf:'#bPdf',zip:'#bZip',cerfa:'#bCerfa'}[b.dataset.revdo];const x=$(id);if(x)x.click()}});
+
 /* insertion : avant / après sur la même planche */
 function insBefore(far){const ph=S.photos,o=S.onsite||{};if(far)return ph.insFromShot2&&o.shot2?o.shot2.img:null;
   if(ph.insMode==='image')return ph.insFromShot&&o.shot&&o.shot.img?o.shot.img:(ph.ins||null);return ph.ins||null}
@@ -2507,7 +2581,7 @@ function pcToDp(h){if(mode()!=='dp-constr')return h;return h.replace(/PCMI([1-8]
 function renderSheet(id){const sh=activeSheets().find(s=>s.id===id)||SHEETS.find(s=>s.id===id);let w=$('#w-'+id);if(!w){w=document.createElement('div');w.className='wrap';w.id='w-'+id;$('#stage').appendChild(w)}
   w.innerHTML=`<div class="sheet ${sh.o}">${pcToDp(/^dp/.test(id)?sheetHTML(sh):withVariant('apres',()=>sheetHTML(sh)))}</div>`;w.classList.toggle('on',S.ui.tab===id);if(S.ui.tab===id)fit()}
 function renderChecks(){let w=$('#w-checks');if(!w){w=document.createElement('div');w.id='w-checks';w.className='wrap';$('#stage').appendChild(w)}
-  const C=checks().map(c=>({...c,t:pcToDp(c.t),s:pcToDp(c.s)}));const ae=document.activeElement;const keep=ae&&ae.dataset&&ae.dataset.suivi;w.innerHTML=`<div class="checks"><h2>Contrôles de cohérence</h2>${C.map(c=>`<div class="ck ${c.lvl}"><div class="ic">${{ok:'✓',warn:'!',bad:'×',info:'i'}[c.lvl]}</div><div><b>${c.t}</b><span>${c.s}</span></div></div>`).join('')}${budgetHTML()}</div>`;if(keep){const n=w.querySelector(`[data-suivi="${keep}"]`);if(n)n.focus()}
+  const C=checks().map(c=>({...c,t:pcToDp(c.t),s:pcToDp(c.s)}));const ae=document.activeElement;const keep=ae&&ae.dataset&&ae.dataset.suivi;w.innerHTML=`<div class="checks"><h2>Contrôles de cohérence</h2><button class="btn primary rev-cta" type="button" data-rev>${ICO('review')} Relecture pièce par pièce avant dépôt</button>${C.map(c=>`<div class="ck ${c.lvl}"><div class="ic">${{ok:'✓',warn:'!',bad:'×',info:'i'}[c.lvl]}</div><div><b>${c.t}</b><span>${c.s}</span></div></div>`).join('')}${budgetHTML()}</div>`;if(keep){const n=w.querySelector(`[data-suivi="${keep}"]`);if(n)n.focus()}
   w.classList.toggle('on',S.ui.tab==='checks');
   const nb=C.filter(c=>c.lvl==='bad').length,nw=C.filter(c=>c.lvl==='warn').length;const ch=$('#chkChip');
   ch.innerHTML=`<span class="d" style="background:${nb?'#E07A6F':nw?'#E3B04B':'#7CC39A'}"></span>${nb?nb+' non-conformité'+(nb>1?'s':''):nw?nw+' point'+(nw>1?'s':'')+' à compléter':'Dossier cohérent'}`;
@@ -2561,7 +2635,7 @@ function goTab(id){if(isMobile()&&document.body.dataset.view==='panel'&&id!==S.u
 $('#bAlign').onclick=()=>{if(alignVoie())schedule()};
 $('#bPlace').onclick=()=>{if(!voieMain()){toast('Désignez d\'abord la voie sur le plan de masse.');return}placeFromVoie(S.regles.reculVoie||3);schedule();goTab('pcmi2')};
 $('#bCenter').onclick=()=>{centerBuilding();schedule();goTab('pcmi2')};
-$('#bDemo').onclick=()=>{const ui=S.ui;const dm=S.dossier&&S.dossier.type;S=demoState();S.dossier={type:'pc',exId:null,avant:null,apres:null};S.clo=[];S.projet.toitItems=[];S.regles.hClo=null;S.ui.tab=ui.tab;mapCache={};fillInputs();renderExList();renderAll();save();status('#stTerrain','','Exemple chargé.')};
+$('#bDemo').onclick=()=>{setTimeout(()=>{if(typeof histReset==='function')histReset()},80);const ui=S.ui;const dm=S.dossier&&S.dossier.type;S=demoState();S.dossier={type:'pc',exId:null,avant:null,apres:null};S.clo=[];S.projet.toitItems=[];S.regles.hClo=null;S.ui.tab=ui.tab;mapCache={};fillInputs();renderExList();renderAll();save();status('#stTerrain','','Exemple chargé.')};
 document.addEventListener('input',e=>{const b=e.target.closest&&e.target.closest('[data-nadd]');if(!b)return;S.noticeAdd=S.noticeAdd||{};S.noticeAdd[b.dataset.nadd]=b.innerText.replace(/\n+$/,'');b.classList.toggle('filled',!!b.innerText.trim());saveLocal()});
 document.addEventListener('paste',e=>{const b=e.target.closest&&e.target.closest('[data-nadd]');if(!b)return;e.preventDefault();const t=(e.clipboardData||window.clipboardData).getData('text/plain');document.execCommand('insertText',false,t)});
 function setCamPolar(){const p=S.projet;const d=parseFloat($('#insDist').value),az=parseFloat($('#insAz').value);if(!isFinite(d)||!isFinite(az))return;
@@ -3327,7 +3401,7 @@ $('#diagRetry').onclick=()=>{$('#diag').hidden=true;window.__errs=[];netCheck(tr
 /* ================= Démarrage ================= */
 if(!S.meta.date)S.meta.date=today();
 /* premier affichage : lancé en fin de script, quand tous les modules sont définis */
-function startApp(){if(!S.demo){const d0=document.querySelector('aside details.step');if(d0)d0.open=false}try{fillInputs();renderExList();renderAll()}catch(e){window.__errs.push('Démarrage : '+e.message);window.__showErr()}
+function startApp(){setTimeout(()=>{histReset();savedUI(S.demo?'demo':'saved')},0);if(!S.demo){const d0=document.querySelector('aside details.step');if(d0)d0.open=false}try{fillInputs();renderExList();renderAll()}catch(e){window.__errs.push('Démarrage : '+e.message);window.__showErr()}
   setTimeout(()=>netCheck(false),800);
   if(isMobile()){let v=isTablet()?'split':'panel';try{v=sessionStorage.getItem('apc-view')||v}catch(e){}setView(v)}
   if(S.demo)status('#stTerrain','','Exemple chargé (terrain fictif). Saisissez l\'adresse de votre terrain pour commencer.');
@@ -4768,17 +4842,17 @@ function dossierId(){S.meta=S.meta||{};if(!S.meta.id)S.meta.id='d'+Date.now().to
 function dossierTitle(x){const T=x.terrain||{};const D=x.dem||{};const t=x.dossier&&x.dossier.type||'pc';const k={pc:'Permis',['dp-facade']:'DP façade',['dp-toiture']:'DP toiture',['dp-cloture']:'DP clôture',['dp-piscine']:'DP piscine',['dp-pergola']:'DP pergola',['dp-division']:'DP division',['dp-constr']:'DP construction',['dp-arbres']:'DP arbres'}[t]||'Dossier';
   const lieu=[T.num,T.street].filter(Boolean).join(' ')||T.label||'Terrain non choisi';return{k,lieu,commune:T.commune||'',nom:[D.prenom,D.nom].filter(Boolean).join(' ')}}
 let idbT=null;
-function idbSave(){if(S.demo)return;askPersist();clearTimeout(idbT);idbT=setTimeout(()=>{const id=dossierId();S.meta.saved=Date.now();try{localStorage.setItem('atelier-pc-cur',id)}catch(e){}
+function idbSave(){if(S.demo){savedUI('demo');return}askPersist();clearTimeout(idbT);idbT=setTimeout(()=>{const id=dossierId();S.meta.saved=Date.now();try{localStorage.setItem('atelier-pc-cur',id)}catch(e){}
   let thumb=null;try{thumb=S.photos.insMode==='image'?S.photos.insImg:null}catch(e){}
-  idbPut({id,updated:S.meta.saved,data:JSON.parse(JSON.stringify(S)),thumb:thumb&&thumb.length<400000?thumb:null,prog:dossierProgress(),mini:miniPlan()}).catch(()=>{})},700)}
+  idbPut({id,updated:S.meta.saved,data:JSON.parse(JSON.stringify(S)),thumb:thumb&&thumb.length<400000?thumb:null,prog:dossierProgress(),mini:miniPlan()}).then(()=>savedUI('saved')).catch(()=>savedUI('err'))},700)}
 /* au démarrage : la version complète (avec photos) vient d'IndexedDB */
 async function idbRestore(){let cur=null;try{cur=localStorage.getItem('atelier-pc-cur')}catch(e){}const id=(S.meta&&S.meta.id)||cur;if(!id)return;
   try{const rec=await idbGet(id);if(!rec)return;const lsT=(S.meta&&S.meta.saved)||0;const lost=['p7','p8','ins','insImg'].some(k=>rec.data.photos&&rec.data.photos[k]&&!S.photos[k]);
     if(rec.updated>lsT+1000||lost){openDossierData(rec.data,true)}}catch(e){}}
-function openDossierData(d,silent){S=unpackS(JSON.parse(JSON.stringify(d)));S.dossier=S.dossier||{type:'pc',exId:null,avant:null,apres:null};S.clo=S.clo||[];S.existants=S.existants||[];if(!S.projet.toitItems)S.projet.toitItems=[];
+function openDossierData(d,silent){setTimeout(()=>{if(typeof histReset==='function')histReset()},50);S=unpackS(JSON.parse(JSON.stringify(d)));S.dossier=S.dossier||{type:'pc',exId:null,avant:null,apres:null};S.clo=S.clo||[];S.existants=S.existants||[];if(!S.projet.toitItems)S.projet.toitItems=[];
   mapCache={};WZ.plu=null;try{fillInputs();renderExList();renderClo&&renderClo();renderModeUI&&renderModeUI();renderAll()}catch(e){console.error(e)}saveLocal();if(!silent)toast('Dossier ouvert.')}
 function newDossier(){const keep=S.ui;S=demoState();S.dossier={type:'pc',exId:null,avant:null,apres:null};S.clo=[];S.vege=[];S.wz=null;S.onsite=null;S.projet.toitItems=[];S.regles.hClo=null;S.ui={...keep,tab:'pcmi2'};S.meta.id=null;
-  mapCache={};WZ.step=0;WZ.t0=null;WZ.plu=null;fillInputs();renderExList();renderAll();saveLocal();try{localStorage.removeItem('atelier-pc-cur')}catch(e){}closeDossiers();wzOpen()}
+  mapCache={};WZ.step=0;WZ.t0=null;WZ.plu=null;fillInputs();renderExList();renderAll();saveLocal();histReset();try{localStorage.removeItem('atelier-pc-cur')}catch(e){}closeDossiers();wzOpen()}
 async function openDossiers(){const M=$('#dos');M.hidden=false;const box=$('#dosList');box.innerHTML='<p class="hint">Chargement…</p>';let L=[];try{L=await idbAll()}catch(e){box.innerHTML='<p class="hint">Stockage indisponible dans ce navigateur.</p>';return}
   L.sort((a,b)=>b.updated-a.updated);const cur=S.meta&&S.meta.id;
   box.innerHTML=L.length?L.map(r=>{const t=dossierTitle(r.data);return`<div class="dos-it${r.id===cur?' cur':''}"><div class="th">${r.thumb?`<img src="${r.thumb}" alt="">`:'<span>🏠</span>'}</div>
@@ -4792,7 +4866,7 @@ async function openDossiers(){const M=$('#dos');M.hidden=false;const box=$('#dos
     if(b.dataset.ddel){if(b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent='Confirmer';b.classList.add('danger');setTimeout(()=>{b.dataset.armed='';b.textContent='Supprimer';b.classList.remove('danger')},3500);return}
       await idbDel(b.dataset.ddel);if(b.dataset.ddel===cur){S.meta.id=null}openDossiers()}}}
 function closeDossiers(){$('#dos').hidden=true}
-$('#bDos').onclick=openDossiers;{const zf=$('#zFs');if(zf)zf.onclick=()=>fsToggle()}document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(VIEW3D)v3dClose();else if(document.body.classList.contains('fs'))fsToggle(false)}});$('#brandHome').onclick=homeOpen;$('#mHome').onclick=()=>{$('#mMenu').hidden=true;homeOpen()};$('#mTheme').onclick=()=>{themeCycle()};{const b=$('#mTheme');if(b)b.innerHTML=ICO('theme')+'Thème : '+UITHEMES[themeGet()]}$('#mReport').onclick=()=>{$('#mMenu').hidden=true;reportProblem()};$('#mShare').onclick=()=>{$('#mMenu').hidden=true;shareLink()};$('#mOffline').onclick=()=>{$('#mMenu').hidden=true;offlinePrep()};
+$('#bDos').onclick=openDossiers;$('#bUndo').onclick=histUndo;$('#bRedo').onclick=histRedo;document.addEventListener('click',e=>{if(e.target.closest('[data-mmundo]')){const mm=$('#mMenu');if(mm)mm.hidden=true;histUndo()}else if(e.target.closest('[data-mmredo]'))histRedo()});{const zf=$('#zFs');if(zf)zf.onclick=()=>fsToggle()}document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(VIEW3D)v3dClose();else if(document.body.classList.contains('fs'))fsToggle(false)}});$('#brandHome').onclick=homeOpen;$('#mHome').onclick=()=>{$('#mMenu').hidden=true;homeOpen()};$('#mTheme').onclick=()=>{themeCycle()};{const b=$('#mTheme');if(b)b.innerHTML=ICO('theme')+'Thème : '+UITHEMES[themeGet()]}$('#mReport').onclick=()=>{$('#mMenu').hidden=true;reportProblem()};$('#mShare').onclick=()=>{$('#mMenu').hidden=true;shareLink()};$('#mOffline').onclick=()=>{$('#mMenu').hidden=true;offlinePrep()};
 $('#dosImp input').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const d=unpackS(JSON.parse(await f.text()));if(!d.terrain||!d.projet)throw new Error('fichier non reconnu');d.meta=d.meta||{};d.meta.id='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);d.meta.saved=Date.now();
   await idbPut({id:d.meta.id,updated:Date.now(),data:d,thumb:null});toast('Dossier importé.');openDossiers()}catch(err){toast('Import impossible : '+err.message)}});$('#dosClose').onclick=closeDossiers;$('#dosNew').onclick=newDossier;
 startApp();
