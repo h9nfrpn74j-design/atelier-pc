@@ -90,6 +90,9 @@ body.fs header.top,body.fs .mnav,body.fs aside,body.fs #scaleBar,body.fs .tabs{d
 .pm-fill{transform-origin:206px 0;animation:pmFill 2.6s ease .3s both}@keyframes pmFill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 .pm-pdf{transform-origin:251px 113px;animation:pmPulse 1.2s ease 3s 2}@keyframes pmPulse{50%{transform:scale(1.08)}}
 @media (prefers-reduced-motion:reduce){.pm-s *{animation-duration:.01s!important;animation-delay:0s!important}}
+.gpu{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--soft)}.gpu h4{margin:0 0 6px;display:flex;gap:6px;align-items:center;font-size:13px;color:var(--accent)}
+.gpu ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}.gpu li{display:grid;gap:2px;padding:6px 8px;border-left:3px solid var(--line);background:var(--panel);border-radius:6px;font-size:12.5px}.gpu li span{color:var(--muted)}
+.gpu li.bad{border-left-color:var(--bad)}.gpu li.warn{border-left-color:var(--warn)}.gpu li.sup{border-left-color:#AE3328}.gpu li.ok{border-left-color:var(--ok)}.gpu-w{color:var(--warn);font-size:13px}
 svg.ic{width:1.15em;height:1.15em;vertical-align:-.2em;flex:none}svg.ic.big{width:44px;height:44px;opacity:.55}
 .prog{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.08)}.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#8FC7C0,#E3C14B);transition:width .4s}
 .brand{cursor:pointer;white-space:nowrap}
@@ -752,6 +755,8 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
       <button class="btn primary" id="bReglRead" type="button" hidden>Lire les règles de ma zone</button>
       <p class="hint" id="pluHint"></p>
       <details class="refbox plu-docs" id="pluDocs" hidden></details>
+      <div id="gpuBox"></div>
+      <label class="toggle"><input type="checkbox" data-b="ui.gpuMapOn" id="gpuMapOn"> Afficher les prescriptions du PLU sur le plan de masse</label>
       <p class="hint">Reportez ci-dessous les règles de votre zone : elles servent aux contrôles de conformité. Le bouton de lecture vous propose les valeurs trouvées dans le règlement.</p>
       <div class="grid2">
         <label class="f">Recul min. / voie (m)<input type="number" step="0.5" min="0" data-b="regles.reculVoie"></label>
@@ -1668,7 +1673,7 @@ async function adoptParcels(feats,addrProps){
   await refreshContext(true);
 }
 async function refreshContext(place){
-  const res=await Promise.allSettled([fetchNeighbors(),fetchZone(),fetchGrid(),fetchExisting(),fetchProtect(),fetchRisques()]);
+  const res=await Promise.allSettled([fetchNeighbors(),fetchZone(),fetchGrid(),fetchExisting(),fetchProtect(),fetchRisques(),fetchGPU()]);
   const errs=res.filter(r=>r.status==='rejected').map(r=>r.reason.message);
   if(res[0].status==='fulfilled'&&!S.terrain.voie.length)autoVoie();
   if(place){centerBuilding();if(boundary().E.some(e=>e.voie))placeFromVoie()}
@@ -1728,6 +1733,7 @@ function checks(){if(mode()!=='pc'&&mode()!=='dp-constr')return dpChecks();
   if(DM.length)add('info','Démolition prévue',`${esc(DM.map(e=>e.usage).join(', '))}. Renseignez la partie « démolition » du formulaire si votre commune soumet les démolitions à autorisation.`);
   if(h.plBad)add('bad','Cote NGF du plancher incohérente',`Vous avez saisi ${fmt(+S.projet.plancherNGF)} alors que le terrain est entre ${fmt(h.TNmin)} et ${fmt(h.TNmax)} NGF sous la construction. La valeur est ignorée : videz le champ ou saisissez une altitude NGF (et non une hauteur).`);
   if(S.projet.regrade&&h.ok){const plat=h.pl-S.projet.hPlancher;const dz=h.tn.map(z=>z-plat);add('info','Terrain repris au droit de la construction',`Plateforme à ${fmt(plat)} NGF : déblai jusqu'à ${fmt(Math.max(0,...dz))} m et remblai jusqu'à ${fmt(Math.max(0,...dz.map(x=>-x)))} m aux angles. Les hauteurs du PLU restent mesurées depuis le terrain naturel avant travaux.`)}
+  gpuChecks(add);
   {const B2=!noBuild();const ep=amList().filter(a=>a.k==='ep');if(B2&&!ep.length)add('warn','Eaux pluviales : aucun ouvrage dessiné',`Beaucoup de PLU imposent de gérer les eaux de toiture sur la parcelle (infiltration, cuve). Ajoutez-le dans « Abords et aménagements » : volume conseillé ${fmt(epVolConseil(),1)} m³.`);
    else if(B2){const v=ep.filter(a=>a.type!=='reseau').reduce((s2,a)=>s2+(+a.vol||0),0);const bad=ep.filter(a=>a.type==='puits'||a.type==='tranchee').some(a=>{const g=epGeom(a);const c=toBld(g.x,g.y);const P2=S.projet;return Math.abs(c[0])<P2.L/2+5&&Math.abs(c[1])<P2.W/2+5});add(bad?'warn':'ok',`Eaux pluviales : ${ep.map(a=>(EP_T[a.type]||'').toLowerCase()).join(', ')}${v?` (${fmt(v,1)} m³)`:''}`,bad?'Un ouvrage d\'infiltration doit se trouver à plus de 5 m des fondations : déplacez-le sur le plan de masse.':`${epDescentes().length} descentes reliées à l'ouvrage. Volume conseillé : ${fmt(epVolConseil(),1)} m³.`)}}
   {const t=terrassements();if(t)add('info',`Terrassements : ${fmt(t.de,0)} m³ de déblai, ${fmt(t.re,0)} m³ de remblai`,`Estimation sous l'emprise, pour une plateforme à ${fmt(t.plat)} NGF. Les terres en excès doivent être évacuées ou régalées sur la parcelle.`)}
@@ -1807,6 +1813,7 @@ function svgMasse(){
   // cotes d'altitude TN aux sommets de la parcelle
   let lastPts=[];for(const r of rings)for(const v of r){if(lastPts.some(q=>hyp(q[0]-v[0],q[1]-v[1])<5))continue;lastPts.push(v);const z=alt(v[0],v[1]);if(z==null)continue;
     o+=`<g>${lineS([v[0]-0.6*k,v[1]],[v[0]+0.6*k,v[1]],`stroke="#111" stroke-width="${0.15*k}"`)}${lineS([v[0],v[1]-0.6*k],[v[0],v[1]+0.6*k],`stroke="#111" stroke-width="${0.15*k}"`)}${textS([v[0]+0.8*k,v[1]+0.8*k],'TN '+fmt(z),1.7*k,`fill="#555" paint-order="stroke" stroke="#fff" stroke-width="${0.5*k}"`)}</g>`}
+  o+=gpuMasse(k);
   if(MODE==='dp-division')o+=divMasse(k,DIVHIDE);
   // constructions existantes
   S.existants.forEach((e,i)=>{if(isDPb()&&S.dossier.exId===e.id)return;const R=exR[i];const dem=e.statut==='demoli';const drag=e.src==='manuel'?`data-drag="ex:${i}" style="cursor:move"`:'';
@@ -2456,6 +2463,82 @@ function promoShow(i){const P=$('#promo');if(!P)return;PM.i=(i+PROMO.length)%PRO
 function promoStart(){const P=$('#promo');if(!P)return;PM.paused=matchMedia('(prefers-reduced-motion: reduce)').matches;promoShow(0);
   P.onclick=e=>{if(e.target.closest('#pmPP')){PM.paused=!PM.paused;$('#pmPP').textContent=PM.paused?'▶':'❚❚';$('#pmPP').setAttribute('aria-label',PM.paused?'Lecture':'Pause');promoShow(PM.i);return}const r=P.getBoundingClientRect();promoShow(PM.i+(e.clientX<r.left+r.width/3?-1:1))}}
 
+/* ================= Lecture complète du Géoportail de l'urbanisme (zones, prescriptions, informations, servitudes) ================= */
+const GPU_EP={zones:['zone-urba','secteur-cc'],presc:['prescription-surf','prescription-lin','prescription-pct'],info:['info-surf','info-lin','info-pct'],sup:['assiette-sup-s','assiette-sup-l','assiette-sup-p']};
+/* catégories de prescriptions, reconnues sur le libellé (le code CNIG varie selon les documents) */
+const PSC_CAT=[
+ ['ebc',/bois[ée]s?\s+class|\bEBC\b/i,'Espace boisé classé','Aucune construction ni défrichement possible ; les coupes d\'arbres demandent une déclaration préalable.','bad'],
+ ['er',/emplacement\s+r[ée]serv|\bER\s*(n\s*°|n°|\d)/i,'Emplacement réservé','Terrain réservé à un projet public (voie, équipement) : on ne peut pas y construire. Vous pouvez demander à la commune d\'acquérir la partie concernée (droit de délaissement).','bad'],
+ ['patri',/patrimo|paysag|remarquable|l\.?\s*151-?(19|23)|[ée]l[ée]ment.*prot|arbre|alignement d.arbres|haie|jardin prot|parc/i,'Élément de patrimoine ou de paysage protégé','À conserver : sa démolition ou sa modification demande une autorisation, et le projet doit le préserver.','warn'],
+ ['oap',/orientation|\bOAP\b|aménagement et de programmation/i,'Orientation d\'aménagement (OAP)','Le projet doit être compatible avec les principes de l\'OAP (accès, implantation, densité, espaces verts) : lisez le document OAP.','warn'],
+ ['impl',/recul|alignement|implantation|marge|bande|retrait|front b[âa]ti/i,'Règle d\'implantation graphique','Une marge de recul ou un alignement est dessiné sur le plan de zonage : il prime sur la règle écrite générale.','warn'],
+ ['risque',/risque|inond|submersion|mouvement|cavit|argile|nuisance|bruit|danger/i,'Secteur de risque ou de nuisance','Des conditions particulières s\'appliquent (cote de plancher, interdiction de sous-sol, isolation acoustique…) : lisez le règlement.','warn'],
+ ['haut',/hauteur|vel[ue]m|plafond/i,'Hauteur réglementée sur le plan','Une hauteur maximale particulière est fixée sur ce secteur.','warn'],
+ ['eco',/continuit|trame|zone humide|corridor|biodiv|pleine terre|espace vert|coefficient de biotope/i,'Continuité écologique ou espace vert protégé','Une part du terrain doit rester en pleine terre ou plantée ; certaines constructions y sont interdites.','warn'],
+ ['mixite',/mixit|logement social|taille des logements/i,'Mixité sociale','Concerne surtout les opérations de plusieurs logements.','info'],
+ ['comm',/commerc|artisan|rez-de-chauss/i,'Diversité commerciale','Concerne les rez-de-chaussée commerciaux.','info'],
+ ['stat',/stationnement/i,'Règle de stationnement particulière','Le nombre de places exigé diffère sur ce secteur.','info'],
+ ['voie',/voie|chemin|cheminement|piste|liaison douce|transport/i,'Voie ou chemin à conserver ou à créer','Le tracé doit rester libre de construction.','warn']];
+const SUP_T={ac1:['Abords de monument historique','L\'architecte des Bâtiments de France (ABF) donne son avis : délai d\'instruction allongé d\'un mois, exigences sur l\'aspect.'],ac2:['Site classé ou inscrit','Avis de l\'ABF ou autorisation spéciale : aspect et volumes très encadrés.'],ac4:['Site patrimonial remarquable','Avis conforme de l\'ABF ; un règlement patrimonial s\'ajoute au PLU.'],
+ as1:['Périmètre de protection de captage d\'eau','Certaines activités et les assainissements individuels peuvent y être interdits ou encadrés.'],pm1:['Plan de prévention des risques naturels','Le règlement du PPR s\'impose : cote de plancher, interdictions, étude parfois exigée (PCMI14).'],pm3:['Plan de prévention des risques technologiques','Constructions limitées ou renforcées près du site industriel.'],
+ i4:['Ligne électrique','Distances de sécurité à respecter sous et près de la ligne ; consultez le gestionnaire (DT-DICT) avant travaux.'],i3:['Canalisation de gaz','Constructions interdites ou limitées dans la bande de servitude ; consultez le gestionnaire.'],i1:['Canalisation d\'hydrocarbures','Bande de servitude à respecter.'],a5:['Canalisation d\'eau ou d\'assainissement','Bande non constructible au-dessus de la conduite.'],
+ el7:['Plan d\'alignement','La limite entre la voie et votre terrain est fixée par un plan d\'alignement : pas de construction au-delà.'],int1:['Voisinage d\'un cimetière','Constructions et puits encadrés à moins de 100 m.'],t1:['Voie ferrée','Distances et clôtures réglementées le long des voies.'],t4:['Servitude aéronautique de balisage','Hauteurs limitées.'],t5:['Servitude aéronautique de dégagement','Hauteur maximale des constructions et des grues.'],t7:['Servitude aéronautique hors dégagement','Constructions de grande hauteur soumises à autorisation.'],
+ pt1:['Protection radioélectrique (perturbations)','Concerne surtout les installations électriques.'],pt2:['Protection radioélectrique (obstacles)','Hauteurs limitées dans certains secteurs.'],pt3:['Réseau de télécommunication','Bande de servitude le long du câble.'],el3:['Servitude de halage ou de marchepied','Passage libre de 3,25 m à 7,80 m le long du cours d\'eau.'],a4:['Cours d\'eau non domanial','Passage libre pour l\'entretien le long des berges.'],js1:['Protection d\'équipement sportif','Pas de construction modifiant l\'équipement.']};
+function gpuGeomLocal(g){if(!g)return[];const T=c=>toLocal(c[0],c[1]);const t=g.type,c=g.coordinates;if(t==='Polygon')return[{k:'s',r:c.map(r=>r.map(T))}];if(t==='MultiPolygon')return c.map(p=>({k:'s',r:p.map(r=>r.map(T))}));if(t==='LineString')return[{k:'l',l:c.map(T)}];if(t==='MultiLineString')return c.map(l=>({k:'l',l:l.map(T)}));if(t==='Point')return[{k:'p',p:T(c)}];if(t==='MultiPoint')return c.map(p=>({k:'p',p:T(p)}));return[]}
+function clipRect(P,bb){let o=P;for(const[o2,n]of[[[bb[0],0],[1,0]],[[bb[2],0],[-1,0]],[[0,bb[1]],[0,1]],[[0,bb[3]],[0,-1]]]){o=o&&clipHalf(o,o2,n)}return o}
+function clipLineRect(L,bb){const inb=q=>q[0]>=bb[0]&&q[0]<=bb[2]&&q[1]>=bb[1]&&q[1]<=bb[3];return L.some(inb)?L:null}
+function gpuShape(feat,bb){return gpuGeomLocal(feat.geometry).map(g=>g.k==='s'?{k:'s',r:g.r.map(r=>clipRect(r,bb)).filter(Boolean)}:g.k==='l'?{k:'l',l:clipLineRect(g.l,bb)}:{k:'p',p:g.p}).filter(g=>g.k==='s'?g.r.length:g.k==='l'?!!g.l:true)}
+function inShape(q,sh){return sh.some(g=>g.k==='s'&&g.r.length&&pip(q,g.r[0])&&!g.r.slice(1).some(h=>pip(q,h)))}
+function parcelSamples(n=22){const {rings}=boundary();const bb=bbox(rings.flat());const out=[];for(let i=0;i<n;i++)for(let j=0;j<n;j++){const q=[bb[0]+(bb[2]-bb[0])*(i+.5)/n,bb[1]+(bb[3]-bb[1])*(j+.5)/n];if(inParcel(q,rings))out.push(q)}return out}
+function pscCat(x){const code=String(x.typepsc||'').padStart(2,'0');const byCode={'01':'ebc','05':'er','07':'patri'}[code];if(byCode)return PSC_CAT.find(c=>c[0]===byCode);const s=(x.libelle||'')+' '+(x.txt||'');for(const c of PSC_CAT)if(c[1].test(s))return c;return['autre',null,'Prescription du PLU','Disposition particulière portée sur le plan de zonage : lisez le règlement.','info']}
+function gpuProcess(R){const {rings}=boundary();const bb=bbox(rings.flat(),25);const S2=parcelSamples();const share=sh=>S2.length?S2.filter(q=>inShape(q,sh)).length/S2.length:0;const lpt=sh=>{const Q=S2.filter(q=>inShape(q,sh));if(!Q.length)return null;const c=[Q.reduce((a,q)=>a+q[0],0)/Q.length,Q.reduce((a,q)=>a+q[1],0)/Q.length];return Q.reduce((b,q)=>Math.hypot(q[0]-c[0],q[1]-c[1])<Math.hypot(b[0]-c[0],b[1]-c[1])?q:b,Q[0])};
+  const zones=(R.zones||[]).map(f=>{const p=f.properties||{};const sh=gpuShape(f,bb);return{lib:p.libelle||p.libelong||'?',long:p.libelong||'',type:p.typezone||p.typesect||'',sh,share:share(sh),lp:lpt(sh)}}).filter(z=>z.share>0.005||z.sh.length).sort((a,b)=>b.share-a.share);
+  const touch=(sh)=>sh.some(g=>g.k==='s'?S2.some(q=>inShape(q,[g])):g.k==='l'?g.l.some(q=>inParcel(q,rings)||boundary().E.some(e=>pSeg(q,e.a,e.b).d<3)):(inParcel(g.p,rings)||boundary().E.some(e=>pSeg(g.p,e.a,e.b).d<5)));
+  const presc=(R.presc||[]).map(f=>{const p=f.properties||{};const c=pscCat(p);const sh=gpuShape(f,bb);return{cat:c[0],titre:c[2],eff:c[3],lvl:c[4],lib:p.libelle||c[2],txt:p.txt||'',sh,share:sh.some(g=>g.k==='s')?share(sh):null,lp:sh.some(g=>g.k==='s')?lpt(sh):null}}).filter(x=>x.sh.length&&(x.share==null?true:x.share>0.002||touch(x.sh)));
+  const info=(R.info||[]).map(f=>{const p=f.properties||{};return{lib:p.libelle||'Information',txt:p.txt||''}});
+  const sup=(R.sup||[]).map(f=>{const p=f.properties||{};const code=String(p.suptype||p.typeass||'').toLowerCase().replace(/[^a-z0-9]/g,'');const k=Object.keys(SUP_T).find(c=>code.startsWith(c));const sh=gpuShape(f,bb);return{code:code.toUpperCase(),titre:k?SUP_T[k][0]:(p.nomsuplitt||p.typeass||'Servitude d\'utilité publique'),eff:k?SUP_T[k][1]:'Servitude imposée par un gestionnaire ou l\'État : renseignez-vous sur ses effets.',nom:p.nomass||p.nomsuplitt||'',sh}});
+  const uniq=(L,key)=>{const m=new Map();for(const x of L){const k=key(x);if(!m.has(k))m.set(k,x)}return[...m.values()]};
+  return{t:Date.now(),ok:true,zones,presc:uniq(presc,x=>x.cat+'|'+x.lib),info:uniq(info,x=>x.lib),sup:uniq(sup,x=>x.code+'|'+x.nom)}}
+async function fetchGPU(){const T=S.terrain;if(!T.parcels.length||S.demo)return;const geom={type:'MultiPolygon',coordinates:T.parcels.flatMap(p=>p.rings.map(r=>[[...r,r[0]]]))};const g=encodeURIComponent(JSON.stringify(geom));
+  const get=async k=>{try{const j=await getJSON('https://apicarto.ign.fr/api/gpu/'+k+'?geom='+g);return j.features||[]}catch(e){return null}};
+  const R={};let any=false;for(const[grp,L]of Object.entries(GPU_EP)){const res=await Promise.all(L.map(get));if(res.some(x=>x!==null))any=true;R[grp]=res.flatMap(x=>x||[])}
+  if(!any){T.gpu={ok:false,t:Date.now()};return}T.gpu=gpuProcess(R)}
+function gpuBldHits(){const G=S.terrain.gpu;if(!G||!G.ok||noBuild())return[];const P=[...bldPoly(),...amList().filter(a=>a.k!=='ep').flatMap(a=>{try{return amPoly(a)||[]}catch(e){return[]}})];if(!P.length)return[];
+  const B=bldPoly();const bb=bbox(B);const pts=[...B];for(let i=1;i<6;i++)for(let j=1;j<6;j++){const q=[bb[0]+(bb[2]-bb[0])*i/6,bb[1]+(bb[3]-bb[1])*j/6];if(pip(q,B))pts.push(q)}
+  return G.presc.filter(x=>x.sh.some(g=>g.k==='s')&&pts.some(q=>inShape(q,x.sh)))}
+function gpuChecks(add){const G=S.terrain.gpu;if(!G)return;if(!G.ok){add('warn','Géoportail de l\'urbanisme injoignable','Zones, prescriptions et servitudes n\'ont pas pu être lues. Consultez geoportail-urbanisme.gouv.fr ou la mairie.');return}
+  if(G.zones.length>1)add('warn',`Terrain partagé entre ${G.zones.length} zones`,G.zones.map(z=>`${z.lib} (${Math.round(z.share*100)} %)`).join(', ')+' : chaque partie du projet doit respecter le règlement de la zone où elle se trouve.');
+  const hits=gpuBldHits();for(const x of hits)add(x.lvl==='info'?'warn':x.lvl,`Le projet empiète sur : ${x.lib}`,x.eff);
+  for(const x of G.presc.filter(p=>!hits.includes(p)))add(x.lvl==='bad'?'warn':'info',`${x.titre} sur le terrain`,`« ${x.lib} »${x.share!=null?` (environ ${Math.max(1,Math.round(x.share*100))} % du terrain)`:''}. ${x.eff}`);
+  for(const x of G.sup)add('info',`Servitude ${x.code} : ${x.titre}`,x.eff+(x.nom?` (${x.nom})`:''));
+  for(const x of G.info.slice(0,6))add('info',`Information : ${x.lib}`,x.txt||'Information portée au document d\'urbanisme (droit de préemption, périmètre de taxe, zone de bruit…).')}
+function gpuHTML(){const G=S.terrain.gpu;if(S.demo)return'<p class="hint">Avec un vrai terrain, l\'appli lit ici le Géoportail de l\'urbanisme : zones, prescriptions du plan (espaces boisés, emplacements réservés, éléments protégés…), servitudes et informations.</p>';if(!G)return'<p class="hint">Lecture du Géoportail de l\'urbanisme…</p>';
+  if(!G.ok)return`<div class="gpu-w">Géoportail de l'urbanisme injoignable pour l'instant. <button class="lnk" type="button" data-gpu="retry">Réessayer</button></div>`;
+  const it=(ic,t,s,l)=>`<li class="${l||''}"><b>${t}</b><span>${s}</span></li>`;
+  return`<div class="gpu"><h4>${ICO('sheets')} Ce que dit le document d'urbanisme</h4><ul>
+   ${G.zones.map(z=>it('','Zone '+esc(z.lib)+(G.zones.length>1?` · ${Math.round(z.share*100)} % du terrain`:''),esc(z.long||'')),'').join('')}
+   ${G.presc.map(x=>it('',esc(x.titre),`« ${esc(x.lib)} »${x.share!=null?` · ${Math.max(1,Math.round(x.share*100))} % du terrain`:''}. ${esc(x.eff)}`,x.lvl)).join('')}
+   ${G.sup.map(x=>it('',`Servitude ${esc(x.code)} · ${esc(x.titre)}`,esc(x.eff)+(x.nom?` <i>${esc(x.nom)}</i>`:''),'sup')).join('')}
+   ${G.info.map(x=>it('','Information · '+esc(x.lib),esc(x.txt||'')),'info').join('')}
+   ${!G.presc.length&&!G.sup.length&&!G.info.length?it('','Aucune prescription ni servitude','Rien de particulier n\'est porté sur le terrain dans le Géoportail de l\'urbanisme (en dehors du règlement de la zone).','ok'):''}
+  </ul><p class="hint">Source : Géoportail de l'urbanisme (lu le ${new Date(G.t).toLocaleDateString('fr-FR')}). Les servitudes ne sont pas toutes numérisées : la liste officielle figure en annexe du PLU. <button class="lnk" type="button" data-gpu="retry">Actualiser</button></p></div>`}
+function gpuMasse(k){const G=S.terrain.gpu;if(!G||!G.ok||S.ui.gpuMapOn===false)return'';let o='';const P=g=>g.r.map(r=>polyS(r,'')).join('');const lb=(q,t,c)=>textS(q,t,1.6*k,`text-anchor="middle" fill="${c}" font-weight="700" paint-order="stroke" stroke="#fff" stroke-width="${0.45*k}" pointer-events="none"`);
+  if(G.zones.length>1)for(const z of G.zones)for(const g of z.sh)if(g.k==='s')for(const r of g.r){o+=polyS(r,`fill="none" stroke="#7A3E9D" stroke-width="${0.35*k}" stroke-dasharray="${2*k} ${0.7*k} ${0.4*k} ${0.7*k}" pointer-events="none"`)}
+  const freePt=sh=>{const B=noBuild()?null:bldPoly();const bc=B?centroid(B):null;const Q=parcelSamples(16).filter(q=>inShape(q,sh)&&(!B||(!pip(q,B)&&Math.hypot(q[0]-bc[0],q[1]-bc[1])>Math.max(S.projet.L,S.projet.W)*0.75)));if(!Q.length)return null;const c=[Q.reduce((a,q)=>a+q[0],0)/Q.length,Q.reduce((a,q)=>a+q[1],0)/Q.length];return Q.reduce((b,q)=>Math.hypot(q[0]-c[0],q[1]-c[1])<Math.hypot(b[0]-c[0],b[1]-c[1])?q:b,Q[0])};
+  if(G.zones.length>1)for(const z of G.zones){z.lp=freePt(z.sh)||z.lp}
+  if(G.zones.length>1)for(const z of G.zones)if(z.lp)o+=textS(z.lp,'ZONE '+z.lib,2.6*k,`text-anchor="middle" fill="#7A3E9D" font-weight="800" opacity=".85" paint-order="stroke" stroke="#fff" stroke-width="${0.5*k}" pointer-events="none"`)
+  for(const x of G.presc){const col=x.cat==='ebc'?'#2f6b2f':x.cat==='er'?'#7A3E9D':x.cat==='patri'?'#B5651D':'#7A3E9D';
+    for(const g of x.sh){if(g.k==='s')for(const r of g.r){o+=polyS(r,`fill="${x.cat==='ebc'?'url(#mebc)':x.cat==='er'?'url(#mer)':'none'}" fill-opacity="${x.cat==='ebc'||x.cat==='er'?0.9:0}" stroke="${col}" stroke-width="${0.3*k}" stroke-dasharray="${1*k} ${0.5*k}" pointer-events="none"`);}
+      if(x.lp&&g===x.sh.find(q=>q.k==='s'))o+=lb(x.lp,x.cat==='ebc'?'Espace boisé classé':x.cat==='er'?x.lib.slice(0,40):x.lib.slice(0,40),col)
+      else if(g.k==='l'){o+=`<polyline points="${g.l.map(PT).join(' ')}" fill="none" stroke="${col}" stroke-width="${0.5*k}" stroke-dasharray="${1.4*k} ${0.6*k}" pointer-events="none"/>`;const q=lineLabelPt(g.l);if(q)o+=lb([q[0],q[1]+1.4*k],x.lib.slice(0,40),col)}
+      else o+=`<circle cx="${g.p[0].toFixed(2)}" cy="${(-g.p[1]).toFixed(2)}" r="${(1*k).toFixed(2)}" fill="${col}" pointer-events="none"/>`+lb([g.p[0],g.p[1]+2*k],x.lib.slice(0,30),col)}}
+  for(const x of G.sup)for(const g of x.sh)if(g.k==='l'){o+=`<polyline points="${g.l.map(PT).join(' ')}" fill="none" stroke="#AE3328" stroke-width="${0.4*k}" stroke-dasharray="${2.5*k} ${0.8*k}" pointer-events="none"/>`;const q=lineLabelPt(g.l);if(q)o+=lb([q[0],q[1]+1.4*k],`${x.titre} (${x.code})`,'#AE3328')}
+  return`<defs><pattern id="mebc" patternUnits="userSpaceOnUse" width="${3*k}" height="${3*k}"><circle cx="${1.5*k}" cy="${1.5*k}" r="${0.9*k}" fill="none" stroke="#2f6b2f" stroke-width="${0.2*k}"/></pattern><pattern id="mer" patternUnits="userSpaceOnUse" width="${2*k}" height="${2*k}" patternTransform="rotate(-45)"><line x1="0" y1="0" x2="0" y2="${2*k}" stroke="#7A3E9D" stroke-width="${0.25*k}"/></pattern></defs><g class="gpu-layer">${o}</g>`}
+function lineLabelPt(L){const {rings}=boundary();const pts=[];for(let i=0;i+1<L.length;i++)for(let t=0;t<=1;t+=0.1){const q=[L[i][0]+(L[i+1][0]-L[i][0])*t,L[i][1]+(L[i+1][1]-L[i][1])*t];if(inParcel(q,rings))pts.push(q)}return pts.length?pts[Math.floor(pts.length*0.3)]:null}
+function gpuNotice(){const G=S.terrain.gpu;if(!G||!G.ok)return'';const L=[];if(G.zones.length>1)L.push(`un partage entre les zones ${G.zones.map(z=>z.lib).join(' et ')}`);for(const x of G.presc)L.push(`${x.titre.toLowerCase()} (« ${x.lib} »)`);for(const x of G.sup)L.push(`servitude ${x.code} : ${x.titre.toLowerCase()}`);
+  return L.length?` D'après le document d'urbanisme, le terrain est concerné par : ${L.join(' ; ')}. Ces éléments sont reportés sur le plan de masse.`:''}
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-gpu]');if(!b)return;if(b.dataset.gpu==='retry'){S.terrain.gpu=null;renderSide();await fetchGPU();renderAll();save()}});
+
 /* insertion : avant / après sur la même planche */
 function insBefore(far){const ph=S.photos,o=S.onsite||{};if(far)return ph.insFromShot2&&o.shot2?o.shot2.img:null;
   if(ph.insMode==='image')return ph.insFromShot&&o.shot&&o.shot.img?o.shot.img:(ph.ins||null);return ph.ins||null}
@@ -2587,6 +2670,7 @@ function sheetHTML(sh){
       (amList().some(a=>a.k==='piscine')?lg(`<rect x="2" y="2" width="32" height="12" fill="#9DD3E8" stroke="#1f6f8b" stroke-width="1.5"/>`,'Piscine (bassin)'):'')+((!noBuild()||mode()==='dp-toiture')?lg(`<line x1="4" y1="8" x2="28" y2="8" stroke="#1f5f8b" stroke-width="1.5"/><path d="M26 4L33 8L26 12z" fill="#1f5f8b"/>`,'Sens d\'écoulement et pente du pan')+lg(`<circle cx="18" cy="8" r="4" fill="#fff" stroke="#1f5f8b" stroke-width="1.5"/>`,'Descente d\'eaux pluviales')+(bldCornerAlts?lg(`<text x="2" y="11" font-size="9" fill="#555">TN</text><text x="16" y="11" font-size="9" fill="#7a4b12" font-weight="700">TF</text>`,'Terrain naturel / terrain fini (NGF)'):''):'')+(amList().some(a=>a.k==='ep'&&a.type!=='reseau')?lg(`<circle cx="18" cy="8" r="6" fill="#e3eff7" stroke="#1f5f8b" stroke-width="1.5"/><line x1="0" y1="8" x2="12" y2="8" stroke="#1f5f8b" stroke-dasharray="3 2"/>`,'Ouvrage et réseau d\'eaux pluviales'):'')+(amList().some(a=>a.k==='pergola')?lg(`<rect x="2" y="2" width="32" height="12" fill="#fff" stroke="#3A3F44" stroke-width="1.2" stroke-dasharray="4 2"/><rect x="3" y="3" width="3" height="3" fill="#3A3F44"/><rect x="30" y="3" width="3" height="3" fill="#3A3F44"/>`,(amList().some(a=>a.k==='pergola'&&pgTy(a)!=='pergola')?'Pergola, carport ou véranda':'Pergola')+' (projection, poteaux)'):'')+(amList().some(a=>a.k==='terrasse'&&terrPoly(a))?lg(`<rect x="2" y="2" width="32" height="12" fill="#B98A5A" fill-opacity=".55" stroke="#5a4a3a" stroke-width="1.2"/>`,'Terrasse'):'')+
       (exKept().length?lg(`<rect x="2" y="2" width="32" height="12" fill="#C9C9C6" stroke="#333" stroke-width="1.2"/>`,'Construction existante conservée'):'')+
       (exDem().length?lg(`<rect x="2" y="2" width="32" height="12" fill="none" stroke="#AE3328" stroke-width="1.2" stroke-dasharray="3 2"/><line x1="2" y1="2" x2="34" y2="14" stroke="#AE3328"/><line x1="2" y1="14" x2="34" y2="2" stroke="#AE3328"/>`,'Construction à démolir'):'')+
+      (S.terrain.gpu&&S.terrain.gpu.ok&&S.ui.gpuMapOn!==false&&(S.terrain.gpu.presc.length||S.terrain.gpu.zones.length>1)?lg(`<rect x="2" y="2" width="32" height="12" fill="none" stroke="#7A3E9D" stroke-width="1.2" stroke-dasharray="4 2"/>`,'Prescriptions et limites de zones du PLU (Géoportail de l\'urbanisme)'):'')+
       (mode()==='dp-division'?lg(`<line x1="2" y1="8" x2="34" y2="8" stroke="#AE3328" stroke-width="2.5" stroke-dasharray="8 3 2 3"/>`,'Limite de division projetée')+lg(`<rect x="2" y="2" width="15" height="12" fill="#2f6f5e" fill-opacity=".25"/><rect x="19" y="2" width="15" height="12" fill="#a65f24" fill-opacity=".25"/>`,'Lot A (bâti conservé) / lot B'):'')+
       lg(`<line x1="2" y1="8" x2="34" y2="8" stroke="#111" stroke-width="2" stroke-dasharray="8 2 1.5 2"/>`,'Limite de propriété')+
       (!noBuild()?lg(`<line x1="2" y1="8" x2="34" y2="8" stroke="#111" stroke-width="1" stroke-dasharray="3 2"/>`,'Débord de toiture'):'')+
@@ -2658,7 +2742,7 @@ function noticeHTML(){
   const demTxt=DM.length?`<p>Le projet prévoit la démolition de : ${DM.map(e=>`${esc((e.usage||'construction').toLowerCase())} (${fmt(exArea(e),0)} m² d'emprise)`).join(', ')}.</p>`:'';
   const exDistTxt=ne?(ne.d<0.1?` Elle est accolée à la construction existante (${esc((ne.e.usage||'').toLowerCase())}).`:` Elle est implantée à ${fmt(ne.d)} m de la construction existante la plus proche (${esc((ne.e.usage||'').toLowerCase())}).`):'';
   return`<h2>1. Présentation de l'état initial du terrain et de ses abords</h2>
-<p>Le terrain est situé ${esc(adresseTerrain()||'—')}${T.commune?` sur la commune de ${esc(T.commune)}`:''}. Il est cadastré ${esc(refs)}, pour une superficie totale de ${fmt(A,0)} m². ${T.zone&&T.zone.libelle!=='?'?`Il est classé en zone ${esc(T.zone.libelle)} du ${esc(T.zone.doc)}${T.zone.libelong?` (${esc(T.zone.libelong)})`:''}.`:'<span class="todo">[Préciser la zone du document d\'urbanisme.]</span>'}${risqueNotice()}</p>
+<p>Le terrain est situé ${esc(adresseTerrain()||'—')}${T.commune?` sur la commune de ${esc(T.commune)}`:''}. Il est cadastré ${esc(refs)}, pour une superficie totale de ${fmt(A,0)} m². ${T.zone&&T.zone.libelle!=='?'?`Il est classé en zone ${esc(T.zone.libelle)} du ${esc(T.zone.doc)}${T.zone.libelong?` (${esc(T.zone.libelong)})`:''}.`:'<span class="todo">[Préciser la zone du document d\'urbanisme.]</span>'}${esc(gpuNotice())}${risqueNotice()}</p>
 <p>${relief} ${voieTxt}</p>
 <p>${exTxt} ${P.etatInitial?esc(P.etatInitial):'<span class="todo">[Décrire la végétation et les éléments paysagers du terrain.]</span>'} ${P.abords?'Les abords sont constitués de '+esc(P.abords)+'.':'Les abords sont constitués de parcelles <span class="todo">[bâties / agricoles / boisées]</span>.'}</p>
 <h2>2. Partis retenus pour assurer l'insertion du projet</h2>
@@ -2714,7 +2798,7 @@ function renderChecks(){let w=$('#w-checks');if(!w){w=document.createElement('di
   const nb=C.filter(c=>c.lvl==='bad').length,nw=C.filter(c=>c.lvl==='warn').length;const ch=$('#chkChip');
   ch.innerHTML=`<span class="d" style="background:${nb?'#E07A6F':nw?'#E3B04B':'#7CC39A'}"></span>${nb?nb+' non-conformité'+(nb>1?'s':''):nw?nw+' point'+(nw>1?'s':'')+' à compléter':'Dossier cohérent'}`;
   ch.style.background='#26322F';ch.style.color='#fff';progRender()}
-function renderSide(){renderModeUI();if(typeof swRender==='function')swRender();$$('input.dmode').forEach(r=>r.checked=r.value===mode());renderImpl();{const ph=S.photos;const pc=$('#insPhotoCtl');if(pc)pc.hidden=!ph.ins;const img=ph.insMode==='image';$('#insImageCtl').hidden=!img;$('#insAutoCtl').hidden=img;$('#insTreesRow').hidden=!!ph.ins;
+function renderSide(){renderModeUI();{const gb=$('#gpuBox');if(gb)gb.innerHTML=gpuHTML()}if(typeof swRender==='function')swRender();$$('input.dmode').forEach(r=>r.checked=r.value===mode());renderImpl();{const ph=S.photos;const pc=$('#insPhotoCtl');if(pc)pc.hidden=!ph.ins;const img=ph.insMode==='image';$('#insImageCtl').hidden=!img;$('#insAutoCtl').hidden=img;$('#insTreesRow').hidden=!!ph.ins;
     const IC=insCamera();const ae=document.activeElement;if(ae!==$('#insDist'))$('#insDist').value=IC.dist.toFixed(1);if(ae!==$('#insAz'))$('#insAz').value=Math.round(IC.az)}{const mr=$('#monoInvRow');if(mr)mr.hidden=S.projet.toit!=='mono'}
   const T=S.terrain;$('#topAddr').textContent=(S.demo?'Exemple — ':'')+(adresseTerrain()||T.label||'');
   $('#plist').innerHTML=T.parcels.map(p=>`<span class="pchip">${esc(p.section)} ${esc(String(p.numero).replace(/^0+/,''))} · ${fmt(p.contenance||0,0)} m²</span>`).join('');
@@ -3232,7 +3316,7 @@ function ouvTxt(s){const map={F:'fenêtre',FE:'petite fenêtre',PF:'porte-fenêt
   const t=Object.entries(c).map(([k,n])=>`${n} ${map[k]}${n>1?(k==='B'?'s':'s'):''}`).join(', ');return t||'aucune'}
 function dpNotice(sh){const T=S.terrain;S.noticeAdd=S.noticeAdd||{};const m=mode();let body='';
   const z=T.zone&&T.zone.libelle!=='?'?`classé en zone ${esc(T.zone.libelle)} du ${esc(T.zone.doc)}`:'';
-  body+=`<h2>1. Le terrain${m==='dp-arbres'?'':' et la construction'}</h2><p>Le terrain est situé ${esc(adresseTerrain()||'—')}, cadastré ${esc(T.parcels.map(p=>`section ${p.section} n°${String(p.numero).replace(/^0+/,'')}`).join(', '))}, d'une superficie de ${fmt(parcelArea(),0)} m²${z?', '+z:''}.</p>`;
+  body+=`<h2>1. Le terrain${m==='dp-arbres'?'':' et la construction'}</h2><p>Le terrain est situé ${esc(adresseTerrain()||'—')}, cadastré ${esc(T.parcels.map(p=>`section ${p.section} n°${String(p.numero).replace(/^0+/,'')}`).join(', '))}, d'une superficie de ${fmt(parcelArea(),0)} m²${z?', '+z:''}.${esc(gpuNotice())}</p>`;
   if(isDPb()){const e=S.existants.find(x=>x.id===S.dossier.exId);const p=S.projet;
     body+=`<p>Les travaux portent sur la construction existante${e?` (${esc((e.usage||'').toLowerCase())})`:''} d'environ ${fmt(p.L,1)} m × ${fmt(p.W,1)} m, ${p.niveaux===1?'de plain-pied':'en R+'+(p.niveaux-1)}.</p>`+naddBox('dp-terrain');
     const A=variant('avant'),B=variant('apres');const cnt=(x,t)=>(x.toitItems||[]).filter(i=>i.t===t).reduce((s,i)=>s+(+i.n||0),0);
@@ -3529,7 +3613,7 @@ $('#diagRetry').onclick=()=>{$('#diag').hidden=true;window.__errs=[];netCheck(tr
 /* ================= Démarrage ================= */
 if(!S.meta.date)S.meta.date=today();
 /* premier affichage : lancé en fin de script, quand tous les modules sont définis */
-function startApp(){setTimeout(()=>{try{helpInit();const J=soonJalons(7);if(J.length&&!S.demo)toast(`Bientôt : ${frDate(J[0][0])} — ${J[0][1]}`,6000)}catch(e){}},400);setTimeout(()=>{histReset();savedUI(S.demo?'demo':'saved')},0);if(!S.demo){const d0=document.querySelector('aside details.step');if(d0)d0.open=false}try{fillInputs();renderExList();renderAll()}catch(e){window.__errs.push('Démarrage : '+e.message);window.__showErr()}
+function startApp(){if(S.ui&&S.ui.gpuMapOn==null)S.ui.gpuMapOn=true;setTimeout(()=>{try{helpInit();const J=soonJalons(7);if(J.length&&!S.demo)toast(`Bientôt : ${frDate(J[0][0])} — ${J[0][1]}`,6000)}catch(e){}},400);setTimeout(()=>{histReset();savedUI(S.demo?'demo':'saved')},0);if(!S.demo){const d0=document.querySelector('aside details.step');if(d0)d0.open=false}try{fillInputs();renderExList();renderAll()}catch(e){window.__errs.push('Démarrage : '+e.message);window.__showErr()}
   setTimeout(()=>netCheck(false),800);
   if(isMobile()){let v=isTablet()?'split':'panel';try{v=sessionStorage.getItem('apc-view')||v}catch(e){}setView(v)}
   if(S.demo)status('#stTerrain','','Exemple chargé (terrain fictif). Saisissez l\'adresse de votre terrain pour commencer.');
