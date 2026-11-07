@@ -130,7 +130,8 @@ nav.tabs button .d{width:7px;height:7px;border-radius:50%}
 .fac2{display:grid;grid-template-rows:1fr 1fr;width:100%;height:100%}
 .fac2 .cell{position:relative;display:flex;align-items:center;justify-content:center;border-bottom:.25mm solid #999}
 .fac2 .cell:last-child{border-bottom:0}
-.fac2.ab .cell{overflow:hidden}.ab-box{position:relative;height:100%;aspect-ratio:203/182;max-width:100%}
+.fac2.ab .cell{overflow:hidden}
+.pros{list-style:none;padding:0;margin:6px 0}.pros li{display:flex;gap:10px;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line,#e5e2da)}.pros small{color:#666}.pros .tag{font-size:11px;padding:1px 6px;border-radius:9px;background:#eef3ee;color:#2d5a3a;white-space:nowrap}.pros .tag.req{background:#fbeaea;color:#9b2c2c}.pros-l{display:flex;flex-direction:column;gap:4px;font-size:13px;white-space:nowrap;text-align:right}@media(max-width:520px){.pros li{flex-direction:column}.pros-l{text-align:left;flex-direction:row;flex-wrap:wrap;gap:12px}}.ab-box{position:relative;height:100%;aspect-ratio:203/182;max-width:100%}
 .fac1{display:grid;width:100%;height:100%}.fac1 .cell{position:relative;display:flex;align-items:center;justify-content:center}
 .photo-area{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#f1f1ef}
 .photo-area img{max-width:100%;max-height:100%;object-fit:contain}
@@ -580,6 +581,8 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
   <button type="button" data-mm="bPdf">📄 Télécharger le dossier en PDF</button><button type="button" data-mm="bCerfa">📝 Formulaire cerfa pré-rempli</button>
   <button type="button" data-mm="bZip">📦 Fichiers pour le dépôt en ligne</button>
   <button type="button" data-mm="bPrint">Imprimer tout le dossier</button>
+  <button type="button" id="mShare">🔗 Partager par lien</button>
+  <button type="button" id="mOffline">📥 Préparer la visite hors connexion</button>
   <button type="button" id="mReport">🐞 Signaler un problème</button>
 </div>
 <div class="main">
@@ -1875,6 +1878,68 @@ function facadeSVG(side,Wmm,Hmm,forceSc){
   o+=facMatLabels(side,r,MD,fw,wall.ops,h,k,m0+ext+0.5);
   o+='</svg>';return{svg:o,sc,fits:fitsF(sc)};
 }
+/* ================= Estimation des travaux (ordres de grandeur) ================= */
+var PRIX={y:2026,maison:[1600,2400],extension:[1800,3000],garage:[600,1200],abri:[200,700],annexe:[800,1500],piscine:[800,1500],terrasse:[80,200],pergolaL:[500,1100],pergolaO:[150,450],clo:[50,150],portail:[1500,5000],portillon:[500,1500],ravalement:[40,100],toiture:[120,250],velux:[800,2000],pv:[350,600],raccord:[3000,10000],arbre:[300,1500]};
+function travauxEst(){const m=mode(),P=S.projet,L=[];const add=(t,q,u,pr)=>{if(q>0.05&&pr)L.push({t,q,u,a:q*pr[0],b:q*pr[1]})};
+  if(m==='pc'||m==='dp-constr'){const sf=surfaces();const wk=S.wz&&S.wz.kind;const n=P.nature;const k=n==='maison'?'maison':n==='extension'?'extension':wk==='garage'?'garage':wk==='abri'?'abri':'annexe';
+    add({maison:'Construction de la maison',extension:'Construction de l\'extension',garage:'Construction du garage',abri:'Abri de jardin (fourni posé)',annexe:'Construction de l\'annexe'}[k],Math.max(sf.sdp+(sf.gar||0),sf.emprise*0.8),'m²',PRIX[k]);
+    if(n==='maison')add('Raccordements (eau, électricité, assainissement)',1,'forfait',PRIX.raccord)}
+  if(m==='dp-facade'){const h=heights();add('Ravalement des façades',2*((+P.L||0)+(+P.W||0))*h.E,'m² de façade',PRIX.ravalement)}
+  if(m==='dp-toiture'){for(const it of P.toitItems||[]){if(it.t==='velux')add('Fenêtres de toit',+it.n||1,'u',PRIX.velux);else if(it.t==='pv')add('Panneaux solaires (posés, raccordés)',(+it.n||1)*(+it.w||1)*(+it.h||1),'m²',PRIX.pv)}}
+  for(const a of amList()){if(a.k==='piscine'&&(m!=='dp-pergola'))add('Piscine',poolBassin?polyArea(poolPoly(a)):0,'m² de bassin',PRIX.piscine);
+    else if(a.k==='terrasse'&&terrPoly(a))add('Terrasse',polyArea(terrPoly(a)),'m²',PRIX.terrasse);
+    else if(a.k==='pergola')add(a.toit==='lames'||a.toit==='vitree'?'Pergola bioclimatique ou couverte':'Pergola',polyArea(pergPoly(a)),'m²',a.toit==='lames'||a.toit==='vitree'?PRIX.pergolaL:PRIX.pergolaO)}
+  if(S.clo&&S.clo.length&&(m==='dp-cloture'||m==='pc')){let cl=0;for(const c of S.clo){const g=cloSeg(c);if(!g)continue;if(c.kind==='portail')add('Portail',1,'u',PRIX.portail);else if(c.kind==='portillon')add('Portillon',1,'u',PRIX.portillon);else cl+=g.len}add('Clôture',cl,'m',PRIX.clo)}
+  if(m==='dp-arbres'){const n=arbList().length;add('Abattage et dessouchage',n,'arbre'+(n>1?'s':''),PRIX.arbre)}
+  return L}
+/* ================= Professionnels à prévoir, près du terrain ================= */
+function prosList(){const m=mode(),P=S.projet,TT=totals(),out=[];const build=m==='pc'||m==='dp-constr';const rg=typeof rgaLevel==='function'?rgaLevel():null;
+  const prot=!!(S.terrain.protect&&S.terrain.protect.ok&&S.terrain.protect.sup&&S.terrain.protect.sup.length);
+  const add=(t,why,req,q,dir)=>out.push({t,why,req,q,dir});
+  if(m==='pc'&&TT.sdpTot>150)add('Architecte','Surface de plancher totale au-delà de 150 m² : le recours à un architecte est obligatoire.','obligatoire','architecte',['Ordre des architectes','https://www.architectes.org/']);
+  if(build&&(rg==='forte'||rg==='moyenne')&&(P.nature==='maison'||P.nature==='extension'))add('Bureau d\'études géotechniques (étude G2)',`Terrain en zone d'argiles ${rg} : l'étude de sol adapte les fondations et évite les fissures.`,P.nature==='maison'?'obligatoire':'conseillé','bureau d\'études géotechniques',['Union syndicale géotechnique','https://www.u-s-g.org/']);
+  if(m==='pc'&&P.nature==='maison')add('Bureau d\'études thermiques (RE2020)','Attestation PCMI14-1 à joindre au permis, puis attestation de fin de travaux.','obligatoire','bureau d\'études thermiques RE2020',['Qualification OPQIBI','https://www.opqibi.com/']);
+  if(build&&P.assain==='individuel')add('Bureau d\'études assainissement + SPANC','Pas de tout-à-l\'égout : étude de filière, puis attestation du SPANC (PCMI12-2).','obligatoire','étude assainissement non collectif',null);
+  if(build&&P.nature==='maison')add('Géomètre-expert','Bornage et plan topographique : limites exactes et altitudes NGF pour le plan de masse.','conseillé','géomètre-expert',['Ordre des géomètres-experts','https://www.geometre-expert.fr/']);
+  if(S.existants&&S.existants.some(e=>e.statut==='demoli'))add('Diagnostiqueur (amiante, plomb)','Obligatoire avant toute démolition d\'un bâtiment ancien.','obligatoire','diagnostiqueur immobilier amiante',null);
+  if(build&&P.nature==='maison')add('Assureur dommages-ouvrage','À souscrire avant l\'ouverture du chantier.','obligatoire','assurance dommages ouvrage',null);
+  if(prot)add('Architecte des Bâtiments de France (UDAP)','Terrain en secteur protégé : un rendez-vous avant le dépôt évite les refus.','conseillé','UDAP architecte des bâtiments de France',null);
+  add('CAUE du département','Conseil gratuit d\'un architecte sur votre projet, avant le dépôt.','gratuit','CAUE conseil architecture',['Réseau des CAUE','https://www.fncaue.com/']);
+  if(m==='dp-toiture'||m==='dp-facade')add('Artisans RGE','Obligatoires pour bénéficier des aides (MaPrimeRénov\', CEE).','conseillé','artisan RGE',['France Rénov\'','https://france-renov.gouv.fr/']);
+  return out}
+function prosHTML(){if(S.demo&&!S.terrain.parcels.length)return'';const L=prosList();const where=[S.terrain.commune,S.terrain.cp].filter(Boolean).join(' ');
+  const map=q=>`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q+' '+where)}`;
+  return`<h3>Professionnels à prévoir</h3><ul class="pros">${L.map(p=>`<li><div><b>${esc(p.t)}</b> <span class="tag ${p.req==='obligatoire'?'req':''}">${esc(p.req)}</span><br><small>${esc(p.why)}</small></div><div class="pros-l"><a href="${map(p.q)}" target="_blank" rel="noopener">📍 Près de ${esc(S.terrain.commune||'chez vous')}</a>${p.dir?`<a href="${p.dir[1]}" target="_blank" rel="noopener">${esc(p.dir[0])}</a>`:''}</div></li>`).join('')}</ul>
+  <p class="hint">Vérifiez l'assurance décennale, les qualifications et demandez au moins deux devis.</p>`}
+function travauxHTML(){const L=travauxEst();if(!L.length)return'';const e=x=>Math.round(x/100)*100;const f=x=>e(x).toLocaleString('fr-FR')+' €';const a=L.reduce((s,x)=>s+x.a,0),b=L.reduce((s,x)=>s+x.b,0);
+  return`<h3>Coût des travaux (ordre de grandeur)</h3><table class="bud-t"><tbody>${L.map(x=>`<tr><td>${esc(x.t)}<br><small>${fmt(x.q,x.u==='u'||x.u==='forfait'||/arbre/.test(x.u)?0:1)} ${esc(x.u)}</small></td><td class="v">${f(x.a)} à ${f(x.b)}</td></tr>`).join('')}${L.length>1?`<tr><td><b>Total</b></td><td class="v"><b>${f(a)} à ${f(b)}</b></td></tr>`:''}</tbody></table>
+  <p class="hint">Fourchettes moyennes ${PRIX.y} TTC, hors terrain et aménagements non dessinés. Les prix varient selon la région, les finitions et l'accès au chantier : seuls des devis font foi.</p>`}
+/* ================= Partage par lien (sans les photos) ================= */
+function stripImgs(o){if(Array.isArray(o))return o.map(stripImgs);if(o&&typeof o==='object'){const r={};for(const[k,v]of Object.entries(o)){if(typeof v==='string'&&v.startsWith('data:')&&v.length>300)continue;r[k]=stripImgs(v)}return r}return o}
+async function b64z(str){const cs=new Blob([str]).stream().pipeThrough(new CompressionStream('deflate-raw'));const buf=new Uint8Array(await new Response(cs).arrayBuffer());let s='';for(let i=0;i<buf.length;i+=0x8000)s+=String.fromCharCode(...buf.subarray(i,i+0x8000));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+async function unb64z(b){b=b.replace(/-/g,'+').replace(/_/g,'/');const bin=atob(b);const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);const ds=new Blob([u]).stream().pipeThrough(new DecompressionStream('deflate-raw'));return new Response(ds).text()}
+async function shareLink(){if(S.demo&&!S.terrain.parcels.length){toast('Choisissez d\'abord votre terrain.');return}if(typeof CompressionStream==='undefined'){toast('Navigateur trop ancien pour le partage par lien : utilisez « Exporter » dans Mes dossiers.',6000);return}
+  const d=stripImgs(JSON.parse(packS()));delete d.onsite;d.meta={...(d.meta||{}),shared:Date.now()};const url=location.origin+location.pathname+'#d='+await b64z(JSON.stringify(d));
+  const title='Dossier '+(dossierTitle?dossierTitle():'Atelier PC');
+  if(navigator.share){try{await navigator.share({title,text:'Mon projet sur Atelier PC (sans les photos) :',url});return}catch(e){if(e&&e.name==='AbortError')return}}
+  try{await navigator.clipboard.writeText(url);toast(`Lien copié (${Math.round(url.length/1000)} k caractères). Les photos ne sont pas incluses : pour un dossier complet, utilisez « Exporter » dans Mes dossiers.`,8000)}catch(e){prompt('Copiez ce lien :',url)}}
+async function shareLinkOpen(){const h=location.hash;if(!h.startsWith('#d='))return false;try{const d=unpackS(JSON.parse(await unb64z(h.slice(3))));if(!d.terrain||!d.projet)throw new Error('lien incomplet');
+    d.meta=d.meta||{};d.meta.id='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);d.meta.saved=Date.now();d.demo=false;await idbPut({id:d.meta.id,updated:Date.now(),data:d,thumb:null});openDossierData(d);try{localStorage.setItem('atelier-pc-cur',d.meta.id)}catch(_){}
+    history.replaceState(null,'',location.pathname);toast('Dossier partagé ouvert : une copie est enregistrée dans « Mes dossiers ». Les photos ne sont pas transmises par lien.',8000);return true}catch(e){toast('Lien de partage illisible : '+e.message,6000);history.replaceState(null,'',location.pathname);return false}}
+/* ================= Hors connexion : préparer la visite sur le terrain ================= */
+function lonlatTile(lon,lat,z){const n=2**z;const x=(lon+180)/360*n;const r=lat*D2R;const y=(1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*n;return[x,y]}
+async function offlinePrep(){if(S.demo&&!S.terrain.parcels.length){toast('Choisissez d\'abord votre terrain.');return}if(!navigator.onLine){toast('Pas de connexion : à faire avant de partir, depuis le Wi-Fi.');return}
+  const c=S.terrain.o;if(!c)return;const plan={l:'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2'},planP={l:'GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2',f:'image/png'},ortho={l:'ORTHOIMAGERY.ORTHOPHOTOS',f:'image/jpeg'},pci={l:'CADASTRALPARCELS.PARCELLAIRE_EXPRESS',st:'PCI vecteur'};
+  const plan_=[[plan,14,3],[plan,16,3],[planP,15,2],[planP,16,2],[planP,17,2],[planP,18,2],[ortho,16,2],[ortho,17,2],[ortho,18,3],[ortho,19,4],[ortho,20,4],[pci,18,3],[pci,19,3]];
+  const urls=new Set();for(const[L,z,r]of plan_){const[tx,ty]=lonlatTile(c[0],c[1],z);for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++)urls.add(wmts(L,z,Math.floor(tx)+dx,Math.floor(ty)+dy))}
+  const U=[...urls];let done=0,ok=0;toast(`Téléchargement des cartes du terrain (${U.length} images)…`,4000);
+  const worker=async()=>{while(U.length){const u=U.pop();try{const r=await fetch(u,{mode:'cors',credentials:'omit'});if(r.ok)ok++}catch(e){}done++;if(done%60===0)toast(`Cartes : ${done} / ${urls.size}…`,2500)}};
+  await Promise.all([...Array(8)].map(worker));
+  try{localStorage.setItem('atelier-pc-offline',JSON.stringify({at:Date.now(),c}))}catch(e){}
+  toast(ok>urls.size*0.8?`Prêt pour le terrain : cartes enregistrées (${ok}). Sans réseau, l'appli, votre dossier et ces cartes restent disponibles.`:`Seulement ${ok} cartes sur ${urls.size} enregistrées : réessayez avec une meilleure connexion.`,8000)}
+window.addEventListener('offline',()=>toast('Hors connexion : votre dossier, les photos et les cartes déjà enregistrées restent utilisables.',6000));
+window.addEventListener('online',()=>toast('Connexion rétablie.',2500));
+
 /* insertion : avant / après sur la même planche */
 function insBefore(far){const ph=S.photos,o=S.onsite||{};if(far)return ph.insFromShot2&&o.shot2?o.shot2.img:null;
   if(ph.insMode==='image')return ph.insFromShot&&o.shot&&o.shot.img?o.shot.img:(ph.ins||null);return ph.ins||null}
@@ -2922,7 +2987,7 @@ window.addEventListener('resize',()=>{if(!isMobile())delete document.body.datase
 /* ================= Diagnostic réseau ================= */
 function showDiag(html){$('#diagTxt').innerHTML=html;$('#diag').hidden=false}
 window.__showErr=()=>{if(!window.__errs.length)return;showDiag(`<b>Une erreur empêche une partie de l'application de fonctionner</b>${esc(window.__errs.slice(-3).join(' · '))}<br>Envoyez ce message à Claude pour correction. Vous pouvez aussi cliquer « Revenir à l'exemple » (étape 01) si l'erreur vient d'un projet enregistré.`)};
-async function netCheck(manual){const tst=async(u,img)=>{try{if(img)return await new Promise(r=>{const i=new Image();const t=setTimeout(()=>r(false),9000);i.onload=()=>{clearTimeout(t);r(true)};i.onerror=()=>{clearTimeout(t);r(false)};i.src=u+'&_='+Date.now()});
+async function netCheck(manual){if(!navigator.onLine){showDiag('<b>Vous êtes hors connexion</b>Votre dossier, vos photos et les cartes déjà enregistrées restent utilisables. La recherche d\'adresse, le cadastre et les règles se mettront à jour au retour du réseau. Astuce : menu ⋯ › « Préparer la visite hors connexion » avant de partir.');return}const tst=async(u,img)=>{try{if(img)return await new Promise(r=>{const i=new Image();const t=setTimeout(()=>r(false),9000);i.onload=()=>{clearTimeout(t);r(true)};i.onerror=()=>{clearTimeout(t);r(false)};i.src=u+'&_='+Date.now()});
     const c=new AbortController();const t=setTimeout(()=>c.abort(),9000);const r=await fetch(u,{signal:c.signal});clearTimeout(t);return r.ok}catch(e){return false}};
   const res={adresse:await tst(`${GEO}/search?q=mairie%20paris&limit=1`),cadastre:await tst(`${CAD}?code_insee=75056&section=AB&numero=0001`),carte:await tst(wmts({l:'ORTHOIMAGERY.ORTHOPHOTOS',f:'image/jpeg'},10,518,352),true)};
   const ko=Object.entries(res).filter(([,v])=>!v).map(([k])=>k);const where=location.protocol;
@@ -3896,6 +3961,7 @@ function budgetHTML(){if(S.demo&&!S.terrain.parcels.length)return'';const C=cout
     <div class="bud-r"><label>Taux communal (%)<input type="number" step="0.1" min="0" max="20" data-suivi="tc" value="${U.tc}"></label><label>Taux départemental (%)<input type="number" step="0.1" min="0" max="2.5" data-suivi="td" value="${U.td}"></label></div>
     <p class="hint">Taux à vérifier sur la délibération de votre commune ou le simulateur impots.gouv.fr. Payable après les travaux : en une fois sous 1 500 €, sinon en deux échéances.</p>`:'<p class="hint">Pas de taxe d\'aménagement pour ces travaux (aucune surface taxable créée).</p>'}
   ${et?`<table class="bud-t"><tbody>${et}</tbody></table><p class="hint">Fourchettes indicatives : demandez au moins deux devis.</p>`:''}
+  ${travauxHTML()}${prosHTML()}
   <h3>Délais</h3><p>Instruction : <b>${delaiInstr()} mois</b> à compter du dépôt du dossier complet${delaiInstr()>(m==='pc'?2:1)?' (secteur protégé : avis de l\'architecte des Bâtiments de France)':''}. Ensuite : 2 mois de recours des voisins après affichage, 3 ans pour commencer les travaux.</p>
   <h3>Suivi de votre dossier</h3><div class="bud-r">
     <label>Dépôt en mairie<input type="date" data-suivi="dep" value="${U.dep||''}"></label><label>Autorisation obtenue<input type="date" data-suivi="acc" value="${U.acc||''}"></label>
@@ -4374,15 +4440,16 @@ async function openDossiers(){const M=$('#dos');M.hidden=false;const box=$('#dos
     if(b.dataset.ddel){if(b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent='Confirmer';b.classList.add('danger');setTimeout(()=>{b.dataset.armed='';b.textContent='Supprimer';b.classList.remove('danger')},3500);return}
       await idbDel(b.dataset.ddel);if(b.dataset.ddel===cur){S.meta.id=null}openDossiers()}}}
 function closeDossiers(){$('#dos').hidden=true}
-$('#bDos').onclick=openDossiers;$('#mReport').onclick=()=>{$('#mMenu').hidden=true;reportProblem()};
+$('#bDos').onclick=openDossiers;$('#mReport').onclick=()=>{$('#mMenu').hidden=true;reportProblem()};$('#mShare').onclick=()=>{$('#mMenu').hidden=true;shareLink()};$('#mOffline').onclick=()=>{$('#mMenu').hidden=true;offlinePrep()};
 $('#dosImp input').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const d=unpackS(JSON.parse(await f.text()));if(!d.terrain||!d.projet)throw new Error('fichier non reconnu');d.meta=d.meta||{};d.meta.id='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);d.meta.saved=Date.now();
   await idbPut({id:d.meta.id,updated:Date.now(),data:d,thumb:null});toast('Dossier importé.');openDossiers()}catch(err){toast('Import impossible : '+err.message)}});$('#dosClose').onclick=closeDossiers;$('#dosNew').onclick=newDossier;
 setTimeout(idbRestore,50);
+let SHARED=location.hash.startsWith('#d=');if(SHARED)setTimeout(()=>shareLinkOpen(),600);
 
 // application installable : copie locale et mise à jour automatique
 if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname!=='localhost'){navigator.serviceWorker.register('sw.js').catch(()=>{})}
 // première ouverture : proposer le mode express
-if(S.demo&&!loadLocal())setTimeout(wzOpen,300);
+if(S.demo&&!loadLocal()&&!SHARED)setTimeout(wzOpen,300);
 </script>
 </body>
 </html>
