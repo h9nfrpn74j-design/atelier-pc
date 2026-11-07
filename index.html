@@ -58,6 +58,14 @@ body.fs header.top,body.fs .mnav,body.fs aside,body.fs #scaleBar,body.fs .tabs{d
 .rev-nav{display:grid;grid-template-columns:auto 1fr 1fr auto;gap:6px;margin-top:6px}.rev-nav .btn.on{box-shadow:0 0 0 2px var(--accent-soft)}.rev-nav .btn.on-bad{border-color:var(--bad);color:var(--bad)}
 .lnk{border:0;background:none;color:var(--accent);font-weight:600;cursor:pointer;padding:6px 0;text-decoration:underline}
 .rev-cta{width:100%;margin:4px 0 12px;display:flex;gap:8px;justify-content:center}
+/* nuancier, aide, rappels */
+.swatches{display:flex;gap:6px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:thin;margin-top:-4px}
+.sw{flex:none;display:grid;justify-items:center;gap:3px;width:62px;border:1px solid var(--line);border-radius:10px;padding:5px 4px;background:var(--panel);cursor:pointer;color:var(--ink)}
+.sw.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}.sw-p{display:block;width:46px;height:30px;border-radius:6px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.sw small{font-size:9.5px;line-height:1.15;text-align:center;color:var(--muted);max-height:2.4em;overflow:hidden}
+.lh{display:flex;align-items:center;gap:0}.hq{display:inline-grid;place-items:center;width:17px;height:17px;margin-left:5px;border-radius:50%;border:1px solid var(--accent);background:transparent;color:var(--accent);font:700 11px var(--f-ui);cursor:pointer;padding:0;vertical-align:1px}
+.hpop{position:fixed;z-index:95;max-width:300px;background:var(--head);color:#fff;border-radius:12px;padding:10px 12px;box-shadow:0 12px 30px rgba(0,0,0,.3);font-size:13px}.hpop b{display:block;margin-bottom:3px}.hpop p{margin:0;opacity:.9;line-height:1.4}
+.home-rem{display:grid;grid-template-columns:auto 1fr;gap:10px;border:1px solid #E3C14B;background:rgba(227,193,75,.12);border-radius:14px;padding:12px 14px}.home-rem svg.ic{width:22px;height:22px;color:#B8901A}.home-rem div{display:grid;gap:3px;font-size:13px}.home-rem .lnk{justify-self:start}
 svg.ic{width:1.15em;height:1.15em;vertical-align:-.2em;flex:none}svg.ic.big{width:44px;height:44px;opacity:.55}
 .prog{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.08)}.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#8FC7C0,#E3C14B);transition:width .4s}
 .brand{cursor:pointer;white-space:nowrap}
@@ -848,12 +856,15 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
       <label class="f">Façades
         <div style="display:grid;grid-template-columns:1fr 38px;gap:8px"><input type="text" data-b="projet.facade"><input type="color" data-b="projet.facadeCouleur" aria-label="Couleur des façades"></div>
       </label>
+      <div class="swatches" id="swFac" aria-label="Choix rapide"></div>
       <label class="f">Couverture
         <div style="display:grid;grid-template-columns:1fr 38px;gap:8px"><select data-b="projet.couv" id="selCouv"></select><input type="color" data-b="projet.couvCouleur" aria-label="Couleur de la couverture"></div>
       </label>
+      <div class="swatches" id="swCouv" aria-label="Choix rapide"></div>
       <label class="f">Menuiseries
         <div style="display:grid;grid-template-columns:1fr 38px;gap:8px"><input type="text" data-b="projet.menuis"><input type="color" data-b="projet.menuisCouleur" aria-label="Couleur des menuiseries"></div>
       </label>
+      <div class="swatches" id="swMen" aria-label="Choix rapide"></div>
       <div class="sub">Ouvertures par façade</div>
       <p class="hint">Codes : <code>F</code> fenêtre, <code>FE</code> petite fenêtre, <code>PF</code> porte-fenêtre, <code>B</code> baie 2,40 m, <code>P</code> porte d'entrée, <code>G</code> porte de garage. Séparez les niveaux par <code>/</code> (RDC / étage / combles).</p>
       <div class="ouvrow"><span id="lbS1">Façade S1</span><input type="text" data-b="projet.ouv.S1"></div>
@@ -2221,17 +2232,17 @@ function themeCycle(){const k=Object.keys(UITHEMES);const n=k[(k.indexOf(themeGe
 themeApply();
 /* ================= Écran d'accueil ================= */
 const KIND_IC={pc:'home','dp-facade':'facade','dp-piscine':'pool','dp-division':'scissors','dp-pergola':'pergola','dp-toiture':'roof','dp-cloture':'gate','dp-constr':'shed','dp-arbres':'tree'};
-async function homeOpen(){const H=$('#home');if(!H)return;H.hidden=false;document.body.classList.add('home-on');const box=$('#homeList');box.innerHTML='<p class="hint">Chargement…</p>';let L=[];try{L=await idbAll()}catch(e){}
+async function homeOpen(){{const hp=document.querySelector('.hpop');if(hp)hp.remove()}const H=$('#home');if(!H)return;H.hidden=false;document.body.classList.add('home-on');const box=$('#homeList');box.innerHTML='<p class="hint">Chargement…</p>';let L=[];try{L=await idbAll()}catch(e){}
   L.sort((a,b)=>b.updated-a.updated);const cur=S.meta&&S.meta.id;
-  box.innerHTML=L.length?`<h2>Vos projets</h2>`+L.map(r=>{const t=dossierTitle(r.data);const m=r.data&&r.data.dossier&&r.data.dossier.type||'pc';const p=r.prog??null;
+  const rem=remindersHTML();box.innerHTML=rem+(L.length?`<h2>Vos projets</h2>`+L.map(r=>{const t=dossierTitle(r.data);const m=r.data&&r.data.dossier&&r.data.dossier.type||'pc';const p=r.prog??null;
     return`<button class="home-card${r.id===cur?' cur':''}" type="button" data-hopen="${r.id}"><div class="th">${r.thumb?`<img src="${r.thumb}" alt="">`:r.mini?r.mini:ICO(KIND_IC[m]||'home','ic big')}</div>
       <div class="tx"><span class="k">${ICO(KIND_IC[m]||'home')}${esc(t.k||'')}</span><b>${esc(t.lieu||'Projet')}</b><small>${esc([t.commune,t.nom].filter(Boolean).join(' · '))}</small>
       ${p!=null?`<span class="pg"><i style="width:${p}%"></i></span><small>${p} % · modifié le ${new Date(r.updated).toLocaleDateString('fr-FR')}</small>`:`<small>Modifié le ${new Date(r.updated).toLocaleDateString('fr-FR')}</small>`}</div></button>`}).join('')+`<button class="home-all" type="button" data-home="dos">${ICO('folder')}Gérer mes dossiers (dupliquer, exporter, supprimer)</button>`
-    :`<div class="home-empty">${ICO('sheets','ic big')}<p>Aucun projet pour l'instant. Commencez par « Nouveau projet » : l'appli vous guide de l'adresse du terrain jusqu'au dossier complet.</p></div>`}
+    :`<div class="home-empty">${ICO('sheets','ic big')}<p>Aucun projet pour l'instant. Commencez par « Nouveau projet » : l'appli vous guide de l'adresse du terrain jusqu'au dossier complet.</p></div>`)}
 function homeClose(){const H=$('#home');if(H)H.hidden=true;document.body.classList.remove('home-on');requestAnimationFrame(()=>{try{fit()}catch(e){}})}
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-hopen],[data-home]');if(!b||!b.closest('#home'))return;
   if(b.dataset.hopen){const rec=await idbGet(b.dataset.hopen);if(rec){if(!(S.meta&&S.meta.id===rec.id))openDossierData(rec.data);try{localStorage.setItem('atelier-pc-cur',rec.id)}catch(_){}homeClose()}return}
-  const k=b.dataset.home;if(k==='new'){homeClose();newDossier()}else if(k==='demo'){homeClose();if(!S.demo){const bd=$('#bDemo');if(bd)bd.click()}}else if(k==='import'){$('#dosImp input').click()}else if(k==='dos'){homeClose();openDossiers()}else if(k==='theme')themeCycle();else if(k==='close')homeClose()});
+  const k=b.dataset.home;if(k==='new'){homeClose();newDossier()}else if(k==='demo'){homeClose();if(!S.demo){const bd=$('#bDemo');if(bd)bd.click()}}else if(k==='import'){$('#dosImp input').click()}else if(k==='dos'){homeClose();openDossiers()}else if(k==='theme')themeCycle();else if(k==='ics')icsExport();else if(k==='close')homeClose()});
 
 /* ================= Planches au doigt : glisser, plein écran, toucher pour modifier ================= */
 function stepOpen(n,sel){const D=[...document.querySelectorAll('aside details.step')];const d=D.find(x=>(x.querySelector('summary .n')||{}).textContent===n);if(!d)return;d.open=true;if(isMobile()&&document.body.dataset.view!=='split')setView('panel');
@@ -2327,6 +2338,50 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-revgo],[da
   if(b.dataset.revset){const L=revSheets();const sh=L[REV.i];revState()[sh.id]=b.dataset.revset;save();if(b.dataset.revset==='ok'){REV.i++;}revRender();return}
   if(b.dataset.revedit!=null){const sh=revSheets()[REV.i];const T=editTarget(null,sh.id);revClose();if(T)stepOpen(T[0],T[1]);return}
   if(b.dataset.revdo){revClose();const id={pdf:'#bPdf',zip:'#bZip',cerfa:'#bCerfa'}[b.dataset.revdo];const x=$(id);if(x)x.click()}});
+
+/* ================= Nuancier : matériaux en vignettes ================= */
+const SW_FAC=[['Enduit gratté fin blanc cassé','#ECE7DC','enduit','RAL 9001'],['Enduit gratté fin ton pierre','#DDCFB6','enduit','RAL 1015'],['Enduit gratté fin sable','#D9C49C','enduit','RAL 1001'],['Enduit lissé gris clair','#CFD1CE','enduit','RAL 7035'],['Enduit gratté ocre','#C99A55','enduit','RAL 1011'],['Bardage bois naturel','#A87A4F','bois',''],['Bardage bois grisé','#8E8B84','bois',''],['Bardage bois noir','#2E2F2F','bois','RAL 9005'],['Parement pierre','#CDBFA4','pierre',''],['Brique de parement','#A65A3C','brique',''],['Béton brut','#A9A9A5','beton','']];
+const SW_MEN=[['Aluminium gris anthracite','#3A3F44','RAL 7016'],['Aluminium noir','#232526','RAL 9005'],['PVC blanc','#F3F2EE','RAL 9016'],['Aluminium gris clair','#B9BDBD','RAL 7035'],['Bois naturel','#A0794F',''],['Aluminium vert sapin','#2F4538','RAL 6009']];
+function swTile(key,i,label,col,tex,ral,on){const T=tex?texGet(tex):null;return`<button type="button" class="sw${on?' on':''}" data-sw="${key}:${i}" title="${esc(label+(ral?' · '+ral:''))}"><span class="sw-p" style="background-color:${col};${T?`background-image:url(${T.url});background-size:${tex==='brique'||tex==='bois'?'34px':'24px'}`:''}"></span><small>${esc(label.replace(/^(Enduit gratté fin|Enduit gratté|Enduit lissé|Bardage bois|Aluminium|Parement|Brique de parement|Tuiles)\s*/,'')||label)}</small></button>`}
+function swRender(){const P=S.projet;const f=$('#swFac'),c=$('#swCouv'),m=$('#swMen');
+  if(f)f.innerHTML=SW_FAC.map((x,i)=>swTile('fac',i,x[0],x[1],x[2],x[3],P.facade===x[0])).join('');
+  if(c)c.innerHTML=Object.entries(COUV).map(([n,col],i)=>swTile('couv',i,n,col,COUV_PAT[n]&&COUV_PAT[n]!=='none'?COUV_PAT[n]:null,'',P.couv===n)).join('');
+  if(m)m.innerHTML=SW_MEN.map((x,i)=>{const T=`<span class="sw-p" style="background:linear-gradient(135deg,${x[1]} 0 46%,#cfe3ee 46% 54%,${x[1]} 54%)"></span>`;return`<button type="button" class="sw${P.menuis===x[0]?' on':''}" data-sw="men:${i}" title="${esc(x[0]+(x[2]?' · '+x[2]:''))}">${T}<small>${esc(x[0].replace(/^Aluminium\s*/,'Alu '))}</small></button>`}).join('')}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-sw]');if(!b)return;const[k,i]=b.dataset.sw.split(':');const P=S.projet;
+  if(k==='fac'){const x=SW_FAC[+i];P.facade=x[0];P.facadeCouleur=x[1]}else if(k==='couv'){const n=Object.keys(COUV)[+i];P.couv=n;P.couvCouleur=COUV[n]}else if(k==='men'){const x=SW_MEN[+i];P.menuis=x[0];P.menuisCouleur=x[1]}
+  fillInputs();renderAll();save()});
+/* ================= Étiquettes sans chevauchement ================= */
+function declutter(root){if(!root)return;for(const svg of root.querySelectorAll('svg')){if(svg.dataset.dc||svg.closest('.v3d,.home,.wz-kinds')||svg.classList.contains('ic'))continue;svg.dataset.dc='1';
+  const T=[...svg.querySelectorAll('text')].filter(t=>!t.closest('defs,marker,pattern,clipPath,mask')&&t.textContent.trim()&&t.getAttribute('y')!=null);if(T.length<2||T.length>500)continue;
+  const isDim=t=>/^[\d\s,.]+ ?m( \(total\))?$|^[A-Z0-9]$|^N$/.test(t.textContent.trim());const sz=t=>+t.getAttribute('font-size')||0;
+  const fixed=T.filter(isDim),mov=T.filter(t=>!isDim(t)).sort((a,b)=>sz(b)-sz(a));const boxes=[];
+  const R=t=>{const r=t.getBoundingClientRect();return r.width?{x:r.left,y:r.top,w:r.width,h:r.height}:null};const hit=q=>boxes.some(o=>q.x<o.x+o.w-1&&q.x+q.w>o.x+1&&q.y<o.y+o.h-1&&q.y+q.h>o.y+1);
+  for(const t of fixed){const b=R(t);if(b)boxes.push(b)}
+  for(const t of mov){let b=R(t);if(!b)continue;if(hit(b)){let lh;try{lh=t.getBBox().height}catch(e){lh=0}if(lh){const y0=+t.getAttribute('y');let ok=false;for(const k of[1,-1,2,-2,3,-3]){t.setAttribute('y',(y0+k*lh*1.02).toFixed(3));const b2=R(t);if(b2&&!hit(b2)){b=b2;ok=true;break}}if(!ok){t.setAttribute('y',y0.toFixed(3));b=R(t)||b}}}
+    boxes.push(b)}}}
+function declutterOn(){const w=document.querySelector('#stage .wrap.on');if(w)requestAnimationFrame(()=>declutter(w))}
+/* ================= Aide en contexte ================= */
+const HELP_B={'projet.L':['Dimensions','La mairie vérifie l\'emprise au sol (surface occupée au sol) et les distances aux limites à partir de ces cotes. Exemple : 12 × 9 m = 108 m² d\'emprise.'],
+ 'projet.hPlancher':['Hauteur du plancher','Hauteur du sol fini du rez-de-chaussée au-dessus du terrain. Elle fixe les hauteurs à l\'égout et au faîtage mesurées par le PLU. En zone inondable, le PPRI impose souvent un minimum.'],
+ 'projet.pente':['Pente du toit','Le PLU impose souvent une pente (par exemple 30 à 45° pour des tuiles). Elle détermine la hauteur au faîtage.'],
+ 'projet.debord':['Débord de toiture','Le débord compte dans l\'emprise au sol au-delà de simples modénatures, et dans certaines distances aux limites.'],
+ 'projet.facade':['Matériaux des façades','Le règlement du PLU encadre l\'aspect extérieur (teintes, matériaux). Indiquez une référence précise : l\'instructeur et l\'architecte des Bâtiments de France s\'en servent pour donner leur avis.'],
+ 'projet.couv':['Couverture','Matériau et teinte du toit : souvent réglementés (tuiles de teinte locale, ardoise…). C\'est un motif fréquent de refus en secteur protégé.'],
+ 'projet.menuis':['Menuiseries','Fenêtres, portes et volets : matériau et teinte. Le PLU peut interdire certaines teintes ou imposer des volets battants.'],
+ 'projet.plancherNGF':['Altitude NGF','Altitude officielle (nivellement général de la France) du plancher. Elle permet de vérifier la hauteur et, en zone inondable, la cote de plancher imposée.'],
+ 'projet.park':['Stationnement','Le PLU exige souvent 1 ou 2 places par logement, sur le terrain. Les places extérieures sont aussi taxées (taxe d\'aménagement).'],
+ 'projet.assain':['Assainissement','Sans tout-à-l\'égout, il faut une étude de filière et l\'attestation du SPANC (pièce PCMI12-2), sinon le dossier est incomplet.'],
+ 'regles.reculVoie':['Recul par rapport à la voie','Distance minimale imposée entre la construction et la rue (article 6 du règlement de zone le plus souvent). Elle garde l\'alignement et la visibilité.'],
+ 'regles.reculLim':['Recul aux limites','Distance minimale aux limites avec les voisins (souvent la moitié de la hauteur, minimum 3 m), sauf implantation en limite autorisée.'],
+ 'regles.hMax':['Hauteur maximale','Hauteur à ne pas dépasser, mesurée depuis le terrain naturel, à l\'égout ou au faîtage selon le PLU.'],
+ 'regles.ces':['Emprise au sol maximale','Pourcentage maximal du terrain que les constructions peuvent couvrir (coefficient d\'emprise au sol). Exemple : 40 % de 800 m² = 320 m².'],
+ 'regles.hClo':['Hauteur des clôtures','Le PLU fixe souvent une hauteur maximale (1,50 à 2 m) et parfois le type de clôture sur rue.']};
+function helpInit(){for(const[k,[t,s]]of Object.entries(HELP_B)){const el=document.querySelector(`[data-b="${k}"]`);const lab=el&&el.closest('label.f');if(!lab||lab.querySelector('.hq'))continue;const b=document.createElement('button');b.type='button';b.className='hq';b.setAttribute('aria-label','Aide : '+t);b.dataset.help=k;b.textContent='?';const tn=[...lab.childNodes].find(n=>n.nodeType===3&&n.textContent.trim());const sp=document.createElement('span');sp.className='lh';if(tn){tn.replaceWith(sp);sp.append(tn.textContent.trim(),b)}else{sp.append(b);lab.prepend(sp)}}}
+document.addEventListener('click',e=>{const b=e.target.closest('.hq');const old=document.querySelector('.hpop');if(old)old.remove();if(!b)return;e.preventDefault();e.stopPropagation();const[t,s]=HELP_B[b.dataset.help]||['',''];const p=document.createElement('div');p.className='hpop';p.innerHTML=`<b>${esc(t)}</b><p>${esc(s)}</p>`;document.body.appendChild(p);
+  const r=b.getBoundingClientRect();p.style.left=Math.max(8,Math.min(innerWidth-p.offsetWidth-8,r.left-20))+'px';p.style.top=(r.bottom+6+p.offsetHeight>innerHeight?r.top-p.offsetHeight-6:r.bottom+6)+'px'},true);
+/* ================= Rappels ================= */
+function soonJalons(days=21){try{const t=today();const lim=addDays(t,days);return jalons().filter(([d])=>d>=t&&d<=lim)}catch(e){return[]}}
+function remindersHTML(){const J=soonJalons();if(!J.length||S.demo)return'';return`<div class="home-rem">${ICO('bell')}<div><b>À faire bientôt — ${esc(dossierTitle(S).lieu||'projet en cours')}</b>${J.map(([d,t])=>`<span>${frDate(d)} · ${esc(t)}</span>`).join('')}<button class="lnk" type="button" data-home="ics">Ajouter à mon agenda (avec rappels)</button></div></div>`}
 
 /* insertion : avant / après sur la même planche */
 function insBefore(far){const ph=S.photos,o=S.onsite||{};if(far)return ph.insFromShot2&&o.shot2?o.shot2.img:null;
@@ -2586,7 +2641,7 @@ function renderChecks(){let w=$('#w-checks');if(!w){w=document.createElement('di
   const nb=C.filter(c=>c.lvl==='bad').length,nw=C.filter(c=>c.lvl==='warn').length;const ch=$('#chkChip');
   ch.innerHTML=`<span class="d" style="background:${nb?'#E07A6F':nw?'#E3B04B':'#7CC39A'}"></span>${nb?nb+' non-conformité'+(nb>1?'s':''):nw?nw+' point'+(nw>1?'s':'')+' à compléter':'Dossier cohérent'}`;
   ch.style.background='#26322F';ch.style.color='#fff';progRender()}
-function renderSide(){renderModeUI();$$('input.dmode').forEach(r=>r.checked=r.value===mode());renderImpl();{const ph=S.photos;const pc=$('#insPhotoCtl');if(pc)pc.hidden=!ph.ins;const img=ph.insMode==='image';$('#insImageCtl').hidden=!img;$('#insAutoCtl').hidden=img;$('#insTreesRow').hidden=!!ph.ins;
+function renderSide(){renderModeUI();if(typeof swRender==='function')swRender();$$('input.dmode').forEach(r=>r.checked=r.value===mode());renderImpl();{const ph=S.photos;const pc=$('#insPhotoCtl');if(pc)pc.hidden=!ph.ins;const img=ph.insMode==='image';$('#insImageCtl').hidden=!img;$('#insAutoCtl').hidden=img;$('#insTreesRow').hidden=!!ph.ins;
     const IC=insCamera();const ae=document.activeElement;if(ae!==$('#insDist'))$('#insDist').value=IC.dist.toFixed(1);if(ae!==$('#insAz'))$('#insAz').value=Math.round(IC.az)}{const mr=$('#monoInvRow');if(mr)mr.hidden=S.projet.toit!=='mono'}
   const T=S.terrain;$('#topAddr').textContent=(S.demo?'Exemple — ':'')+(adresseTerrain()||T.label||'');
   $('#plist').innerHTML=T.parcels.map(p=>`<span class="pchip">${esc(p.section)} ${esc(String(p.numero).replace(/^0+/,''))} · ${fmt(p.contenance||0,0)} m²</span>`).join('');
@@ -2610,7 +2665,7 @@ function renderSide(){renderModeUI();$$('input.dmode').forEach(r=>r.checked=r.va
 function renderAll(){if(!activeSheets().some(s=>s.id===S.ui.tab)&&S.ui.tab!=='checks')S.ui.tab='pcmi2';
   {const act=new Set(activeSheets().map(s=>s.id));$$('#stage .wrap').forEach(w=>{const id=w.id.slice(2);if(id!=='checks'&&!act.has(id))w.remove()})}
   renderTabs();for(const s of activeSheets())renderSheet(s.id);renderChecks();renderSide()}
-function fit(){renderScaleBar();const st=$('#stage');const avail=st.clientWidth-48;const w=$('.wrap.on');if(!w||w.id==='w-checks')return;const sh=w.firstElementChild;if(!sh)return;const base=sh.offsetWidth;const z=S.ui.zoom||1;const s=Math.min(1.2,avail/base)*z;const zv=$('#zVal');if(zv)zv.textContent=Math.round(z*100)+' %';
+function fit(){renderScaleBar();if(typeof declutterOn==='function')declutterOn();const st=$('#stage');const avail=st.clientWidth-48;const w=$('.wrap.on');if(!w||w.id==='w-checks')return;const sh=w.firstElementChild;if(!sh)return;const base=sh.offsetWidth;const z=S.ui.zoom||1;const s=Math.min(1.2,avail/base)*z;const zv=$('#zVal');if(zv)zv.textContent=Math.round(z*100)+' %';
   w.style.setProperty('--s',s);w.style.width=base*s+'px';w.style.height=sh.offsetHeight*s+'px'}
 window.addEventListener('resize',fit);
 let rT;function schedule(){clearTimeout(rT);rT=setTimeout(()=>{renderAll();save()},90)}
@@ -3401,7 +3456,7 @@ $('#diagRetry').onclick=()=>{$('#diag').hidden=true;window.__errs=[];netCheck(tr
 /* ================= Démarrage ================= */
 if(!S.meta.date)S.meta.date=today();
 /* premier affichage : lancé en fin de script, quand tous les modules sont définis */
-function startApp(){setTimeout(()=>{histReset();savedUI(S.demo?'demo':'saved')},0);if(!S.demo){const d0=document.querySelector('aside details.step');if(d0)d0.open=false}try{fillInputs();renderExList();renderAll()}catch(e){window.__errs.push('Démarrage : '+e.message);window.__showErr()}
+function startApp(){setTimeout(()=>{try{helpInit();const J=soonJalons(7);if(J.length&&!S.demo)toast(`Bientôt : ${frDate(J[0][0])} — ${J[0][1]}`,6000)}catch(e){}},400);setTimeout(()=>{histReset();savedUI(S.demo?'demo':'saved')},0);if(!S.demo){const d0=document.querySelector('aside details.step');if(d0)d0.open=false}try{fillInputs();renderExList();renderAll()}catch(e){window.__errs.push('Démarrage : '+e.message);window.__showErr()}
   setTimeout(()=>netCheck(false),800);
   if(isMobile()){let v=isTablet()?'split':'panel';try{v=sessionStorage.getItem('apc-view')||v}catch(e){}setView(v)}
   if(S.demo)status('#stTerrain','','Exemple chargé (terrain fictif). Saisissez l\'adresse de votre terrain pour commencer.');
@@ -4388,7 +4443,7 @@ function budgetHTML(){if(S.demo&&!S.terrain.parcels.length)return'';const C=cout
   ${J.length?`<ul class="jal">${J.map(([d,t])=>`<li class="${d<today0?'past':''}"><b>${frDate(d)}</b> ${esc(t)}</li>`).join('')}</ul><div class="btns"><button class="btn sm" type="button" data-ics>📅 Ajouter ces dates à mon agenda</button></div>`:'<p class="hint">Saisissez la date de dépôt : les échéances suivantes se calculent toutes seules.</p>'}
   </div>`}
 function icsExport(){const J=jalons();if(!J.length)return;const st=new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z';const lieu=adresseTerrain()||S.terrain.commune||'';
-  const ev=J.map(([d,t],i)=>['BEGIN:VEVENT',`UID:apc-${S.meta&&S.meta.id||'x'}-${i}-${d}@atelier-pc`,`DTSTAMP:${st}`,`DTSTART;VALUE=DATE:${d.replace(/-/g,'')}`,`SUMMARY:${('Urbanisme : '+t).replace(/[,;]/g,m=>'\\'+m).slice(0,250)}`,`LOCATION:${lieu.replace(/[,;]/g,m=>'\\'+m)}`,'BEGIN:VALARM','TRIGGER:-P3D','ACTION:DISPLAY','DESCRIPTION:Rappel','END:VALARM','END:VEVENT'].join('\r\n'));
+  const ev=J.map(([d,t],i)=>['BEGIN:VEVENT',`UID:apc-${S.meta&&S.meta.id||'x'}-${i}-${d}@atelier-pc`,`DTSTAMP:${st}`,`DTSTART;VALUE=DATE:${d.replace(/-/g,'')}`,`SUMMARY:${('Urbanisme : '+t).replace(/[,;]/g,m=>'\\'+m).slice(0,250)}`,`LOCATION:${lieu.replace(/[,;]/g,m=>'\\'+m)}`,'BEGIN:VALARM','TRIGGER:-P7D','ACTION:DISPLAY','DESCRIPTION:Rappel dans une semaine','END:VALARM','BEGIN:VALARM','TRIGGER:-P1D','ACTION:DISPLAY','DESCRIPTION:Rappel : demain','END:VALARM','END:VEVENT'].join('\r\n'));
   saveBlob(new Blob([['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Atelier PC//FR',...ev,'END:VCALENDAR'].join('\r\n')],{type:'text/calendar'}),'Echeances_urbanisme.ics')}
 document.addEventListener('change',e=>{const el=e.target.closest('[data-suivi]');if(!el)return;suivi()[el.dataset.suivi]=el.type==='number'?+el.value:el.value;save();if(el.tagName!=='TEXTAREA'&&el.type!=='text')renderChecks()});
 document.addEventListener('input',e=>{const el=e.target.closest('[data-div]');if(!el)return;divS()[el.dataset.div]=el.type==='range'||el.type==='number'?+el.value:el.value;save();const bv=el.parentElement&&el.parentElement.querySelector('b');if(bv&&el.type==='range')bv.textContent=fmt(+el.value,el.dataset.div==='rot'?0:1);clearTimeout(window.__divT);window.__divT=setTimeout(()=>{renderAll();const inWz=$('#wiz')&&!$('#wiz').hidden&&wzKeys()[WZ.step]==='division';if(inWz){if(el.type==='range'){const pv=$('#wiz .wz-masse');if(pv)pv.innerHTML=wzMasse()}else wzRender()}},el.type==='range'?120:0)});
@@ -4471,7 +4526,7 @@ function pdfBusy(msg){let b=$('#pdfBusy');if(!msg){if(b)b.remove();return}if(!b)
 /* une planche -> image haute définition */
 async function sheetCanvas(id){renderSheet(id);const src=$('#w-'+id+' .sheet');if(!src)return null;const host=document.createElement('div');host.className='pdf-host';const cl=src.cloneNode(true);cl.style.transform='none';cl.style.boxShadow='none';
   cl.querySelectorAll('.nadd').forEach(n=>{if(!n.textContent.trim())n.remove();else{n.removeAttribute('contenteditable');n.style.border='0';n.style.background='none'}});cl.querySelectorAll('.todo').forEach(t=>t.style.background='none');
-  host.appendChild(cl);document.body.appendChild(host);
+  host.appendChild(cl);document.body.appendChild(host);try{cl.querySelectorAll('svg[data-dc]').forEach(v=>delete v.dataset.dc);declutter(cl)}catch(e){}
   await Promise.all([...cl.querySelectorAll('img')].map(im=>im.complete?0:new Promise(r=>{im.onload=im.onerror=r;setTimeout(r,6000)})));
   try{return await html2canvas(cl,{scale:2.4,useCORS:true,backgroundColor:'#ffffff',logging:false,imageTimeout:8000})}finally{host.remove()}}
 /* ajoute une planche au document (découpée si plus haute qu'une page) */
