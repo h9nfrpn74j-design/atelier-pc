@@ -1590,6 +1590,9 @@ function checks(){if(mode()!=='pc'&&mode()!=='dp-constr')return dpChecks();
   if(DM.length)add('info','Démolition prévue',`${esc(DM.map(e=>e.usage).join(', '))}. Renseignez la partie « démolition » du formulaire si votre commune soumet les démolitions à autorisation.`);
   if(h.plBad)add('bad','Cote NGF du plancher incohérente',`Vous avez saisi ${fmt(+S.projet.plancherNGF)} alors que le terrain est entre ${fmt(h.TNmin)} et ${fmt(h.TNmax)} NGF sous la construction. La valeur est ignorée : videz le champ ou saisissez une altitude NGF (et non une hauteur).`);
   if(S.projet.regrade&&h.ok){const plat=h.pl-S.projet.hPlancher;const dz=h.tn.map(z=>z-plat);add('info','Terrain repris au droit de la construction',`Plateforme à ${fmt(plat)} NGF : déblai jusqu'à ${fmt(Math.max(0,...dz))} m et remblai jusqu'à ${fmt(Math.max(0,...dz.map(x=>-x)))} m aux angles. Les hauteurs du PLU restent mesurées depuis le terrain naturel avant travaux.`)}
+  {const B2=!noBuild();const ep=amList().filter(a=>a.k==='ep');if(B2&&!ep.length)add('warn','Eaux pluviales : aucun ouvrage dessiné',`Beaucoup de PLU imposent de gérer les eaux de toiture sur la parcelle (infiltration, cuve). Ajoutez-le dans « Abords et aménagements » : volume conseillé ${fmt(epVolConseil(),1)} m³.`);
+   else if(B2){const v=ep.filter(a=>a.type!=='reseau').reduce((s2,a)=>s2+(+a.vol||0),0);const bad=ep.filter(a=>a.type==='puits'||a.type==='tranchee').some(a=>{const g=epGeom(a);const c=toBld(g.x,g.y);const P2=S.projet;return Math.abs(c[0])<P2.L/2+5&&Math.abs(c[1])<P2.W/2+5});add(bad?'warn':'ok',`Eaux pluviales : ${ep.map(a=>(EP_T[a.type]||'').toLowerCase()).join(', ')}${v?` (${fmt(v,1)} m³)`:''}`,bad?'Un ouvrage d\'infiltration doit se trouver à plus de 5 m des fondations : déplacez-le sur le plan de masse.':`${epDescentes().length} descentes reliées à l'ouvrage. Volume conseillé : ${fmt(epVolConseil(),1)} m³.`)}}
+  {const t=terrassements();if(t)add('info',`Terrassements : ${fmt(t.de,0)} m³ de déblai, ${fmt(t.re,0)} m³ de remblai`,`Estimation sous l'emprise, pour une plateforme à ${fmt(t.plat)} NGF. Les terres en excès doivent être évacuées ou régalées sur la parcelle.`)}
   add(h.ok?'ok':'warn',h.ok?'Altimétrie du terrain chargée':'Altimétrie indisponible',h.ok?`TN entre ${fmt(h.TNmin)} et ${fmt(h.TNmax)} NGF sous l'emprise.`:'Les cotes NGF ne pourront pas être indiquées.');
   if(T.zone)add('info',`Zone ${T.zone.libelle} — ${T.zone.doc}`,`${esc(T.zone.libelong||'')}${reglementUrl(T.zone)?` <a href="${esc(reglementUrl(T.zone))}" target="_blank" rel="noopener">Ouvrir le règlement écrit</a>`:''}`);
   const ph=S.photos;add(ph.p7&&ph.p7pos?'ok':'warn','Photographie proche (PCMI7)',ph.p7?(ph.p7pos?'Photo et point de vue renseignés.':'Placez le point de vue sur le plan de masse.'):'Photo à ajouter.');
@@ -1641,12 +1644,12 @@ let masseMeta={scale:200};
 function svgMasse(){
   const T=S.terrain,P=S.projet;const {rings,E}=boundary();if(!rings.length)return'<div class="photo-empty">Chargez une parcelle.</div>';
   const B=bat(),h=heights(),D=distances();const MODE=mode();const BLD=MODE==='pc'||MODE==='dp-constr';
-  const exR=S.existants.map(exRing);amFix();const bb=bbox(rings.flat().concat(noBuild()?[]:bldPoly()).concat(arbList().filter(t=>t.p).map(t=>toLocal(...t.p))).concat(amList().flatMap(a=>a.k==='piscine'?poolPoly(a,(+a.marg||0)+(+a.plage||0)):a.k==='pergola'?pergPoly(a):(terrPoly(a)||[]))),7);const wm=bb[2]-bb[0],hm=bb[3]-bb[1];
+  const exR=S.existants.map(exRing);amFix();const bb=bbox(rings.flat().concat(noBuild()?[]:bldPoly()).concat(arbList().filter(t=>t.p).map(t=>toLocal(...t.p))).concat(amList().flatMap(a=>a.k==='piscine'?poolPoly(a,(+a.marg||0)+(+a.plage||0)):a.k==='pergola'?pergPoly(a):a.k==='ep'?(a.type==='reseau'?[]:rectAt(epGeom(a))):(terrPoly(a)||[]))),7);const wm=bb[2]-bb[0],hm=bb[3]-bb[1];
   const Wmm=203,Hmm=186;const sc=chooseScale('pcmi2',s=>wm*1000/s<=Wmm&&hm*1000/s<=Hmm);masseMeta.scale=sc;const k=sc/1000;
   const vw=Wmm*k,vh=Hmm*k,cx=(bb[0]+bb[2])/2,cy=(bb[1]+bb[3])/2;const vx=cx-vw/2,vy=cy-vh/2;
   const id='m';let o=`<svg id="svg-masse" xmlns="http://www.w3.org/2000/svg" width="${Wmm}mm" height="${Hmm}mm" viewBox="${vx.toFixed(3)} ${(-cy-vh/2).toFixed(3)} ${vw.toFixed(3)} ${vh.toFixed(3)}" font-family="Archivo Narrow, Arial Narrow, Arial, sans-serif" style="touch-action:pan-x pan-y pinch-zoom">`;
   o+=`<defs><pattern id="${id}h" patternUnits="userSpaceOnUse" width="${(1.4*k).toFixed(3)}" height="${(1.4*k).toFixed(3)}" patternTransform="rotate(45)"><rect width="100%" height="100%" fill="#fff"/><line x1="0" y1="0" x2="0" y2="${(1.4*k).toFixed(3)}" stroke="#111" stroke-width="${(0.22*k).toFixed(3)}"/></pattern>
-  <marker id="${id}a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#111"/></marker></defs>`;
+  <marker id="${id}a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#111"/></marker><marker id="${id}e" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0L10,5L0,10z" fill="#1f5f8b"/></marker></defs>`;
   o+=`<rect x="${vx}" y="${-cy-vh/2}" width="${vw}" height="${vh}" fill="#fff"/>`;
   // voie : bande
   for(const e of E.filter(e=>e.voie)){const w=5;o+=polyS([e.a,e.b,[e.b[0]+e.n[0]*w,e.b[1]+e.n[1]*w],[e.a[0]+e.n[0]*w,e.a[1]+e.n[1]*w]],`fill="#ECEBE6" stroke="none"`)}
@@ -1702,7 +1705,7 @@ function svgMasse(){
   const rl=`stroke="#111" stroke-width="${0.3*k}" pointer-events="none"`;
   if(P.toit==='2pans')o+=lineS(W(-a-d,0),W(a+d,0),rl);
   if(P.toit==='4pans'){if(a>=b){const r=a-b;o+=lineS(W(-r,0),W(r,0),rl)+lineS(W(r,0),W(a+d,b+d),rl)+lineS(W(r,0),W(a+d,-b-d),rl)+lineS(W(-r,0),W(-a-d,b+d),rl)+lineS(W(-r,0),W(-a-d,-b-d),rl)}else{const r=b-a;o+=lineS(W(0,-r),W(0,r),rl)+lineS(W(0,r),W(a+d,b+d),rl)+lineS(W(0,r),W(-a-d,b+d),rl)+lineS(W(0,-r),W(a+d,-b-d),rl)+lineS(W(0,-r),W(-a-d,-b-d),rl)}}
-  if(P.toit==='mono')o+=lineS(W(0,(P.monoInv?1:-1)*b*0.6),W(0,(P.monoInv?-1:1)*b*0.6),`stroke="#111" stroke-width="${0.25*k}" marker-end="url(#${id}a)" pointer-events="none"`);
+  if(!noBuild()||MODE==='dp-toiture')o+=masseRoofArrows(k,id)+bldCornerAlts(k);
   // étiquette construction
   { // étiquette dans l'emprise, taille ajustée à la construction
     const lines=[[BLD?'Construction projetée':'Construction existante',700],...(!BLD?[[MODE==='dp-facade'?'Façades modifiées':'Toiture modifiée',600]]:[]),[`${fmt(surfaces().emprise,1)} m² · ${P.niveaux===1?'plain-pied':'R+'+(P.niveaux-1)}${P.combles&&P.toit!=='plat'?' + combles':''}`,400]];
@@ -1940,6 +1943,49 @@ async function offlinePrep(){if(S.demo&&!S.terrain.parcels.length){toast('Choisi
 window.addEventListener('offline',()=>toast('Hors connexion : votre dossier, les photos et les cartes déjà enregistrées restent utilisables.',6000));
 window.addEventListener('online',()=>toast('Connexion rétablie.',2500));
 
+/* ================= Plan de toiture, eaux pluviales, terrassements ================= */
+/* descentes d'eaux pluviales : angles bas des pans (positions repère local) */
+function epDescentes(){if(noBuild()&&mode()!=='dp-toiture')return[];const M=model();if(!M.roofs||!M.roofs.length)return[];const zs=M.roofs.flatMap(r=>r.pts.map(q=>q[2]));const zmin=Math.min(...zs);const out=[];
+  const flat=S.projet.toit==='plat';if(flat){const P=S.projet;const a=P.L/2-0.25,b=P.W/2-0.25;return[[a,b],[-a,-b]].concat(P.L*P.W>120?[[-a,b],[a,-b]]:[])}
+  for(const r of M.roofs)for(const q of r.pts){if(q[2]>zmin+0.15)continue;if(out.some(o=>Math.hypot(o[0]-q[0],o[1]-q[1])<1.2))continue;out.push([q[0],q[1]])}return out}
+function masseRoofArrows(k,id){if(noBuild()&&mode()!=='dp-toiture')return'';const B=bat(),M=model();const W=(x,y)=>B.w(x,y);let o='';const P=S.projet;
+  for(const r of M.roofs||[]){const n=r.nrm;const hz=Math.hypot(n[0],n[1]);const pts=r.pts;const c=pts.reduce((s,q)=>[s[0]+q[0],s[1]+q[1]],[0,0]).map(v=>v/pts.length);
+    let dir,pct,lab;if(hz<0.02){if(P.toit!=='plat'||r!==M.roofs[0])continue;dir=[1,0];pct=2;lab='pente 2 %'}else{dir=[n[0]/hz,n[1]/hz];pct=Math.round(hz/n[2]*100);lab=`${Math.round(Math.atan(hz/n[2])/D2R)}° (${pct} %)`}
+    const al=[-dir[1],dir[0]];const ext=pts.map(q=>(q[0]-c[0])*al[0]+(q[1]-c[1])*al[1]);const shift=hz<0.02?0:Math.max(...ext)*0.45;const base=[c[0]+al[0]*shift,c[1]+al[1]*shift];
+    const dep=pts.map(q=>(q[0]-base[0])*dir[0]+(q[1]-base[1])*dir[1]);const len=Math.min(2.2,Math.max(0.8,(Math.max(...dep)-Math.min(...dep))*0.45));
+    const p0=[base[0]-dir[0]*len/2,base[1]-dir[1]*len/2],p1=[base[0]+dir[0]*len/2,base[1]+dir[1]*len/2];
+    o+=lineS(W(...p0),W(...p1),`stroke="#1f5f8b" stroke-width="${0.22*k}" marker-end="url(#${id}e)" pointer-events="none"`);
+    const lp=W(base[0]+al[0]*1.1*k*1.6,base[1]+al[1]*1.1*k*1.6);o+=textS(lp,lab,1.6*k,`text-anchor="middle" dominant-baseline="middle" fill="#1f5f8b" font-weight="700" paint-order="stroke" stroke="#fff" stroke-width="${0.4*k}" pointer-events="none"`)}
+  for(const q of epDescentes()){const w=W(q[0],q[1]);o+=`<circle cx="${w[0].toFixed(3)}" cy="${(-w[1]).toFixed(3)}" r="${(1.1*k).toFixed(3)}" fill="#fff" stroke="#1f5f8b" stroke-width="${(0.35*k).toFixed(3)}" pointer-events="none"/>`}
+  // réseau EP vers l'ouvrage
+  const ep=amList().filter(a=>a.k==='ep');if(ep.length){const D=epDescentes().map(q=>W(q[0],q[1]));for(const d of D){const t=ep.reduce((b,a)=>{const g=epGeom(a);const dd=Math.hypot(g.x-d[0],g.y-d[1]);return!b||dd<b.dd?{g,dd}:b},null);if(t)o+=lineS(d,[t.g.x,t.g.y],`stroke="#1f5f8b" stroke-width="${0.15*k}" stroke-dasharray="${0.9*k} ${0.45*k}" pointer-events="none"`)}}
+  return o}
+/* ouvrages de gestion des eaux pluviales */
+var EP_T={cuve:'Cuve de récupération',puits:'Puits d\'infiltration',tranchee:'Tranchée ou noue d\'infiltration',reseau:'Raccordement au réseau public'};
+function roofArea(){const M=model();return(M.roofs||[]).reduce((s,r)=>s+Math.abs(polyArea(r.pts.map(q=>[q[0],q[1]]))),0)}
+function epVolConseil(){return Math.max(1,Math.round(roofArea()*0.03*2)/2)}
+function newEP(){const it={id:'a'+Date.now().toString(36)+'e',k:'ep',type:'puits',vol:epVolConseil(),x:null,y:null,rot:0};return it}
+function epGeom(a){const L=a.type==='tranchee'?Math.max(2,(+a.vol||3)/0.8):a.type==='cuve'?2.4:1.4,W2=a.type==='tranchee'?0.8:a.type==='cuve'?1.2:1.4;if(a.x==null){const t={L:L+1,W:W2+1,marg:0,plage:0};const c=defaultPoolPos(t);a.x=c[0];a.y=c[1];a.rot=t.rot||0}return{x:a.x,y:a.y,rot:a.rot||0,L,W:W2}}
+function epMasse(a,i,k){if(a.type==='reseau')return'';const g=epGeom(a);const col='#1f5f8b';let s='';
+  if(a.type==='puits')s=`<circle cx="${g.x.toFixed(3)}" cy="${(-g.y).toFixed(3)}" r="${(g.L/2).toFixed(3)}" fill="#e3eff7" stroke="${col}" stroke-width="${0.25*k}"/>`;else s=polyS(rectAt(g),`fill="#e3eff7" stroke="${col}" stroke-width="${0.25*k}"`);
+  s+=textS([g.x,g.y-g.W/2-1.6*k],`${a.type==='cuve'?'Cuve':a.type==='puits'?'Puits':'Tranchée'} EP ${fmt(+a.vol||0,1)} m³`,1.5*k,`text-anchor="middle" fill="${col}" font-weight="700" paint-order="stroke" stroke="#fff" stroke-width="${0.4*k}"`);
+  return`<g data-drag="am:${i}" style="cursor:move">${s}</g>`}
+function epText(){const ep=amList().filter(a=>a.k==='ep');const n=epDescentes().length;if(noBuild()&&!ep.length)return'';
+  if(!ep.length)return n?`Les eaux pluviales de toiture sont collectées par ${n} descente${n>1?'s':''}.`:'';
+  return`Les eaux pluviales de toiture (environ ${fmt(roofArea(),0)} m²) sont collectées par ${n} descente${n>1?'s':''} et dirigées vers ${ep.map(a=>`${a.type==='reseau'?'le réseau public d\'eaux pluviales':{cuve:'une cuve de récupération',puits:'un puits d\'infiltration',tranchee:'une tranchée d\'infiltration'}[a.type]+` de ${fmt(+a.vol||0,1)} m³`}`).join(' puis ')}${ep.some(a=>a.type==='cuve')&&ep.length===1?', avec trop-plein vers un ouvrage d\'infiltration':''}${ep.some(a=>a.type!=='reseau'&&a.type!=='cuve')?', l\'infiltration se faisant à plus de 5 m des fondations':''}.`}
+function epEditorHTML(a,num,sel){return`<div class="am-it"><div class="am-h"><b>💧 Eaux pluviales</b><button class="btn sm" type="button" data-amdel="${a.id}">Retirer</button></div>
+  <div class="grid2"><label class="f">Ouvrage${sel(a,'type',{puits:'Puits d\'infiltration',tranchee:'Tranchée / noue',cuve:'Cuve de récupération',reseau:'Réseau public'})}</label>${a.type==='reseau'?'':num(a,'vol','Volume (m³)',0.5,0.5)}</div>
+  <p class="hint">Volume conseillé : ${fmt(epVolConseil(),1)} m³ (toiture de ${fmt(roofArea(),0)} m² × 30 mm de pluie). Le PLU ou le zonage pluvial de la commune peut imposer une autre règle. ${a.type==='reseau'?'':'Faites-le glisser sur le plan de masse ; une infiltration se place à plus de 5 m des fondations et de la limite.'}</p></div>`}
+/* terrassements : volumes de déblai et de remblai sous l'emprise (plateforme) */
+function terrassements(){const P=S.projet,h=heights();if(!P.regrade||!h.ok||noBuild())return null;const plat=h.pl-P.hPlancher;const B=bat();const a=P.L/2+0.5,b=P.W/2+0.5;let de=0,re=0;const n=16;const cell=(2*a/n)*(2*b/n);
+  for(let i=0;i<n;i++)for(let j=0;j<n;j++){const u=-a+(i+0.5)*2*a/n,v=-b+(j+0.5)*2*b/n;const w=B.w(u,v);const z=alt(w[0],w[1]);if(z==null)continue;const dz=z-plat;if(dz>0)de+=dz*cell;else re+=-dz*cell}
+  return{plat,de,re}}
+/* altitudes TN / TF aux angles de la construction */
+function bldCornerAlts(k){if(noBuild())return'';const h=heights();const P=S.projet;if(!h.ok||!P.regrade)return'';const B=bat();const plat=h.pl-P.hPlancher;let o='';
+  B.corners.forEach((c,i)=>{const z=h.tn[i];if(z==null||Math.abs(plat-z)<0.05)return;const dir=[c[0]-P.x,c[1]-P.y];const l=Math.hypot(...dir);const pp=[c[0]+dir[0]/l*2.4*k,c[1]+dir[1]/l*2.4*k-1.9*k];
+    o+=textS(pp,'TF '+fmt(plat),1.7*k,`text-anchor="middle" dominant-baseline="middle" fill="#7a4b12" font-weight="700" paint-order="stroke" stroke="#fff" stroke-width="${0.45*k}"`)});
+  return`<g pointer-events="none">${o}</g>`}
+
 /* insertion : avant / après sur la même planche */
 function insBefore(far){const ph=S.photos,o=S.onsite||{};if(far)return ph.insFromShot2&&o.shot2?o.shot2.img:null;
   if(ph.insMode==='image')return ph.insFromShot&&o.shot&&o.shot.img?o.shot.img:(ph.ins||null);return ph.ins||null}
@@ -2065,7 +2111,7 @@ function sheetHTML(sh){
   case'pcmi2':{const svg=svgMasse();const k=1;void k;
     const leg=(noBuild()?'':lg(`<rect x="2" y="2" width="32" height="12" fill="url(#lgh)" stroke="#111" stroke-width="1.5"/><defs><pattern id="lgh" patternUnits="userSpaceOnUse" width="4" height="4" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="4" stroke="#111"/></pattern></defs>`,mode()==='pc'?'Construction projetée':'Construction concernée (existante)'))+
       (mode()==='dp-cloture'?lg(`<line x1="2" y1="8" x2="34" y2="8" stroke="#3a3f44" stroke-width="4"/>`,'Clôture / mur projeté')+lg(`<rect x="2" y="4" width="6" height="8" fill="#bbb" stroke="#111"/><line x1="8" y1="8" x2="28" y2="8" stroke="#3a3f44" stroke-width="2"/><rect x="28" y="4" width="6" height="8" fill="#bbb" stroke="#111"/>`,'Portail / portillon projeté'):'')+
-      (amList().some(a=>a.k==='piscine')?lg(`<rect x="2" y="2" width="32" height="12" fill="#9DD3E8" stroke="#1f6f8b" stroke-width="1.5"/>`,'Piscine (bassin)'):'')+(amList().some(a=>a.k==='pergola')?lg(`<rect x="2" y="2" width="32" height="12" fill="#fff" stroke="#3A3F44" stroke-width="1.2" stroke-dasharray="4 2"/><rect x="3" y="3" width="3" height="3" fill="#3A3F44"/><rect x="30" y="3" width="3" height="3" fill="#3A3F44"/>`,'Pergola (projection, poteaux)'):'')+(amList().some(a=>a.k==='terrasse'&&terrPoly(a))?lg(`<rect x="2" y="2" width="32" height="12" fill="#B98A5A" fill-opacity=".55" stroke="#5a4a3a" stroke-width="1.2"/>`,'Terrasse'):'')+
+      (amList().some(a=>a.k==='piscine')?lg(`<rect x="2" y="2" width="32" height="12" fill="#9DD3E8" stroke="#1f6f8b" stroke-width="1.5"/>`,'Piscine (bassin)'):'')+((!noBuild()||mode()==='dp-toiture')?lg(`<line x1="4" y1="8" x2="28" y2="8" stroke="#1f5f8b" stroke-width="1.5"/><path d="M26 4L33 8L26 12z" fill="#1f5f8b"/>`,'Sens d\'écoulement et pente du pan')+lg(`<circle cx="18" cy="8" r="4" fill="#fff" stroke="#1f5f8b" stroke-width="1.5"/>`,'Descente d\'eaux pluviales')+(bldCornerAlts?lg(`<text x="2" y="11" font-size="9" fill="#555">TN</text><text x="16" y="11" font-size="9" fill="#7a4b12" font-weight="700">TF</text>`,'Terrain naturel / terrain fini (NGF)'):''):'')+(amList().some(a=>a.k==='ep'&&a.type!=='reseau')?lg(`<circle cx="18" cy="8" r="6" fill="#e3eff7" stroke="#1f5f8b" stroke-width="1.5"/><line x1="0" y1="8" x2="12" y2="8" stroke="#1f5f8b" stroke-dasharray="3 2"/>`,'Ouvrage et réseau d\'eaux pluviales'):'')+(amList().some(a=>a.k==='pergola')?lg(`<rect x="2" y="2" width="32" height="12" fill="#fff" stroke="#3A3F44" stroke-width="1.2" stroke-dasharray="4 2"/><rect x="3" y="3" width="3" height="3" fill="#3A3F44"/><rect x="30" y="3" width="3" height="3" fill="#3A3F44"/>`,'Pergola (projection, poteaux)'):'')+(amList().some(a=>a.k==='terrasse'&&terrPoly(a))?lg(`<rect x="2" y="2" width="32" height="12" fill="#B98A5A" fill-opacity=".55" stroke="#5a4a3a" stroke-width="1.2"/>`,'Terrasse'):'')+
       (exKept().length?lg(`<rect x="2" y="2" width="32" height="12" fill="#C9C9C6" stroke="#333" stroke-width="1.2"/>`,'Construction existante conservée'):'')+
       (exDem().length?lg(`<rect x="2" y="2" width="32" height="12" fill="none" stroke="#AE3328" stroke-width="1.2" stroke-dasharray="3 2"/><line x1="2" y1="2" x2="34" y2="14" stroke="#AE3328"/><line x1="2" y1="14" x2="34" y2="2" stroke="#AE3328"/>`,'Construction à démolir'):'')+
       lg(`<line x1="2" y1="8" x2="34" y2="8" stroke="#111" stroke-width="2" stroke-dasharray="8 2 1.5 2"/>`,'Limite de propriété')+
@@ -2078,7 +2124,7 @@ function sheetHTML(sh){
 
       `<p style="margin:2mm 0 0">Cotes en mètres. Altitudes rattachées au NGF (RGE ALTI® IGN).</p>`;
     return`${demoMark()}<div class="draw" data-sheet="masse">${svg}</div>${cart(sh,'1/'+masseMeta.scale,leg)}`}
-  case'pcmi3':{const svg=svgCoupe();return`${demoMark()}<div class="draw">${svg}</div>${cart(sh,'1/'+masseMeta.coupe,`<p style="margin:0">Coupe AA transversale, repérée sur le plan de masse. ${S.projet.regrade?'Le terrain naturel (pointillé) est repris au droit de la construction pour former une plateforme ; le terrain fini est en trait plein.':'Le terrain naturel est conservé ; seul le décaissement de l\'emprise est réalisé.'}</p><p style="margin:0">Cotes de niveau rapportées au plancher du RDC (±0,00) et au NGF.</p>`)}`}
+  case'pcmi3':{const svg=svgCoupe();return`${demoMark()}<div class="draw">${svg}</div>${cart(sh,'1/'+masseMeta.coupe,`<p style="margin:0">Coupe AA transversale, repérée sur le plan de masse. ${S.projet.regrade?'Le terrain naturel (pointillé) est repris au droit de la construction pour former une plateforme ; le terrain fini est en trait plein.'+((t=>t?` Déblai ≈ ${fmt(t.de,0)} m³, remblai ≈ ${fmt(t.re,0)} m³.`:'')(terrassements())):'Le terrain naturel est conservé ; seul le décaissement de l\'emprise est réalisé.'}</p><p style="margin:0">Cotes de niveau rapportées au plancher du RDC (±0,00) et au NGF.</p>`)}`}
   case'pcmi5a':case'pcmi5b':case'pcmi5c':case'pcmi5d':{const sd=sidesDef();const solo=facSolo();
     const pair=solo?[{pcmi5a:sd[2],pcmi5b:sd[0],pcmi5c:sd[1],pcmi5d:sd[3]}[sh.id]]:(sh.id==='pcmi5a'?[sd[2],sd[0]]:[sd[1],sd[3]]);const W=203,H=solo?182:88;
     const autoSc=Math.max(...sd.map(s=>facadeSVG(s,W,H).sc));const ov=S.ui.scales&&S.ui.scales.pcmi5;const sc=ov&&ov!=='auto'?+ov:autoSc;
@@ -2154,7 +2200,7 @@ ${demTxt}<p>Le projet consiste en ${natTxt}, de ${fmt(P.L)} m × ${fmt(P.W)} m, 
 <h3>e) Traitement des espaces libres, notamment les plantations</h3>
 <p>${P.plantations?esc(P.plantations):vegeTxt()?'':'<span class="todo">[Décrire les espaces verts et les plantations prévues.]</span>'}${vegeTxt()?' '+esc(vegeTxt()):''}${amText()?' '+esc(amText()):''}</p>
 <h3>f) Organisation et aménagement des accès au terrain, aux constructions et aux aires de stationnement</h3>
-<p>L'accès au terrain se fait depuis ${esc(T.street||'la voie publique')}. ${abordsOn()?esc(abordsText()):P.park>0?`${P.park} place${P.park>1?'s':''} de stationnement ${P.park>1?'sont aménagées':'est aménagée'} sur la parcelle, à proximité de l'accès.`:''} La construction est raccordée aux réseaux publics d'eau potable, d'électricité et de télécommunication existant sous la voie. ${P.assain==='collectif'?'Les eaux usées sont raccordées au réseau public d\'assainissement collectif.':'Les eaux usées sont traitées par un dispositif d\'assainissement non collectif, conformément à l\'avis du SPANC.'} ${P.ep?esc(P.ep):'Les eaux pluviales sont gérées sur la parcelle <span class="todo">[infiltration / cuve de récupération]</span>.'}</p>`;
+<p>L'accès au terrain se fait depuis ${esc(T.street||'la voie publique')}. ${abordsOn()?esc(abordsText()):P.park>0?`${P.park} place${P.park>1?'s':''} de stationnement ${P.park>1?'sont aménagées':'est aménagée'} sur la parcelle, à proximité de l'accès.`:''} La construction est raccordée aux réseaux publics d'eau potable, d'électricité et de télécommunication existant sous la voie. ${P.assain==='collectif'?'Les eaux usées sont raccordées au réseau public d\'assainissement collectif.':'Les eaux usées sont traitées par un dispositif d\'assainissement non collectif, conformément à l\'avis du SPANC.'} ${amList().some(a=>a.k==='ep')?esc(epText()):P.ep?esc(P.ep):'Les eaux pluviales sont gérées sur la parcelle <span class="todo">[infiltration / cuve de récupération]</span>.'}${(()=>{const t=terrassements();return t?` Les terrassements représentent environ ${fmt(t.de,0)} m³ de déblai et ${fmt(t.re,0)} m³ de remblai, pour une plateforme à ${fmt(t.plat)} NGF.`:''})()}</p>`;
 }
 
 /* ================= Récapitulatif cerfa ================= */
@@ -3664,7 +3710,7 @@ function amDists(a){return poolDists(a)}
 function poolDists(a){const P=amPoly(a);const out=[];for(const e of boundary().E){let b=null;for(const q of P){const r=pSeg(q,e.a,e.b);if(!b||r.d<b.d)b={d:r.d,a:q,b:r.q}}out.push({e,...b})}return out.sort((x,y)=>x.d-y.d)}
 /* plan de masse */
 function amMasse(k){let o='';const lbl=(c,lines,fs)=>lines.map((t,i)=>textS([c[0],c[1]-(i-(lines.length-1)/2)*fs*1.25],t,i?fs*0.85:fs,`text-anchor="middle" dominant-baseline="middle" ${i?'':'font-weight="700"'} fill="#123" paint-order="stroke" stroke="#fff" stroke-width="${0.35*k}" pointer-events="none"`)).join('');
-  amList().forEach((a,i)=>{if(a.k==='pergola'){o+=pergMasse(a,i,k);const g=pergGeom(a);o+=lbl([g.x,g.y],[`Pergola ${fmt(g.L,2)} × ${fmt(g.W,2)} m`,`H ${fmt(+a.H||2.5,2)} m · ${PG_TOITC[a.toit]||''}`],1.5*k);
+  amList().forEach((a,i)=>{if(a.k==='ep'){o+=epMasse(a,i,k);return}if(a.k==='pergola'){o+=pergMasse(a,i,k);const g=pergGeom(a);o+=lbl([g.x,g.y],[`Pergola ${fmt(g.L,2)} × ${fmt(g.W,2)} m`,`H ${fmt(+a.H||2.5,2)} m · ${PG_TOITC[a.toit]||''}`],1.5*k);
       if(a.att!=='bat'||noBuild())for(const d of amDists(a).slice(0,2)){if(d.d>25)continue;const m=[(d.a[0]+d.b[0])/2,(d.a[1]+d.b[1])/2];o+=lineS(d.a,d.b,`stroke="#555" stroke-width="${0.18*k}" stroke-dasharray="${0.8*k} ${0.4*k}"`)+textS(m,fmt(d.d,2)+' m',1.6*k,`text-anchor="middle" dominant-baseline="middle" fill="#333" font-weight="700" paint-order="stroke" stroke="#fff" stroke-width="${0.4*k}"`)}return}
     if(a.k==='terrasse'){const P=terrPoly(a);if(!P)return;const c=centroid(P);o+=polyS(P,`fill="${AM_REVC[a.rev]||'#ccc'}" fill-opacity=".55" stroke="#5a4a3a" stroke-width="${0.3*k}"`);
       const d=[P[1][0]-P[0][0],P[1][1]-P[0][1]];const L=Math.hypot(...d);for(let s=0.4;s<L;s+=0.4){const f=s/L;o+=lineS([P[0][0]+d[0]*f,P[0][1]+d[1]*f],[P[3][0]+d[0]*f,P[3][1]+d[1]*f],`stroke="#5a4a3a" stroke-opacity=".35" stroke-width="${0.1*k}"`)}
@@ -3677,7 +3723,7 @@ function amMasse(k){let o='';const lbl=(c,lines,fs)=>lines.map((t,i)=>textS([c[0
   return o}
 /* 3D : objets triés par profondeur, dans le repère de la construction */
 function amRender(V,sun){const objs=[];const P2=q=>q.map(v=>v[0].toFixed(3)+','+(-v[1]).toFixed(3)).join(' ');const B3=(P,z)=>P.map(q=>{const b=toBld(...q);return[b[0],b[1],z]});
-  for(const a of amList()){if(a.k==='pergola'){objs.push(pergRender(a,V,sun));continue}
+  for(const a of amList()){if(a.k==='ep')continue;if(a.k==='pergola'){objs.push(pergRender(a,V,sun));continue}
     if(a.k==='piscine'){const g=poolGeom(a);const z=zRelAt(g.x,g.y);const mg=+a.marg||0,pl=+a.plage||0;let s='';
       if(pl>0){const q=V.clip(B3(poolPoly(a,mg+pl),z+0.015));if(q.length>2)s+=`<polygon points="${P2(q)}" fill="#D9D3C5" stroke="#b8b1a2" stroke-width="0.01"/>`}
       const q1=V.clip(B3(poolPoly(a,mg),z+0.03));if(q1.length>2)s+=`<polygon points="${P2(q1)}" fill="#F4F1EA" stroke="#cfc8ba" stroke-width="0.01"/>`;
@@ -3692,7 +3738,7 @@ function amRender(V,sun){const objs=[];const P2=q=>q.map(v=>v[0].toFixed(3)+','+
       objs.push({d:V.depth([...toBld(...c),0]),svg:s})}}
   return objs}
 /* textes de la notice */
-function amText(){const t=[];for(const a of amList()){if(a.k==='pergola'){t.push(pergText(a));continue}if(a.k==='terrasse'&&!terrPoly(a))continue;if(a.k==='terrasse'){const s=sidesDef().find(x=>x.id===a.side);t.push(`Une terrasse ${+a.h>0.05?`surélevée de ${fmt(+a.h,2)} m`:'de plain-pied'} de ${fmt(+a.len,2)} × ${fmt(+a.dep,2)} m, en ${AM_REV[a.rev]||a.rev}${a.couv?', couverte,':''} prolonge la ${s?sideName(s).toLowerCase():'façade'}.${+a.h>0.6||a.couv?' Elle crée de l\'emprise au sol.':''}`)}
+function amText(){const t=[];for(const a of amList()){if(a.k==='ep')continue;if(a.k==='pergola'){t.push(pergText(a));continue}if(a.k==='terrasse'&&!terrPoly(a))continue;if(a.k==='terrasse'){const s=sidesDef().find(x=>x.id===a.side);t.push(`Une terrasse ${+a.h>0.05?`surélevée de ${fmt(+a.h,2)} m`:'de plain-pied'} de ${fmt(+a.len,2)} × ${fmt(+a.dep,2)} m, en ${AM_REV[a.rev]||a.rev}${a.couv?', couverte,':''} prolonge la ${s?sideName(s).toLowerCase():'façade'}.${+a.h>0.6||a.couv?' Elle crée de l\'emprise au sol.':''}`)}
     if(a.k==='piscine'){const d=poolDists(a)[0];t.push(`Une piscine enterrée ${a.forme==='arrondie'?'aux angles arrondis ':''}de ${fmt(+a.L,2)} × ${fmt(+a.W,2)} m (bassin de ${fmt(polyArea(poolPoly(a)),1)} m², profondeur ${fmt(+a.prof||1.5,2)} m) est réalisée${d?`, à ${fmt(d.d,2)} m de la limite la plus proche`:''}. Margelle de ${fmt(+a.marg||0,2)} m${+a.plage>0?` et plage en ${AM_REV[a.rev]||'dalles'} de ${fmt(+a.plage,2)} m`:''}.${a.local?' Le local technique (filtration) est enterré ou adossé, de faible hauteur.':''} Les eaux de vidange sont évacuées après neutralisation du traitement, conformément au règlement d'assainissement.`)}}
   return t.join(' ')}
 /* formalités */
@@ -3700,7 +3746,7 @@ function poolSeuil(){const b=poolBassin();if(!b)return'';return b<=10?'Bassin ju
 /* éditeur (étape 03 du mode complet et Express) */
 function amEditorHTML(opts={}){const L=amList();const sel=(a,k,o)=>`<select data-am="${a.id}" data-k="${k}">${Object.entries(o).map(([v,l])=>`<option value="${v}"${a[k]===v?' selected':''}>${l}</option>`).join('')}</select>`;
   const num=(a,k,l,st=0.1,min=0)=>`<label class="f">${l}<input type="number" step="${st}" min="${min}" data-am="${a.id}" data-k="${k}" value="${a[k]??''}"></label>`;
-  const items=L.filter(a=>!opts.only||a.k===opts.only).map(a=>a.k==='pergola'?pergEditorHTML(a,num,sel):a.k==='terrasse'?`<div class="am-it"><div class="am-h"><b>🪵 Terrasse</b><button class="btn sm" type="button" data-amdel="${a.id}">Retirer</button></div>
+  const items=L.filter(a=>!opts.only||a.k===opts.only).map(a=>a.k==='ep'?epEditorHTML(a,num,sel):a.k==='pergola'?pergEditorHTML(a,num,sel):a.k==='terrasse'?`<div class="am-it"><div class="am-h"><b>🪵 Terrasse</b><button class="btn sm" type="button" data-amdel="${a.id}">Retirer</button></div>
       <div class="grid3"><label class="f">Façade${noBuild()?'':`<select data-am="${a.id}" data-k="side">${sidesDef().map(s=>`<option value="${s.id}"${a.side===s.id?' selected':''}>${esc(sideName(s))}</option>`).join('')}</select>`}</label>${num(a,'len','Longueur (m)',0.5,1)}${num(a,'dep','Profondeur (m)',0.5,1)}</div>
       <div class="grid3">${num(a,'h','Hauteur / sol (m)',0.05,0)}<label class="f">Revêtement${sel(a,'rev',{bois:'Bois',composite:'Composite',carrelage:'Carrelage',dalles:'Dalles sur plots',beton:'Béton'})}</label>${num(a,'off','Décalage (m)',0.5,-50)}</div>
       <label class="toggle"><input type="checkbox" data-am="${a.id}" data-k="couv"${a.couv?' checked':''}> Couverte (pergola fermée, auvent)</label></div>`
@@ -3709,11 +3755,11 @@ function amEditorHTML(opts={}){const L=amList();const sel=(a,k,o)=>`<select data
       <div class="grid3">${num(a,'marg','Margelle (m)',0.05,0)}${num(a,'plage','Plage (m)',0.25,0)}<label class="f">Forme${sel(a,'forme',{rect:'Rectangle',arrondie:'Angles arrondis'})}</label></div>
       <div class="grid2"><label class="f">Plage en${sel(a,'rev',{dalles:'Dalles',bois:'Bois',composite:'Composite',carrelage:'Carrelage',beton:'Béton'})}</label><label class="toggle" style="align-self:end"><input type="checkbox" data-am="${a.id}" data-k="local"${a.local?' checked':''}> Local technique</label></div>
       ${opts.hint!==false?`<p class="hint">${isPoolMode()?'Déplacez-la sur le plan (glisser) ou à l\'étape Implantation.':'Faites-la glisser sur le plan de masse pour la placer.'} ${poolSeuil()}</p>`:''}</div>`).join('');
-  return`<div class="am-list">${opts.abords!==false?abordsEditorHTML():''}${items}</div>${opts.only?'':`<div class="btns">${noBuild()?'':'<button class="btn sm" type="button" data-amadd="terrasse">+ Terrasse</button>'}${L.some(a=>a.k==='piscine')||isPergMode()?'':'<button class="btn sm" type="button" data-amadd="piscine">+ Piscine</button>'}${isPergMode()?'':'<button class="btn sm" type="button" data-amadd="pergola">+ Pergola</button>'}</div>`}`}
+  return`<div class="am-list">${opts.abords!==false?abordsEditorHTML():''}${items}</div>${opts.only?'':`<div class="btns">${noBuild()?'':'<button class="btn sm" type="button" data-amadd="terrasse">+ Terrasse</button>'}${L.some(a=>a.k==='piscine')||isPergMode()?'':'<button class="btn sm" type="button" data-amadd="piscine">+ Piscine</button>'}${isPergMode()?'':'<button class="btn sm" type="button" data-amadd="pergola">+ Pergola</button>'}${noBuild()||L.some(a=>a.k==='ep')?'':'<button class="btn sm" type="button" data-amadd="ep">+ Eaux pluviales</button>'}</div>`}`}
 function amOnChange(after){return e=>{const el=e.target.closest('[data-am]');if(!el)return;const a=amList().find(x=>x.id===el.dataset.am);if(!a)return;const k=el.dataset.k;
   if(a.k==='pergola'&&k==='att'&&el.value==='libre'){const g=pergGeom(a);a.x=g.x;a.y=g.y;a.rot=g.rot}
   a[k]=el.type==='checkbox'?el.checked:el.tagName==='SELECT'?el.value:+el.value;if(isAmMode()&&a===mainAm()&&(k==='L'||k==='W')){S.projet.L=+a.L;S.projet.W=+a.W}if(isPergMode()&&a===pergItem()&&k==='rot')S.projet.rot=+a.rot;save();after&&after()}}
-function amOnClick(after){return e=>{const ad=e.target.closest('[data-amadd]');if(ad){const it=ad.dataset.amadd==='piscine'?newPool():ad.dataset.amadd==='pergola'?newPerg():newTerr();amList().push(it);amFix();save();after&&after();return}
+function amOnClick(after){return e=>{const ad=e.target.closest('[data-amadd]');if(ad){const it=ad.dataset.amadd==='piscine'?newPool():ad.dataset.amadd==='pergola'?newPerg():ad.dataset.amadd==='ep'?newEP():newTerr();amList().push(it);amFix();save();after&&after();return}
   const dl=e.target.closest('[data-amdel]');if(dl){S.amenag=amList().filter(x=>x.id!==dl.dataset.amdel);save();after&&after()}}}
 /* sur la photo : la piscine seule se cale comme une construction de hauteur nulle */
 function poolSync(){const a=mainAm();if(!a)return;S.projet.L=+a.L;S.projet.W=+a.W;S.projet.niveaux=1;S.projet.toit='plat'}
@@ -3747,8 +3793,8 @@ function pergDefaultPos(a){const ex=exKept().map(exRing).filter(R=>R&&R.length>2
 function pergPoly(a,e=0){return rectAt(pergGeom(a),e)}
 function pergPosts(a){const g=pergGeom(a);const r=g.rot*D2R,U=[Math.cos(r),Math.sin(r)],V=[-Math.sin(r),Math.cos(r)];const n=Math.max(2,Math.ceil(g.L/4.2)+1);const vs=a.adoss?[-g.W/2+0.08]:[-g.W/2+0.08,g.W/2-0.08];const pts=[];
   for(const v of vs)for(let i=0;i<n;i++){const u=-g.L/2+0.08+(g.L-0.16)*i/(n-1);pts.push([g.x+u*U[0]+v*V[0],g.y+u*U[1]+v*V[1]])}return{g,U,V,pts,n}}
-function amGeom(a){return a.k==='pergola'?pergGeom(a):poolGeom(a)}
-function amPoly(a){return a.k==='pergola'?pergPoly(a):a.k==='piscine'?poolPoly(a):terrPoly(a)}
+function amGeom(a){return a.k==='pergola'?pergGeom(a):a.k==='ep'?epGeom(a):poolGeom(a)}
+function amPoly(a){return a.k==='ep'?rectAt(epGeom(a)):a.k==='pergola'?pergPoly(a):a.k==='piscine'?poolPoly(a):terrPoly(a)}
 function pergEmprise(){return amList().filter(a=>a.k==='pergola').reduce((s,a)=>s+polyArea(pergPoly(a)),0)}
 function zoneUPLU(){const z=S.terrain.zone;return!!(z&&/^\s*U/i.test(z.libelle||'')&&/PLU/i.test(z.doc||''))}
 function pergSeuil(a){const e=a?polyArea(pergPoly(a)):pergEmprise();if(!e)return'';const ad=a?a.adoss:amList().some(x=>x.k==='pergola'&&x.adoss);
@@ -4152,6 +4198,7 @@ function abApply(){const A=wzState().ab;if(!A)return;const P=S.projet;
   const PL={gazon:'les espaces libres sont engazonnés',haie:'une haie d\'essences locales est plantée en limite',arbres:'des arbres de haute tige sont plantés',fruitiers:'des arbres fruitiers sont plantés'};const pl=(A.pl||[]).map(x=>PL[x]).filter(Boolean);
   P.plantations=pl.length?pl[0][0].toUpperCase()+joinFr(pl).slice(1)+'.':'';
   P.ep={infil:'Les eaux pluviales sont infiltrées sur la parcelle.',cuve:'Les eaux pluviales sont recueillies dans une cuve de récupération, le trop-plein étant infiltré sur la parcelle.',reseau:'Les eaux pluviales sont raccordées au réseau public pluvial.'}[A.ep]||'';
+  if(A.ep&&!amList().some(a=>a.k==='ep')&&!noBuild()){const e=newEP();e.type={infil:'puits',cuve:'cuve',reseau:'reseau'}[A.ep]||'puits';amList().push(e)}
   if(A.as)P.assain=A.as}
 function wzWantMode(){const k=wzKind();return k==='portail'?'dp-cloture':k==='piscine'?'dp-piscine':k==='pergola'?'dp-pergola':k==='arbre'?'dp-arbres':mode()==='dp-constr'?'dp-constr':'pc'}
 /* dimensions à partir de la surface */
