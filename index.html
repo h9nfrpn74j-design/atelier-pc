@@ -130,6 +130,7 @@ nav.tabs button .d{width:7px;height:7px;border-radius:50%}
 .fac2{display:grid;grid-template-rows:1fr 1fr;width:100%;height:100%}
 .fac2 .cell{position:relative;display:flex;align-items:center;justify-content:center;border-bottom:.25mm solid #999}
 .fac2 .cell:last-child{border-bottom:0}
+.fac2.ab .cell{overflow:hidden}.ab-box{position:relative;height:100%;aspect-ratio:203/182;max-width:100%}
 .fac1{display:grid;width:100%;height:100%}.fac1 .cell{position:relative;display:flex;align-items:center;justify-content:center}
 .photo-area{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#f1f1ef}
 .photo-area img{max-width:100%;max-height:100%;object-fit:contain}
@@ -821,6 +822,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
         <label><input type="radio" name="insMode" value="auto" data-b="photos.insMode"> Générer l'insertion</label>
         <label><input type="radio" name="insMode" value="image" data-b="photos.insMode"> Importer mon image</label>
       </div>
+      <label class="toggle"><input type="checkbox" data-b="photos.insAB"> Avant / après sur la même planche (photo seule, puis photo avec le projet)</label>
       <div id="insImageCtl">
         <p class="hint">Vous avez réalisé l'insertion dans votre logiciel (Photoshop, GIMP, Affinity, SketchUp…) : importez l'image finale (JPEG, PNG, HEIC, TIFF ou PDF), ou faites-la glisser sur la planche, ou collez-la (Ctrl+V). Elle remplit la planche PCMI6 avec le cartouche. Pour vous aider, téléchargez d'abord la maison détourée en PNG ci-dessous.</p>
         <input type="file" accept="image/*,.jpg,.jpeg,.png,.webp,.heic,.heif,.tif,.tiff,.bmp,.gif,.avif,.pdf,application/pdf" data-photo="insImg">
@@ -1054,7 +1056,7 @@ function demoState(){
       cloture:'Clôture existante conservée en limites séparatives. Portail coulissant de 4 m en façade sur voie, grillage rigide gris anthracite de 1,50 m doublé d\'une haie champêtre.',
       plantations:'Les espaces libres sont engazonnés. Deux arbres de haute tige sont plantés au nord de la construction et une haie d\'essences locales borde les limites séparatives.',
       etatInitial:'Le terrain est une prairie bordée de quelques arbres en fond de parcelle.'},
-    photos:{p7:null,p8:null,ins:null,p7pos:null,p8pos:null,pv6pos:null,p7dir:20,p8dir:340,insX:30,insY:38,insS:40,insOp:100,insEye:1.6,insFocal:28,insLum:100,insSat:90,insMode:'auto',insFit:'contain',insPan:0,insTilt:0,insSpin:0,insLines:true,insShadow:100,insTrees:true,insRot:0,insFlip:false,insCon:100,insImg:null},
+    photos:{p7:null,p8:null,ins:null,p7pos:null,p8pos:null,pv6pos:null,p7dir:20,p8dir:340,insX:30,insY:38,insS:40,insOp:100,insEye:1.6,insFocal:28,insLum:100,insSat:90,insMode:'auto',insAB:true,insFit:'contain',insPan:0,insTilt:0,insSpin:0,insLines:true,insShadow:100,insTrees:true,insRot:0,insFlip:false,insCon:100,insImg:null},
     dem:{civ:'M.',nom:'',prenom:'',naissance:'',adresse:'',cp:'',ville:'',tel:'',email:''},
     meta:{date:today(),indice:'A'},
     notice:null,
@@ -1063,7 +1065,7 @@ function demoState(){
 }
 let S=loadLocal()||demoState();
 S.dossier=S.dossier||{type:'pc',exId:null,avant:null,apres:null};S.clo=S.clo||[];if(!S.projet.toitItems)S.projet.toitItems=[];if(S.regles.hClo===undefined)S.regles.hClo=null;
-{const d={insEye:1.6,insFocal:28,insLum:100,insSat:90,insOp:100,insMode:'auto',insFit:'contain',insPan:0,insTilt:0,insSpin:0,insLines:true,insShadow:100,insTrees:true,insRot:0,insFlip:false,insCon:100,insImg:null};for(const k in d)if(S.photos[k]==null)S.photos[k]=d[k];if(S.photos.insOp<60)S.photos.insOp=100}
+{const d={insEye:1.6,insFocal:28,insLum:100,insSat:90,insOp:100,insMode:'auto',insAB:true,insFit:'contain',insPan:0,insTilt:0,insSpin:0,insLines:true,insShadow:100,insTrees:true,insRot:0,insFlip:false,insCon:100,insImg:null};for(const k in d)if(S.photos[k]==null)S.photos[k]=d[k];if(S.photos.insOp<60)S.photos.insOp=100}
 if(!S.existants)S.existants=[];if(!S.projet.nature)S.projet.nature='maison';
 function loadLocal(){try{const s=localStorage.getItem('atelier-pc');return s?unpackS(JSON.parse(s)):null}catch(e){return null}}
 let saveT;
@@ -1873,6 +1875,12 @@ function facadeSVG(side,Wmm,Hmm,forceSc){
   o+=facMatLabels(side,r,MD,fw,wall.ops,h,k,m0+ext+0.5);
   o+='</svg>';return{svg:o,sc,fits:fitsF(sc)};
 }
+/* insertion : avant / après sur la même planche */
+function insBefore(far){const ph=S.photos,o=S.onsite||{};if(far)return ph.insFromShot2&&o.shot2?o.shot2.img:null;
+  if(ph.insMode==='image')return ph.insFromShot&&o.shot&&o.shot.img?o.shot.img:(ph.ins||null);return ph.ins||null}
+function abOn(far){return S.photos.insAB!==false&&!!insBefore(far)}
+function abHTML(before,after,box){const wrap=x=>box?`<div class="ab-box">${x}</div>`:x;const fit=S.photos.insFit==='cover'?' style="width:100%;height:100%;object-fit:cover"':'';
+  return`<div class="fac2 ab"><div class="cell"><h4>Avant — état actuel</h4>${wrap(`<div class="photo-area"><img src="${before}" alt="Photo avant travaux"${fit}></div>`)}</div><div class="cell"><h4>Après — avec le projet</h4>${wrap(after)}</div></div>`}
 /* repérage des matériaux sur les façades : étiquettes dans la marge droite, flèche vers l'élément */
 function facMatLabels(side,r,MD,fw,ops,h,k,x0){const P=S.projet;const X=q=>q[0]*r[0]+q[1]*r[1];const items=[];
   const inOp=(x,z)=>ops.some(op=>x>op.q-op.o.w/2-0.15&&x<op.q+op.o.w/2+0.15&&z>op.z0-0.15&&z<op.z1+0.15);
@@ -2012,18 +2020,19 @@ function sheetHTML(sh){
     const F2=pair.map(s=>facadeSVG(s,W,H,sc));SCALEINFO.pcmi5={sc,auto:autoSc,forced:!!(ov&&ov!=='auto'),fits:sd.every(s=>facadeSVG(s,W,H,sc).fits)};
     return`${demoMark()}<div class="draw"><div class="${solo?'fac1':'fac2'}">${F2.map((f,i)=>`<div class="cell"><h4>${sideName(pair[i])}</h4>${f.svg}</div>`).join('')}</div></div>${cart(sh,'1/'+sc,`<div><b>Façades</b> : ${esc(P.facade)}</div><div><b>Couverture</b> : ${esc(P.toit==='plat'?'Toiture-terrasse':P.couv)}${P.toit!=='plat'?`, pente ${P.pente}°`:''}</div><div><b>Menuiseries</b> : ${esc(P.menuis)}</div><p style="margin:2mm 0 0">La toiture est représentée sur le plan de masse (PCMI2).</p>`)}`}
   case'pcmi6':{const ph=S.photos;
-    if(ph.insMode==='image'){const inner=ph.insImg?`<div class="photo-area"><img src="${ph.insImg}" alt="Insertion du projet" style="${ph.insFit==='cover'?'width:100%;height:100%;object-fit:cover':''}"></div>`:`<div class="photo-area"><div class="photo-empty">Importez votre image d'insertion (étape 04, « Importer mon image »).</div></div>`;
+    if(ph.insMode==='image'){const one=ph.insImg?`<div class="photo-area"><img src="${ph.insImg}" alt="Insertion du projet" style="${ph.insFit==='cover'?'width:100%;height:100%;object-fit:cover':''}"></div>`:'';const ab=one&&abOn();const inner=ab?abHTML(insBefore(),one):ph.insImg?one:`<div class="photo-area"><div class="photo-empty">Importez votre image d'insertion (étape 04, « Importer mon image »).</div></div>`;
       const pv=ph.pv6pos?' Point de vue I reporté sur le plan de masse (PCMI2).':'';
-      return`${demoMark()}<div class="draw" style="display:block" data-sheet="ins">${inner}</div>${cart(sh,'Sans échelle',`<p style="margin:0">Insertion du projet dans son environnement.${pv}</p><p style="margin:0">Volumes, matériaux et teintes conformes aux plans PCMI2 et PCMI5.</p>`)}`}
+      return`${demoMark()}<div class="draw" style="display:block" data-sheet="ins">${inner}</div>${cart(sh,'Sans échelle',`<p style="margin:0">Insertion du projet dans son environnement${ab?' : état actuel et état projeté, depuis le même point de vue':''}.${pv}</p><p style="margin:0">Volumes, matériaux et teintes conformes aux plans PCMI2 et PCMI5.</p>`)}`}
     const I=insertionSVG(!ph.ins);const IC=I.IC;
     const cam=`point de vue I du plan de masse, à ${fmt(IC.dist,0)} m de la construction, hauteur d'œil ${fmt(IC.eye)} m, focale ${IC.focal} mm`;
     const filt=`brightness(${(ph.insLum??100)/100}) saturate(${(ph.insSat??90)/100}) contrast(${(ph.insCon??100)/100})`;
     const tf=`rotate(${+ph.insRot||0}deg)${ph.insFlip?' scaleX(-1)':''}`;
-    const inner=ph.ins?`<div class="photo-area"><img src="${ph.ins}" alt="Photo du terrain"></div><div class="ins-ov" data-drag="ins" style="left:${ph.insX}%;top:${ph.insY}%;width:${ph.insS}%;opacity:${(ph.insOp||100)/100};filter:${filt};transform:${tf}">${I.svg}</div>`
+    const ovl=ph.ins?`<div class="photo-area"><img src="${ph.ins}" alt="Photo du terrain"></div><div class="ins-ov" data-drag="ins" style="left:${ph.insX}%;top:${ph.insY}%;width:${ph.insS}%;opacity:${(ph.insOp||100)/100};filter:${filt};transform:${tf}">${I.svg}</div>`:'';const ab=ph.ins&&abOn();
+    const inner=ab?abHTML(ph.ins,ovl,true):ph.ins?ovl
       :`<div class="ins-env">${I.svg}<div class="ins-note">Vue de principe générée à partir du terrain. Ajoutez une photo prise depuis le point I, ou importez votre propre image d'insertion (étape 04).</div></div>`;
-    return`${demoMark()}<div class="draw" style="display:block" data-sheet="ins">${inner}</div>${cart(sh,'Sans échelle',`<p style="margin:0">Insertion du projet dans son environnement, en perspective depuis le ${esc(cam)}.</p><p style="margin:0">Volumes, matériaux et teintes conformes aux plans PCMI2 et PCMI5.</p>`)}`}
+    return`${demoMark()}<div class="draw" style="display:block" data-sheet="ins">${inner}</div>${cart(sh,'Sans échelle',`<p style="margin:0">Insertion du projet dans son environnement, en perspective depuis le ${esc(cam)}.${ab?' En haut l\'état actuel, en bas l\'état projeté.':''}</p><p style="margin:0">Volumes, matériaux et teintes conformes aux plans PCMI2 et PCMI5.</p>`)}`}
   case'pcmi6b':{const ph=S.photos;const pv=ph.p8pos?` Point de vue reporté sur le plan de masse (photo ${mode()==='pc'?'PCMI8':'DPC8'}).`:'';
-    return`${demoMark()}<div class="draw" style="display:block" data-sheet="ins"><div class="photo-area">${ph.insImg2?`<img src="${ph.insImg2}" alt="Insertion, vue lointaine">`:'<div class="photo-empty">Vue lointaine à prendre (étape 04).</div>'}</div></div>${cart(sh,'Sans échelle',`<p style="margin:0">Insertion du projet dans le paysage lointain.${pv}</p><p style="margin:0">Volumes, matériaux et teintes conformes aux plans de masse et de façades.</p>`)}`}
+    return`${demoMark()}<div class="draw" style="display:block" data-sheet="ins">${ph.insImg2&&abOn(true)?abHTML(insBefore(true),`<div class="photo-area"><img src="${ph.insImg2}" alt="Insertion, vue lointaine"></div>`):`<div class="photo-area">${ph.insImg2?`<img src="${ph.insImg2}" alt="Insertion, vue lointaine">`:'<div class="photo-empty">Vue lointaine à prendre (étape 04).</div>'}</div>`}</div>${cart(sh,'Sans échelle',`<p style="margin:0">Insertion du projet dans le paysage lointain${ph.insImg2&&abOn(true)?' : état actuel et état projeté':''}.${pv}</p><p style="margin:0">Volumes, matériaux et teintes conformes aux plans de masse et de façades.</p>`)}`}
   case'pcmi7':case'pcmi8':{const key=sh.id==='pcmi7'?'p7':'p8';const ph=S.photos[key];
     return`${demoMark()}<div class="draw" style="display:block"><div class="photo-area">${ph?`<img src="${ph}" alt="">`:`<div class="photo-empty">Ajoutez la photographie de l'environnement ${key==='p7'?'proche':'lointain'} (étape 04).</div>`}</div></div>${cart(sh,'Sans échelle',`<p style="margin:0">${key==='p7'?'Photographie permettant de situer le terrain dans son environnement proche.':'Photographie permettant de situer le terrain dans le paysage lointain.'}</p><p style="margin:0">Point de vue n°${key==='p7'?'7':'8'} reporté sur le plan de masse (PCMI2)${S.photos[key+'pos']?`, direction ${CARD[Math.round(S.photos[key+'dir']/45)%8].toLowerCase()}`:''}.</p>`)}`}
   case'pcmi4':{S.noticeAdd=S.noticeAdd||{};if(S.noticeEdited&&S.notice&&!S.noticeAdd.__migr){S.noticeAdd.__migr=1}
@@ -2209,7 +2218,7 @@ async function importImage(file,maxPx){
 function downscale(file,maxPx){return importImage(file,maxPx)}
 const PHOTO_LBL={p7:'photo PCMI7',p8:'photo PCMI8',ins:'photo de fond PCMI6',insImg:'image d\'insertion PCMI6'};
 async function setPhoto(k,file){if(!file)return;const mb=(file.size/1048576);toast(`Import de « ${file.name||'image'} » (${mb.toFixed(1).replace('.',',')} Mo)…`,15000);
-  try{S.photos[k]=await importImage(file,k==='insImg'?3200:2200);if(k==='insImg')S.photos.insMode='image';document.scrollingElement.scrollTop=0;fillInputs();renderAll();save();goTab(k.startsWith('ins')?'pcmi6':'pcmi'+k.slice(1));toast(`${PHOTO_LBL[k]} importée.`)}
+  try{S.photos[k]=await importImage(file,k==='insImg'?3200:2200);if(k==='insImg'){S.photos.insMode='image';S.photos.insFromShot=false}document.scrollingElement.scrollTop=0;fillInputs();renderAll();save();goTab(k.startsWith('ins')?'pcmi6':'pcmi'+k.slice(1));toast(`${PHOTO_LBL[k]} importée.`)}
   catch(e){toast(`Impossible d'importer « ${file.name||'image'} » : ${e.message}. Formats acceptés : JPEG, PNG, WebP, HEIC, TIFF, PDF. Si besoin, réenregistrez l'image en JPEG.`,10000)}}
 $$('[data-photo]').forEach(inp=>inp.addEventListener('change',async()=>{document.scrollingElement.scrollTop=0;const f=inp.files[0];await setPhoto(inp.dataset.photo,f);inp.value=''}));
 // glisser-déposer et coller (Ctrl+V) une image sur la planche affichée
@@ -3472,19 +3481,19 @@ async function onsiteFlow(){if(S.demo){toast('Choisissez d\'abord votre terrain.
   await onsiteApply();toast(isPortail()?'Photo DP7 et insertion DP6 prêtes.':'Photo PCMI7 et insertion PCMI6 prêtes.');return true}
 async function onsiteApply(){const sh=S.onsite&&S.onsite.shot;if(!sh)return;const G=shotGeom(sh);const ph=S.photos;
   ph.p7=sh.img;ph.p7pos=toLL(...G.cw);ph.p7dir=Math.round(G.h);ph.pv6pos=toLL(...G.cw);
-  try{ph.insImg=await shotComposite(sh);ph.insMode='image';ph.insFit='contain'}catch(e){ph.ins=sh.img;ph.insMode='auto'}
+  try{ph.insImg=await shotComposite(sh);ph.insMode='image';ph.insFit='contain';ph.insFromShot=true}catch(e){ph.ins=sh.img;ph.insMode='auto'}
   S.onsite.composedFor=onsiteKey();fillInputs();renderAll();save()}
 /* ---------- seconde insertion : vue lointaine (PCMI6-2), qui sert aussi de photo lointaine (PCMI8) ---------- */
 async function onsiteFlow2(){if(S.demo){toast('Choisissez d\'abord votre terrain.');return false}
   for(;;){const sh=await openCamera({title:'Vue lointaine pour l\'insertion',tip:'Reculez de 30 à 100 m dans la rue, le terrain au centre, téléphone droit'});if(!sh)return false;
     const prev=S.onsite&&S.onsite.shot2;S.onsite=Object.assign(S.onsite||{},{shot2:sh});const r=await calibratePhoto(sh);if(r==='retake')continue;if(r!=='ok'){S.onsite.shot2=prev;save();return false}break}
   await onsiteApply2();toast(mode()==='pc'?'Photo lointaine (PCMI8) et seconde insertion (PCMI6-2) prêtes.':'Photo lointaine (DPC8) et seconde insertion (DPC6-2) prêtes.');return true}
-async function onsiteApply2(){const sh=S.onsite&&S.onsite.shot2;if(!sh)return;const G=shotGeom(sh);const ph=S.photos;ph.p8=sh.img;ph.p8pos=toLL(...G.cw);ph.p8dir=Math.round(G.h);
+async function onsiteApply2(){const sh=S.onsite&&S.onsite.shot2;if(!sh)return;const G=shotGeom(sh);const ph=S.photos;ph.insFromShot2=true;ph.p8=sh.img;ph.p8pos=toLL(...G.cw);ph.p8dir=Math.round(G.h);
   try{ph.insImg2=await shotComposite(sh)}catch(e){}S.onsite.composedFor2=onsiteKey();fillInputs();renderAll();save()}
 function removeFar(){const o=S.onsite;if(o)o.shot2=null;S.photos.insImg2=null;renderAll();save()}
 function onsiteKey(){const p=S.projet;return JSON.stringify([p.x,p.y,p.rot,p.L,p.W,p.niveaux,p.toit,p.pente,p.ouv,p.facadeCouleur,p.couvCouleur,S.clo,S.vege||[]])}
 async function onsiteRefresh(){const o=S.onsite;if(o&&o.shot2&&S.photos.insImg2&&o.composedFor2!==onsiteKey()){try{S.photos.insImg2=await shotComposite(o.shot2);o.composedFor2=onsiteKey();save()}catch(e){}}
-  if(!o||!o.shot||S.photos.p7!==o.shot.img)return;if(o.composedFor===onsiteKey())return;
+  if(!o||!o.shot||(S.photos.p7!==o.shot.img&&!S.photos.insFromShot))return;if(o.composedFor===onsiteKey())return;
   try{S.photos.insImg=await shotComposite(o.shot);S.photos.insMode='image';o.composedFor=onsiteKey();save()}catch(e){}}
 /* photo d'environnement avec position et direction automatiques */
 async function onsitePhoto(k){if(S.demo){toast('Choisissez d\'abord votre terrain.');return}
@@ -4189,7 +4198,7 @@ function wzRender(){const el=$('#wiz');if(!el||el.hidden)return;const keys=wzKey
     else{const fd=pl.found||{};const lbl={reculVoie:'Recul / voie',reculLim:'Recul / limites',hMax:'Hauteur max.',ces:'Emprise au sol'};const ks=Object.keys(fd);
       pluBox=`<div class="wz-card ok"><b>Règlement lu : zone ${esc(pl.label)}, pages ${pl.pages[0]} à ${pl.pages[1]}</b>${ks.length?`Valeurs trouvées : ${ks.map(x=>`${lbl[x]} ${fmt(fd[x],x==='ces'?0:1)}${x==='ces'?' %':' m'}`).join(' · ')}<div class="btns" style="margin-top:6px"><button class="btn sm primary" type="button" id="wzPluApply">Utiliser ces valeurs</button></div><span class="hint">À vérifier : la lecture automatique peut se tromper.</span>`:'Aucune valeur chiffrée trouvée : saisissez les règles.'}</div>`}}
     const placed=S.onsite&&S.onsite.placed;
-    const shot=S.onsite&&S.onsite.shot&&S.photos.p7===S.onsite.shot.img;const what=port?'du portail':'de la maison';
+    const shot=S.onsite&&S.onsite.shot&&(S.photos.p7===S.onsite.shot.img||(S.photos.insFromShot&&S.photos.insImg));const what=port?'du portail':'de la maison';
     const cam=`<div class="wz-place"><b>1. Placer ${port?'le portail':{extension:'l\'extension',abri:'l\'abri',garage:'le garage',piscine:'la piscine',pergola:'la pergola'}[wzKind()]||'la maison'}</b>
       <button class="btn primary wz-big" type="button" id="wzHere">📍 Je suis à l'emplacement ${port?'du portail':{extension:'de l\'extension',abri:'de l\'abri',garage:'du garage',piscine:'de la piscine',pergola:'de la pergola'}[wzKind()]||'de la maison'}</button>
       <button class="btn wz-big2" type="button" id="wzPlan">🗺️ Placer sur la vue aérienne</button>
@@ -4220,12 +4229,13 @@ function wzRender(){const el=$('#wiz');if(!el||el.hidden)return;const keys=wzKey
       ${grp('ep','Eaux de pluie',[['infil','Infiltration sur la parcelle'],['cuve','Cuve de récupération'],['reseau','Réseau public pluvial']],0)}
       ${grp('as','Eaux usées',[['collectif','Tout-à-l\'égout'],['individuel','Assainissement individuel']],0)}
       <div class="wz-card"><b>Aperçu de la notice</b><span class="hint">${esc([S.projet.etatInitial,S.projet.abords?'Abords : '+S.projet.abords+'.':'',S.projet.cloture,S.projet.plantations,S.projet.ep].filter(Boolean).join(' ')).slice(0,420)||'—'}</span></div>`}
-  if(k==='photos'){const ph=S.photos;const tag=mode()==='pc'?'PCMI':'DP';const fromSite=S.onsite&&S.onsite.placed&&S.onsite.shot&&ph.p7===S.onsite.shot.img;
+  if(k==='photos'){const ph=S.photos;const tag=mode()==='pc'?'PCMI':'DP';const fromSite=!!(S.onsite&&S.onsite.placed&&S.onsite.shot&&(ph.p7===S.onsite.shot.img||(ph.insFromShot&&ph.insImg)));
     const card=(kk,t,d)=>{const has=kk==='ins'?(ph.insMode==='image'?ph.insImg:ph.ins):ph[kk];return`<div class="wz-ph ${has?'ok':''}"><div class="th">${has?`<img src="${has}" alt="">`:'<span>📷</span>'}</div><div><b>${t}</b><span class="hint">${d}</span>
       <div class="btns"><button class="btn sm ${has?'':'primary'}" type="button" data-wzcam="${kk}">${has?'Reprendre sur place':'Prendre sur place'}</button><label class="btn sm">Choisir une photo<input type="file" accept="image/*,.heic,.heif" data-wzph="${kk}" hidden></label></div></div></div>`};
     h=`<p>Les photos prises depuis l'application placent automatiquement leur point de vue sur le plan de masse (position GPS et boussole).</p>
-      ${fromSite?`<div class="wz-card ok"><b>✓ Photo proche (${tag}7) et insertion (${tag}6) faites à l'étape Implantation</b></div>`:card('p7',`Environnement proche (${tag}7)`,'Depuis la rue, face au terrain, à quelques mètres.')}
-      ${fromSite&&ph.insImg?`<div class="wz-card"><b>Votre insertion</b>${compareHTML(ph.p7,ph.insImg)}<span class="hint">Glissez pour comparer avant et après.</span></div>`:''}
+      ${fromSite?`<div class="wz-card ok"><b>✓ Insertion (${tag}6) faite à l'étape Implantation</b><span class="hint">La planche ${tag}6 montre l'avant et l'après sur la même page.</span></div>`:''}
+      ${card('p7',`Environnement proche (${tag}7)`,fromSite&&ph.p7===S.onsite.shot.img?'Pour l\'instant, c\'est la photo de l\'insertion. Mieux : une autre photo prise à quelques mètres, qui montre le terrain et les maisons voisines (sinon la même image figure en '+tag+'6 et '+tag+'7).':'Depuis la rue, à quelques mètres : le terrain et les constructions voisines.')}
+      ${fromSite&&ph.insImg?`<div class="wz-card"><b>Votre insertion</b>${compareHTML(insBefore()||ph.p7,ph.insImg)}<span class="hint">Glissez pour comparer avant et après.</span></div>`:''}
       ${fromSite?`<div class="wz-ph ${ph.insImg2?'ok':''}"><div class="th">${ph.insImg2?`<img src="${ph.insImg2}" alt="">`:'<span>🔭</span>'}</div><div><b>Vue lointaine + 2e insertion (${tag}8 et ${tag}6-2)</b><span class="hint">Facultatif, mais apprécié des mairies : reculez de 30 à 100 m, la photo sert de ${tag}8 et reçoit une seconde insertion.</span>
         <div class="btns"><button class="btn sm ${ph.insImg2?'':'primary'}" type="button" data-far>${ph.insImg2?'Refaire':'Prendre et caler'}</button>${ph.insImg2?'<button class="btn sm" type="button" data-farx>Retirer</button>':''}</div></div></div>`:''}
       ${fromSite&&ph.insImg2?'':card('p8',`Environnement lointain (${tag}8)`,'Plus loin dans la rue, pour situer le terrain dans le paysage.')}
