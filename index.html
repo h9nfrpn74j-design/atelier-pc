@@ -1836,12 +1836,12 @@ function facadeSVG(side,Wmm,Hmm,forceSc){
   const wall={ops:fw.flatMap(w=>{const dx=w.c[0]*r[0]+w.c[1]*r[1];return w.ops.map(o=>({...o,q:o.q+dx}))})};const lvNames=['RDC','R+1','R+2','R+3','Combles'];
   const byLv=new Map();for(const op of (wall?wall.ops:[])){const lvl=Math.max(0,Math.round((op.z0-op.o.s)/P.hEtage));if(!byLv.has(lvl))byLv.set(lvl,[]);byLv.get(lvl).push(op)}
   const chains=[...byLv.entries()].sort((a,b)=>a[0]-b[0]);const CH=6.5;const chainMm=chains.length*CH+(chains.length?2:0);
-  const hm=zTop-zLow+1.2;const LBL=30;const fitsF=s=>(2*extMin+1)*1000/s+LBL<=Wmm&&hm*1000/s<=Hmm-chainMm;let sc=forceSc;
+  const hm=zTop-zLow+1.2;const LBL=30,RL=26;const fitsF=s=>(2*extMin+1)*1000/s+LBL+RL<=Wmm&&hm*1000/s<=Hmm-chainMm;let sc=forceSc;
   if(!sc){sc=STD_SC.find(fitsF)||250}
   const k=sc/1000;const vw=Wmm*k,vh=Hmm*k;
   // le terrain de part et d'autre s'étend autant que la page le permet (entre 1,6 m et 3,5 m)
-  const ext=Math.max(extMin,Math.min(hX+3.5,((Wmm-LBL)*k-1)/2));const prof3=profile(ext);prof=prof3.map(q=>[q[0],q[1]]);const profN=prof3.map(q=>[q[0],q[2]]);
-  const left=m0-ext-0.4-LBL*k,right=m0+ext+0.5;const cx=(left+right)/2;const zBot=zLow-chainMm*k;const cy=(zBot+zTop)/2;
+  const ext=Math.max(extMin,Math.min(hX+3.5,((Wmm-LBL-RL)*k-1)/2));const prof3=profile(ext);prof=prof3.map(q=>[q[0],q[1]]);const profN=prof3.map(q=>[q[0],q[2]]);
+  const left=m0-ext-0.4-LBL*k,right=m0+ext+0.5+RL*k;const cx=(left+right)/2;const zBot=zLow-chainMm*k;const cy=(zBot+zTop)/2;
   R=renderBuilding(f,0,{sw:0.28*k});const gid='fg'+(++UID);
   let o=`<svg xmlns="http://www.w3.org/2000/svg" width="${Wmm}mm" height="${Hmm}mm" viewBox="${(cx-vw/2).toFixed(3)} ${(-cy-vh/2).toFixed(3)} ${vw.toFixed(3)} ${vh.toFixed(3)}" font-family="Archivo Narrow, Arial Narrow, Arial, sans-serif">`;
   o+=`<defs><pattern id="${gid}" patternUnits="userSpaceOnUse" width="${(1.4*k).toFixed(3)}" height="${(1.4*k).toFixed(3)}" patternTransform="rotate(45)"><rect width="100%" height="100%" fill="#fff"/><line x1="0" y1="0" x2="0" y2="${(1.4*k).toFixed(3)}" stroke="#8a6d4b" stroke-width="${(0.13*k).toFixed(3)}"/></pattern></defs>`;
@@ -1870,8 +1870,36 @@ function facadeSVG(side,Wmm,Hmm,forceSc){
       o+=textS([op.q,zm+dy],l1,fs,st);if(l2)o+=textS([op.q,zm-dy],l2,fs*0.9,st)}
     zc-=CH*k});
   o+=dimLine([xa,zc],[xb,zc],k,fmt(xb-xa)+' m (total)');
+  o+=facMatLabels(side,r,MD,fw,wall.ops,h,k,m0+ext+0.5);
   o+='</svg>';return{svg:o,sc,fits:fitsF(sc)};
 }
+/* repérage des matériaux sur les façades : étiquettes dans la marge droite, flèche vers l'élément */
+function facMatLabels(side,r,MD,fw,ops,h,k,x0){const P=S.projet;const X=q=>q[0]*r[0]+q[1]*r[1];const items=[];
+  const inOp=(x,z)=>ops.some(op=>x>op.q-op.o.w/2-0.15&&x<op.q+op.o.w/2+0.15&&z>op.z0-0.15&&z<op.z1+0.15);
+  // couverture : point d'un pan vu de face, sinon sur la rive du pignon
+  if(P.toit!=='plat'){let tg=null;const RP=MD.roofs.filter(rf=>rf.nrm[0]*side.n[0]+rf.nrm[1]*side.n[1]>0.05).map(rf=>rf.pts.map(q=>[X(q),q[2]]));
+    for(const poly of RP){const xs=poly.map(q=>q[0]),zs=poly.map(q=>q[1]);const xm=Math.max(...xs),xn=Math.min(...xs),zm=Math.max(...zs),zn=Math.min(...zs);
+      for(let i=1;i<10&&!tg;i++){const x=xm-(xm-xn)*i/10*0.6;const z=zn+(zm-zn)*0.45;if(pip([x,z],poly))tg=[x,z]}}
+    if(!tg){let best=null;for(const w of fw){const pts=w.pts.map(q=>[X(q),q[2]]);const top=pts.reduce((a,b)=>b[1]>a[1]?b:a);const ed=pts.filter(q=>q[1]>h.E-0.05&&q!==top).sort((a,b)=>b[0]-a[0])[0];if(ed&&(!best||top[1]>best[1]))best=[ed[0]+(top[0]-ed[0])*0.45,ed[1]+(top[1]-ed[1])*0.45+0.15]}tg=best}
+    if(tg)items.push({t:'Couverture : '+P.couv,tg})}
+  else{const xs=fw.flatMap(w=>w.pts.map(X));const xm=Math.max(...xs),xn=Math.min(...xs);items.push({t:'Acrotère : couvertine métallique, toiture-terrasse étanchée',tg:[xm-(xm-xn)*0.12,h.E-0.12]})}
+  // façade : zone de mur sans ouverture, côté droit de préférence
+  {let tg=null;const xs=fw.flatMap(w=>w.pts.map(X));const xm=Math.max(...xs),xn=Math.min(...xs);const zt=Math.min(h.E,P.hEtage)-0.4;
+    for(let i=1;i<=24&&!tg;i++){const x=xm-(xm-xn)*i/25;for(const zf of[0.55,0.75,0.35])if(!tg){const z=zt*zf;if(!inOp(x,z))tg=[x,z]}}
+    if(tg)items.push({t:'Façade : '+P.facade,tg})}
+  // menuiseries : ouverture la plus à droite
+  const opk=op=>op.o.k||'win';const wins=ops.filter(op=>opk(op)!=='gar');
+  if(wins.length){const op=wins.slice().sort((a,b)=>(opk(a)==='win')-(opk(b)==='win')||a.q-b.q).pop();items.push({t:'Menuiseries : '+P.menuis,tg:[op.q+op.o.w/2-0.08,op.z0+(op.z1-op.z0)*0.62]})}
+  const gar=ops.find(op=>opk(op)==='gar');if(gar)items.push({t:'Porte de garage : sectionnelle, teinte des menuiseries',tg:[gar.q+gar.o.w/2-0.15,gar.z0+(gar.z1-gar.z0)*0.3]});
+  if(!items.length)return'';
+  const fs=1.75*k,lh=fs*1.2;const wrap=t=>{const out=[];let cur='';for(const w of String(t).split(/\s+/)){if(cur&&(cur+' '+w).length>21){out.push(cur);cur=w}else cur=cur?cur+' '+w:w}if(cur)out.push(cur);return out};
+  items.sort((a,b)=>b.tg[1]-a.tg[1]);let zPrev=Infinity;let o='';const xt=x0+2*k;
+  for(const it of items){const sp=it.t.indexOf(' : ');const L=sp>0?[it.t.slice(0,sp)+' :',...wrap(it.t.slice(sp+3))]:wrap(it.t);let z=Math.min(it.tg[1]+(L.length-1)*lh/2,zPrev-0.9*k);const zc=z-(L.length-1)*lh/2;zPrev=z-(L.length-1)*lh-lh;
+    const [tx,tz]=it.tg;const a=1.4*k,b=0.42*k;const xe=xt-2.4*k;const e=[xe-tx,zc-tz];const de=Math.hypot(...e)||1;const vx=e[0]/de,vz=e[1]/de;
+    o+=`<polyline points="${PT([xt-0.5*k,zc])} ${PT([xe,zc])} ${PT([tx+vx*a*0.9,tz+vz*a*0.9])}" fill="none" stroke="#111" stroke-width="${(0.14*k).toFixed(3)}" stroke-linejoin="round"/>`;
+    o+=polyS([[tx,tz],[tx+vx*a-vz*b,tz+vz*a+vx*b],[tx+vx*a+vz*b,tz+vz*a-vx*b]],'fill="#111"');
+    L.forEach((ln,i)=>{o+=textS([xt,z-i*lh],ln,fs,`dominant-baseline="middle" fill="#111"${i===0?' font-weight="600"':''}`)})}
+  return o}
 /* ================= Cartes (tuiles Géoplateforme) ================= */
 function llPx(lon,lat,z){const n=256*2**z;const s=Math.sin(lat*D2R);return[(lon+180)/360*n,(0.5-Math.log((1+s)/(1-s))/(4*Math.PI))*n]}
 const wmts=(L,z,x,y)=>`https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=${L.l}&STYLE=${encodeURIComponent(L.st||'normal')}&FORMAT=${encodeURIComponent(L.f||'image/png')}&TILEMATRIXSET=PM&TILEMATRIX=${z}&TILEROW=${y}&TILECOL=${x}`;
