@@ -1019,6 +1019,17 @@ window.addEventListener('unhandledrejection',e=>{const m=String(e.reason&&e.reas
 </script>
 <script>
 "use strict";
+/* constantes utilisées dès le premier affichage */
+var PRIX={y:2026,maison:[1600,2400],extension:[1800,3000],garage:[600,1200],abri:[200,700],annexe:[800,1500],piscine:[800,1500],terrasse:[80,200],pergolaL:[500,1100],pergolaO:[150,450],clo:[50,150],portail:[1500,5000],portillon:[500,1500],ravalement:[40,100],toiture:[120,250],velux:[800,2000],pv:[350,600],raccord:[3000,10000],arbre:[300,1500]};
+var EP_T={cuve:'Cuve de récupération',puits:'Puits d\'infiltration',tranchee:'Tranchée ou noue d\'infiltration',reseau:'Raccordement au réseau public'};
+var TR_T={garage:'Transformation d\'un garage en pièce de vie',combles:'Aménagement des combles',surelevation:'Surélévation',destination:'Changement de destination (grange, local, bureau → logement)'};
+var DIVHIDE=false;
+var PG_TY={pergola:'Pergola',carport:'Carport',veranda:'Véranda'};
+var PG_TOITS={pergola:{lames:'Lames orientables',ouverte:'Ventelles fixes',toile:'Toile',vitree:'Vitrée / polycarbonate'},carport:{bac:'Bac acier',poly:'Polycarbonate',lames:'Lames orientables'},veranda:{vitree:'Vitrée',panneau:'Panneaux isolants',poly:'Polycarbonate'}};
+var PG_TOIT={bac:'bac acier',poly:'plaques de polycarbonate',panneau:'panneaux isolants',lames:'lames orientables (bioclimatique)',ouverte:'ventelles fixes (pergola ouverte)',toile:'toile rétractable',vitree:'vitrage feuilleté ou polycarbonate'};
+var PG_TOITC={bac:'bac acier',poly:'polycarbonate',panneau:'panneaux',lames:'lames orientables',ouverte:'ouverte',toile:'toile',vitree:'vitrée'};
+var PG_MAT={alu:'aluminium',bois:'bois',acier:'acier'};
+var PG_COL={'#3A3F44':'Gris anthracite','#232526':'Noir','#F3F2EE':'Blanc','#8A8D8F':'Gris','#A0794F':'Bois naturel','#6B4A2E':'Bois foncé'};
 /* ================= Utilitaires ================= */
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const D2R=Math.PI/180;
@@ -1894,7 +1905,6 @@ function facadeSVG(side,Wmm,Hmm,forceSc){
   o+='</svg>';return{svg:o,sc,fits:fitsF(sc)};
 }
 /* ================= Estimation des travaux (ordres de grandeur) ================= */
-var PRIX={y:2026,maison:[1600,2400],extension:[1800,3000],garage:[600,1200],abri:[200,700],annexe:[800,1500],piscine:[800,1500],terrasse:[80,200],pergolaL:[500,1100],pergolaO:[150,450],clo:[50,150],portail:[1500,5000],portillon:[500,1500],ravalement:[40,100],toiture:[120,250],velux:[800,2000],pv:[350,600],raccord:[3000,10000],arbre:[300,1500]};
 function travauxEst(){const m=mode(),P=S.projet,L=[];const add=(t,q,u,pr)=>{if(q>0.05&&pr)L.push({t,q,u,a:q*pr[0],b:q*pr[1]})};
   if(m==='pc'||m==='dp-constr'){const sf=surfaces();const wk=S.wz&&S.wz.kind;const n=P.nature;const k=n==='maison'?'maison':n==='extension'?'extension':wk==='garage'?'garage':wk==='abri'?'abri':'annexe';
     add({maison:'Construction de la maison',extension:'Construction de l\'extension',garage:'Construction du garage',abri:'Abri de jardin (fourni posé)',annexe:'Construction de l\'annexe'}[k],Math.max(sf.sdp+(sf.gar||0),sf.emprise*0.8),'m²',PRIX[k]);
@@ -1976,7 +1986,6 @@ function masseRoofArrows(k,id){if(noBuild()&&mode()!=='dp-toiture')return'';cons
   const ep=amList().filter(a=>a.k==='ep');if(ep.length){const D=epDescentes().map(q=>W(q[0],q[1]));for(const d of D){const t=ep.reduce((b,a)=>{const g=epGeom(a);const dd=Math.hypot(g.x-d[0],g.y-d[1]);return!b||dd<b.dd?{g,dd}:b},null);if(t)o+=lineS(d,[t.g.x,t.g.y],`stroke="#1f5f8b" stroke-width="${0.15*k}" stroke-dasharray="${0.9*k} ${0.45*k}" pointer-events="none"`)}}
   return o}
 /* ouvrages de gestion des eaux pluviales */
-var EP_T={cuve:'Cuve de récupération',puits:'Puits d\'infiltration',tranchee:'Tranchée ou noue d\'infiltration',reseau:'Raccordement au réseau public'};
 function roofArea(){const M=model();return(M.roofs||[]).reduce((s,r)=>s+Math.abs(polyArea(r.pts.map(q=>[q[0],q[1]]))),0)}
 function epVolConseil(){return Math.max(1,Math.round(roofArea()*0.03*2)/2)}
 function newEP(){const it={id:'a'+Date.now().toString(36)+'e',k:'ep',type:'puits',vol:epVolConseil(),x:null,y:null,rot:0};return it}
@@ -2056,7 +2065,6 @@ function ficheMod(){const U=suivi(),T=S.terrain,D=S.dem;const L=String(U.modTxt|
   <h1>Pièces à joindre</h1><p>Uniquement les plans concernés par les modifications, en faisant apparaître l'état autorisé et l'état modifié (par exemple PCMI2, PCMI3, PCMI5 et une nouvelle insertion PCMI6). Atelier PC produit ces planches à partir du projet modifié : gardez une copie du dossier initial (Mes dossiers › Dupliquer) avant de modifier.</p>`)}
 
 /* ================= Construction existante : surélévation, garage ou combles aménagés, changement de destination ================= */
-var TR_T={garage:'Transformation d\'un garage en pièce de vie',combles:'Aménagement des combles',surelevation:'Surélévation',destination:'Changement de destination (grange, local, bureau → logement)'};
 function trInfo(){const d=S.dossier||{};const tr=d.tr||'';if(!tr||mode()!=='dp-facade')return null;let s=+d.trSurf||0;
   if(tr==='surelevation'){const a=d.avant,b=d.apres;const dn=a&&b?(+b.niveaux||1)-(+a.niveaux||1):0;s=Math.max(0,dn)*Math.max(0,(+S.projet.L||0)-0.6)*Math.max(0,(+S.projet.W||0)-0.6)}
   const U=zoneUPLU();const lim=U?40:20;let f,lvl;
@@ -2116,7 +2124,6 @@ function ficheDiv(){const G=divGeom();const D=S.dem,T=S.terrain;docOpen('Fiche d
   ${ficheTable([['Déclarant',[D.civ,D.prenom,D.nom].filter(Boolean).join(' ')],['Adresse du déclarant',[D.adresse,D.cp,D.ville].filter(Boolean).join(' ')],['Adresse du terrain',adresseTerrain()],['Références cadastrales',T.parcels.map(p=>p.section+' '+p.numero).join(', ')],['Superficie du terrain',fmt(parcelArea(),0)+' m²'],['Nombre de lots',G?'2':''],['Surface du lot A',G?fmt(G.lots[0].area,0)+' m²':''],['Surface du lot B',G?fmt(G.lots[1].area,0)+' m²':''],['Création de voies ou d\'espaces communs','Non'],['Surface de plancher maximale envisagée sur le lot B','[à préciser, par exemple 150 m²]']])}
   <h1>Pièces à joindre</h1><ul><li>DP1 — Plan de situation du terrain</li><li>DP2 — Plan sommaire des lieux (constructions existantes)</li><li>DP3 — Plan de division coté (limites, surfaces, accès)</li><li>Notice (facultative mais recommandée)</li></ul><p>Atelier PC produit ces planches (menu ⋯ › Télécharger le dossier en PDF).</p>`)}
 
-var DIVHIDE=false;
 /* insertion : avant / après sur la même planche */
 function insBefore(far){const ph=S.photos,o=S.onsite||{};if(far)return ph.insFromShot2&&o.shot2?o.shot2.img:null;
   if(ph.insMode==='image')return ph.insFromShot&&o.shot&&o.shot.img?o.shot.img:(ph.ins||null);return ph.ins||null}
@@ -3189,11 +3196,12 @@ async function netCheck(manual){if(!navigator.onLine){showDiag('<b>Vous êtes ho
 $('#diagRetry').onclick=()=>{$('#diag').hidden=true;window.__errs=[];netCheck(true)};$('#diagClose').onclick=()=>{$('#diag').hidden=true};
 /* ================= Démarrage ================= */
 if(!S.meta.date)S.meta.date=today();
-try{fillInputs();renderExList();renderAll()}catch(e){window.__errs.push('Démarrage : '+e.message);window.__showErr()}
-setTimeout(()=>netCheck(false),800);
-if(isMobile()){let v=isTablet()?'split':'panel';try{v=sessionStorage.getItem('apc-view')||v}catch(e){}setView(v)}
-if(S.demo)status('#stTerrain','','Exemple chargé (terrain fictif). Saisissez l\'adresse de votre terrain pour commencer.');
-else status('#stTerrain','ok',`Parcelle ${parcelRefs()} — ${fmt(parcelArea(),0)} m².`);
+/* premier affichage : lancé en fin de script, quand tous les modules sont définis */
+function startApp(){try{fillInputs();renderExList();renderAll()}catch(e){window.__errs.push('Démarrage : '+e.message);window.__showErr()}
+  setTimeout(()=>netCheck(false),800);
+  if(isMobile()){let v=isTablet()?'split':'panel';try{v=sessionStorage.getItem('apc-view')||v}catch(e){}setView(v)}
+  if(S.demo)status('#stTerrain','','Exemple chargé (terrain fictif). Saisissez l\'adresse de votre terrain pour commencer.');
+  else status('#stTerrain','ok',`Parcelle ${parcelRefs()} — ${fmt(parcelArea(),0)} m².`)}
 /* ================= Sur place : GPS, boussole, caméra, placement sur la photo ================= */
 const ORI={h:null,p:0,r:0,src:null,on:false,t:0};
 const GPS={best:null,last:null,watch:null};
@@ -3908,15 +3916,9 @@ function amOnClick(after){return e=>{const ad=e.target.closest('[data-amadd]');i
 /* sur la photo : la piscine seule se cale comme une construction de hauteur nulle */
 function poolSync(){const a=mainAm();if(!a)return;S.projet.L=+a.L;S.projet.W=+a.W;S.projet.niveaux=1;S.projet.toit='plat'}
 /* ================= Pergola (adossée ou isolée) ================= */
-var PG_TY={pergola:'Pergola',carport:'Carport',veranda:'Véranda'};
-var PG_TOITS={pergola:{lames:'Lames orientables',ouverte:'Ventelles fixes',toile:'Toile',vitree:'Vitrée / polycarbonate'},carport:{bac:'Bac acier',poly:'Polycarbonate',lames:'Lames orientables'},veranda:{vitree:'Vitrée',panneau:'Panneaux isolants',poly:'Polycarbonate'}};
 function pgConstr(){const a=pergItem();return'Construction '+{pergola:'d\'une pergola',carport:'d\'un carport',veranda:'d\'une véranda'}[pgTy(a)]}
 function pgTy(a){return a&&PG_TY[a.ty]?a.ty:'pergola'}function pgNom(a){return PG_TY[pgTy(a)]}function pgLe(a){return{pergola:'la pergola',carport:'le carport',veranda:'la véranda'}[pgTy(a)]}function pgDe(a){return{pergola:'de la pergola',carport:'du carport',veranda:'de la véranda'}[pgTy(a)]}
 function pgSolid(a){return['bac','poly','panneau','vitree'].includes(a.toit)}function pgSdp(a){return pgTy(a)==='veranda'?Math.max(0,(pergGeom(a).L-0.1)*(pergGeom(a).W-0.1)):0}function verSdp(){return amList().filter(a=>a.k==='pergola').reduce((s,a)=>s+pgSdp(a),0)}
-var PG_TOIT={bac:'bac acier',poly:'plaques de polycarbonate',panneau:'panneaux isolants',lames:'lames orientables (bioclimatique)',ouverte:'ventelles fixes (pergola ouverte)',toile:'toile rétractable',vitree:'vitrage feuilleté ou polycarbonate'};
-var PG_TOITC={bac:'bac acier',poly:'polycarbonate',panneau:'panneaux',lames:'lames orientables',ouverte:'ouverte',toile:'toile',vitree:'vitrée'};
-var PG_MAT={alu:'aluminium',bois:'bois',acier:'acier'};
-var PG_COL={'#3A3F44':'Gris anthracite','#232526':'Noir','#F3F2EE':'Blanc','#8A8D8F':'Gris','#A0794F':'Bois naturel','#6B4A2E':'Bois foncé'};
 function pgColName(c){return PG_COL[c]||String(colorName(c)||'').replace(/\s*\(.*\)$/,'')}
 function isPergMode(){return mode()==='dp-pergola'}
 function pergModeInit(){let a=pergItem();if(!a){const wk=typeof wzKind==='function'?wzKind():null;a=newPerg(PG_TY[wk]?wk:'pergola');amList().push(a)}a.att='libre';a.x=null;const c=pergDefaultPos(a);poolSync();S.projet.x=c[0];S.projet.y=c[1];S.projet.rot=a.rot||0;S.projet.hEtage=+a.H||2.5}
@@ -4663,6 +4665,7 @@ function closeDossiers(){$('#dos').hidden=true}
 $('#bDos').onclick=openDossiers;$('#mReport').onclick=()=>{$('#mMenu').hidden=true;reportProblem()};$('#mShare').onclick=()=>{$('#mMenu').hidden=true;shareLink()};$('#mOffline').onclick=()=>{$('#mMenu').hidden=true;offlinePrep()};
 $('#dosImp input').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const d=unpackS(JSON.parse(await f.text()));if(!d.terrain||!d.projet)throw new Error('fichier non reconnu');d.meta=d.meta||{};d.meta.id='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);d.meta.saved=Date.now();
   await idbPut({id:d.meta.id,updated:Date.now(),data:d,thumb:null});toast('Dossier importé.');openDossiers()}catch(err){toast('Import impossible : '+err.message)}});$('#dosClose').onclick=closeDossiers;$('#dosNew').onclick=newDossier;
+startApp();
 setTimeout(idbRestore,50);
 let SHARED=location.hash.startsWith('#d=');if(SHARED)setTimeout(()=>shareLinkOpen(),600);
 
