@@ -56,6 +56,21 @@ body.fs header.top,body.fs .mnav,body.fs aside,body.fs #scaleBar,body.fs .tabs{d
 .tabs button small.tcode{font:500 10px var(--f-mono);opacity:.55;margin-left:5px}
 .lex-in{max-width:640px}.lex-it{display:flex;flex-direction:column;gap:2px;padding:9px 0;border-bottom:1px solid var(--line)}.lex-it span{color:var(--muted);font-size:14px;line-height:1.45}
 .wz-next{background:var(--panel);border:1.5px solid var(--accent);border-radius:14px;padding:12px 14px;margin-bottom:12px}.wz-next>b{font-size:16px}.wz-next ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.45}
+.i3d{position:fixed;inset:0;z-index:87;background:#0d1211;color:#fff;display:grid;grid-template-columns:1fr 340px;grid-template-rows:auto 1fr}
+.i3d[hidden]{display:none}
+.i3d-bar{grid-column:1/-1;display:flex;align-items:center;gap:10px;padding:calc(8px + env(safe-area-inset-top)) 12px 8px;border-bottom:1px solid rgba(255,255,255,.1);min-width:0}
+.i3d-bar>b{display:flex;align-items:center;gap:6px;white-space:nowrap}.i3d-bar .sp{flex:1}.i3d-bar>button{background:rgba(255,255,255,.1);border:0;color:#fff;border-radius:10px;min-width:40px;min-height:40px;font-size:16px}
+.i3d-seg{display:flex;gap:4px;overflow-x:auto}.i3d-seg button{border:1px solid rgba(255,255,255,.18);background:none;color:#fff;border-radius:10px;padding:5px 10px;font:600 13px var(--f-ui);white-space:nowrap;display:flex;flex-direction:column;align-items:flex-start;line-height:1.15}
+.i3d-seg button small{font:500 10.5px var(--f-ui);opacity:.65}.i3d-seg button.on{background:#fff;color:#0d1211}
+.i3d-stage{position:relative;min-height:0;touch-action:none;overflow:hidden;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none}
+.i3d-stage svg{width:100%;height:100%;display:block}
+.i3d-hint{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);background:rgba(0,0,0,.6);padding:7px 12px;border-radius:99px;font-size:13px;pointer-events:none;white-space:nowrap;transition:opacity .4s}.i3d-hint.gone{opacity:0}
+.i3d-empty{max-width:420px;padding:20px;display:flex;flex-direction:column;gap:10px;text-align:center}.i3d-empty[hidden]{display:none}.i3d-empty .hint{color:rgba(255,255,255,.6)}
+.i3d-panel{background:var(--panel);color:var(--ink);padding:12px 14px calc(12px + env(safe-area-inset-bottom));overflow:auto;display:flex;flex-direction:column;gap:8px}
+.i3d-panel.dis>*:not(.i3d-use){opacity:.4;pointer-events:none}.i3d-panel .f b{float:right;font:600 12px var(--f-mono);color:var(--accent)}
+.i3d-panel .btn.on{background:var(--accent);color:#fff;border-color:var(--accent)}.i3d-more summary{cursor:pointer;font-weight:600;padding:4px 0}.i3d-use{margin-top:auto;min-height:48px;font-size:15px;position:sticky;bottom:0;box-shadow:0 -10px 14px var(--panel)}
+@media (max-width:820px){.i3d{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr) auto}.i3d-panel{max-height:44vh}.i3d-bar>b{display:none}}
+.btn.i3d-b{gap:6px}@media (max-width:820px){.btn.i3d-b{display:none}}
 .varm{position:fixed;inset:0;z-index:95;background:rgba(10,14,12,.55);display:flex;align-items:center;justify-content:center;padding:14px}.varm[hidden]{display:none}
 .varm-in{background:var(--panel);color:var(--ink);border-radius:16px;max-width:1100px;width:100%;max-height:92vh;overflow:auto;padding:14px;box-shadow:0 18px 50px rgba(0,0,0,.35)}
 .varm-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.var-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
@@ -557,7 +572,7 @@ body[data-mode="dp-facade"] .pc-only,body[data-mode="dp-toiture"] .pc-only{displ
 .wz-shot{width:100%;border-radius:8px;margin-top:6px;max-height:220px;object-fit:cover}
 #wzPElev svg{width:100%;height:auto}
 .mnav button[data-view=split]{display:none}
-@media (min-width:700px) and (max-width:820px){.mnav{grid-template-columns:repeat(4,1fr)!important}.mnav button[data-view=split]{display:grid}
+@media (min-width:700px) and (max-width:820px){.mnav{grid-template-columns:none!important;grid-auto-flow:column;grid-auto-columns:1fr}.mnav button[data-view=split]{display:grid}
   body[data-view=split] aside{right:auto!important;width:44%;visibility:visible!important;pointer-events:auto!important;border-right:1px solid var(--line)!important}
   body[data-view=split] .stagecol{left:44%!important;visibility:visible!important;pointer-events:auto!important}
   .wz-kinds{grid-template-columns:1fr 1fr!important}.wz-box{max-width:720px}}
@@ -667,7 +682,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
   <span class="saved" id="savedInd" aria-live="polite"></span>
   <button class="hbtn" id="bUndo" type="button" title="Annuler (Ctrl+Z)" aria-label="Annuler" disabled><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-4"/></svg></button><button class="hbtn" id="bRedo" type="button" title="Rétablir (Ctrl+Maj+Z)" aria-label="Rétablir" disabled><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h4"/></svg></button>
   <button class="chip" id="chkChip" type="button"></button>
-  <button class="btn express" id="bExpress" type="button" title="Assistant pas à pas : le dossier en 10 minutes"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg> Guidé</button>
+  <button class="btn i3d-b" type="button" id="bI3d" title="Poser le projet en 3D sur une photo du terrain"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 22V12M21 7l-9 5-9-5"/></svg> Insertion 3D</button><button class="btn express" id="bExpress" type="button" title="Assistant pas à pas : le dossier en 10 minutes"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg> Guidé</button>
   <button class="btn" id="bDos" type="button">Mes dossiers</button>
   <button class="btn" id="bOpen" type="button">Ouvrir</button>
   <button class="btn" id="bSave" type="button">Enregistrer</button>
@@ -695,6 +710,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
   <button type="button" data-mmundo><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-4"/></svg>Annuler la dernière modification</button>
   <button type="button" data-v3d="open"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 12l9-5M12 12v10M12 12L3 7"/></svg>Vue 3D du projet</button>
   <button type="button" id="mHome"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>Accueil : mes projets</button>
+  <button type="button" data-i3dopen><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 22V12M21 7l-9 5-9-5"/></svg>Insertion 3D sur photo</button>
   <button type="button" id="mExpert"></button>
   <button type="button" id="mLex"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/><path d="M9 8h6M9 12h4"/></svg>Lexique des mots du permis</button>
   <button type="button" id="mTheme"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg>Thème : automatique</button>
@@ -946,6 +962,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
       <div class="btns"><button class="btn sm" data-placepv="p8" type="button">Placer le point de vue sur le plan</button><button class="btn sm" type="button" data-far>📷 Vue lointaine + 2e insertion</button></div>
       <label class="f">Direction de la prise de vue (° depuis le Nord)<input type="range" min="0" max="359" data-b="photos.p8dir"></label>
       <div class="sub">PCMI6 · insertion du projet</div>
+      <button class="btn primary" type="button" data-i3dopen style="width:100%;margin:4px 0 8px"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 22V12M21 7l-9 5-9-5"/></svg> Ouvrir l'insertion 3D sur photo</button>
       <div class="seg2" role="radiogroup" aria-label="Mode d'insertion">
         <label><input type="radio" name="insMode" value="auto" data-b="photos.insMode"> Générer l'insertion</label>
         <label><input type="radio" name="insMode" value="image" data-b="photos.insMode"> Importer mon image</label>
@@ -1039,11 +1056,27 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
   <button type="button" data-view="panel" class="on"><span class="ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>Réglages</button>
   <button type="button" data-view="sheets"><span class="ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h8l4 4v14H7z"/><path d="M15 3v4h4M10 12h6M10 16h6"/></svg></span>Planches<i class="dotn" id="mDot" hidden></i></button>
   <button type="button" data-view="checks"><span class="ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12l5 5L20 6"/></svg></span>Contrôles</button>
+  <button type="button" data-i3dopen><span class="ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 22V12M21 7l-9 5-9-5"/></svg></span>Insertion 3D</button>
   <button type="button" data-view="split"><span class="ic"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M11 4v16"/></svg></span>Côte à côte</button>
 </nav>
 </div>
 <div class="histpill" id="histPill"><button type="button" data-mmundo aria-label="Annuler"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-4"/></svg></button><button type="button" data-mmredo aria-label="Rétablir"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h4"/></svg></button></div>
 <div class="rev" id="rev" hidden role="dialog" aria-label="Relecture avant dépôt"><div class="rev-top"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg><b>Relecture avant dépôt</b><span class="sp"></span><button type="button" data-revclose aria-label="Fermer">✕</button></div><div id="revBody"></div></div>
+<div class="i3d" id="i3d" hidden role="dialog" aria-label="Insertion 3D">
+ <div class="i3d-bar"><b><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 22V12M21 7l-9 5-9-5"/></svg> Insertion 3D</b><div class="i3d-seg" id="i3dSeg"></div><span class="sp"></span><button type="button" id="i3dX" aria-label="Fermer">✕</button></div>
+ <div class="i3d-stage" id="i3dStage"><svg id="i3dSvg" preserveAspectRatio="xMidYMid meet" hidden></svg>
+  <div class="i3d-hint" id="i3dHint">☝️ Glissez pour placer · 🤏 pincez pour la taille</div>
+  <div class="i3d-empty" id="i3dEmpty"><p id="i3dEmptyT"></p><button class="btn primary" type="button" id="i3dCam">📷 Prendre la photo sur place</button><label class="btn" for="i3dFile">🖼️ Choisir une photo</label><input type="file" id="i3dFile" accept="image/*,.heic,.heif" hidden><p class="hint">Une photo prise depuis l'application connaît sa position et sa direction : la maison apparaît déjà presque à sa place.</p></div></div>
+ <div class="i3d-panel" id="i3dPanel">
+  <label class="f">Point de vue autour du projet <b id="i3dAzV"></b><input type="range" id="i3dAz" min="0" max="359" step="1"></label>
+  <label class="f">Distance au projet <b id="i3dDistV"></b><input type="range" id="i3dDist" min="3" max="150" step="0.5"></label>
+  <label class="f">Hauteur de l'appareil photo <b id="i3dEyeV"></b><input type="range" id="i3dEye" min="0.5" max="10" step="0.05"></label>
+  <div data-adv><label class="f">Inclinaison <b id="i3dRollV"></b><input type="range" id="i3dRoll" min="-25" max="25" step="0.1"></label><label class="f">Focale (équivalent 24×36) <b id="i3dFovV"></b><input type="range" id="i3dFov" min="12" max="110" step="0.5"></label></div>
+  <div class="btns"><button class="btn sm" type="button" id="i3dOp">Voir à travers</button><button class="btn sm" type="button" id="i3dGuides">Limites du terrain</button><button class="btn sm" type="button" id="i3dLevel">Redresser l'horizon</button></div>
+  <details class="i3d-more"><summary>Plus d'outils</summary><div class="btns"><button class="btn sm" type="button" id="i3dRetouch">Premier plan, végétation, soleil…</button><button class="btn sm" type="button" id="i3dFine" data-adv>Caler par les coins (précis)</button><button class="btn sm" type="button" id="i3dReset">Vue de départ</button><button class="btn sm" type="button" id="i3dCam2">Reprendre la photo</button><label class="btn sm" for="i3dFile">Autre photo…</label><button class="btn sm" type="button" id="i3dDel">Retirer cette photo</button></div></details>
+  <button class="btn primary i3d-use" type="button" id="i3dUse">Utiliser pour le dossier</button>
+ </div>
+</div>
 <div class="v3d" id="v3d" hidden role="dialog" aria-label="Vue 3D"><div class="v3d-bar"><b><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 12l9-5M12 12v10M12 12L3 7"/></svg> Vue 3D</b><span class="hint">Glissez pour tourner, pincez pour zoomer</span><span class="sp"></span><button type="button" data-v3d="close">✕ Fermer</button></div>
   <div class="v3d-view" id="v3dView"></div>
   <div class="v3d-tools"><button type="button" data-v3d="left">↺ 45°</button><button type="button" data-v3d="rue">Depuis la rue</button><button type="button" data-v3d="eye">À hauteur d'homme</button><button type="button" data-v3d="top">Vue de dessus</button><button type="button" data-v3d="right">↻ 45°</button></div></div>
@@ -2682,6 +2715,84 @@ function nextStepsHTML(bad){const m=mode(),pc=m==='pc',T=S.terrain;const com=T.c
    <li><b>Une fois accordé</b>, affichez le panneau sur le terrain avant de commencer les travaux.</li></ol></div>`}
 document.addEventListener('click',e=>{if(e.target.closest('#mExpert'))expertToggle();else if(e.target.closest('#mLex'))lexOpen();else if(e.target.closest('#lexX')||e.target.id==='lexM')$('#lexM').hidden=true});
 
+/* ================= Insertion 3D : la maquette posée sur la photo ================= */
+const I3={k:'shot',ptr:new Map(),g:null,raf:0,op:1,guides:false,busy:false};
+function i3dShot(k=I3.k){return S.onsite&&S.onsite[k]||null}
+function i3dCenter(){const p=S.projet;return isPortail()?(cloCenter()||[p.x,p.y]):[p.x,p.y]}
+function i3dNorm(sh){const P=sh.pose;const G=shotGeom(sh);Object.assign(P,{lonlat:P.lonlat||toLL(...G.cw),h:G.h,dh:0,p:G.p,dp:0,r:+P.r||0,fov:+P.fov||66,eye:+P.eye||1.6})}
+function i3dFit(sh){if(!sh.pose||!sh.pose.lonlat){sh.pose=sh.pose||{};resetPoseDefault(sh)}
+  if(sh.pose.h==null){const c=i3dCenter(),cw=toLocal(...sh.pose.lonlat);sh.pose.h=bearing(c[0]-cw[0],c[1]-cw[1]);sh.pose.p=sh.pose.p??-3}
+  if(!cornersInside(sh)){const keep=JSON.stringify(sh.pose);/* d'abord viser la maison depuis la position GPS, sinon vue par défaut */
+    const c=i3dCenter(),cw=toLocal(...sh.pose.lonlat);sh.pose.h=bearing(c[0]-cw[0],c[1]-cw[1]);sh.pose.dh=0;if(!cornersInside(sh)){resetPoseDefault(sh)}
+    if(!cornersInside(sh)){for(const d of[1.4,2,3]){const p=sh.pose;const w=toLocal(...p.lonlat);p.lonlat=toLL(c[0]+(w[0]-c[0])*d,c[1]+(w[1]-c[1])*d);if(cornersInside(sh))break}}
+    if(!cornersInside(sh))sh.pose=JSON.parse(keep)}
+  i3dNorm(sh)}
+async function i3dOpen(k){{const mm=$('#mMenu');if(mm)mm.hidden=true}if(S.demo){toast('Choisissez d\'abord votre terrain : l\'insertion se fait sur une photo de votre rue.');}
+  if(noBuild()&&!amList().length&&!isPortail()){toast('Définissez d\'abord le projet.');return}
+  I3.k=k||(i3dShot('shot')?'shot':i3dShot('shot2')?'shot2':'shot');$('#i3d').hidden=false;document.body.classList.add('i3d-on');const sh=i3dShot();if(sh)i3dFit(sh);i3dUI();i3dDraw()}
+function i3dClose(){$('#i3d').hidden=true;document.body.classList.remove('i3d-on');save()}
+function i3dUI(){const sh=i3dShot();const tag=mode()==='pc'?'PCMI':'DP';
+  $('#i3dSeg').innerHTML=[['shot','Vue proche',tag+'6'],['shot2','Vue lointaine',tag+'6-2']].map(([k,t,c])=>`<button type="button" data-i3k="${k}" class="${I3.k===k?'on':''}">${t}<small>${c}${i3dShot(k)?'':' · à ajouter'}</small></button>`).join('');
+  $('#i3dEmpty').hidden=!!sh;$('#i3dSvg').toggleAttribute('hidden',!sh);$('#i3dPanel').classList.toggle('dis',!sh);$('#i3dUse').disabled=!sh;
+  $('#i3dEmptyT').textContent=I3.k==='shot'?'Ajoutez une photo du terrain prise depuis la rue, à 10 ou 20 m : la maison y sera posée en 3D.':'Facultatif : une photo prise de plus loin (30 à 100 m) situe le projet dans le quartier et sert aussi de photo lointaine.';
+  $('#i3dOp').classList.toggle('on',I3.op<1);$('#i3dGuides').classList.toggle('on',I3.guides);if(sh)i3dSync()}
+function i3dSync(){const sh=i3dShot();if(!sh)return;const P=sh.pose;const c=i3dCenter(),cw=toLocal(...P.lonlat);const az=nAng(bearing(cw[0]-c[0],cw[1]-c[1]));const d=Math.hypot(cw[0]-c[0],cw[1]-c[1]);
+  const set=(id,v,t)=>{const r=$('#'+id);if(r&&document.activeElement!==r)r.value=v;const o=$('#'+id+'V');if(o)o.textContent=t};
+  const card=['nord','nord-est','est','sud-est','sud','sud-ouest','ouest','nord-ouest'][Math.round(az/45)%8];
+  const dm=$('#i3dDist');dm.max=Math.max(150,Math.ceil(d*1.5));
+  set('i3dAz',Math.round(az),'côté '+card);set('i3dDist',d.toFixed(1),fmt(d,0)+' m');set('i3dEye',(+P.eye).toFixed(2),fmt(+P.eye,1)+' m');set('i3dRoll',(+P.r).toFixed(1),fmt(+P.r,1)+'°');set('i3dFov',Math.round(P.fov),Math.round(36/2/Math.tan(P.fov*D2R/2))+' mm')}
+function i3dDraw(){if(I3.raf)return;I3.raf=requestAnimationFrame(()=>{I3.raf=0;const sh=i3dShot();if(!sh||$('#i3d').hidden)return;const svg=$('#i3dSvg');svg.setAttribute('viewBox',`0 0 ${sh.w} ${sh.h}`);
+  let gd='';if(I3.guides){const {G,V}=shotView(sh);const s=(sh.w/2)/V.W;gd=`<g transform="rotate(${G.r.toFixed(2)} ${sh.w/2} ${sh.h/2}) translate(${sh.w/2} ${sh.h/2}) scale(${s.toFixed(4)})">${shotGuides(V)}</g>`}
+  let ov='';try{ov=shotOverlay(sh)}catch(e){ov=''}
+  svg.innerHTML=`<image href="${sh.img}" x="0" y="0" width="${sh.w}" height="${sh.h}" preserveAspectRatio="none"/><g opacity="${I3.op}">${ov}</g>${gd}`;i3dSync()})}
+function i3dScale(){const sh=i3dShot();const r=$('#i3dSvg').getBoundingClientRect();return Math.min(r.width/sh.w,r.height/sh.h)||1}
+/* gestes : glisser = déplacer la maison dans le cadre, pincer = agrandir, tourner à deux doigts = incliner */
+function i3dPan(dx,dy){const sh=i3dShot();const G=shotGeom(sh);const k=1/i3dScale();const a=-G.r*D2R;const x=(dx*Math.cos(a)-dy*Math.sin(a))*k,y=(dx*Math.sin(a)+dy*Math.cos(a))*k;
+  sh.pose.h=nAng(sh.pose.h-Math.atan(x/G.fpx)/D2R);sh.pose.p=clamp(sh.pose.p+Math.atan(y/G.fpx)/D2R,-45,45);i3dDraw()}
+function i3dZoom(f){const P=i3dShot().pose;const t=Math.tan(P.fov*D2R/2)/f;P.fov=clamp(2*Math.atan(t)/D2R,12,110);i3dDraw()}
+function i3dOrbit(az){const sh=i3dShot();const P=sh.pose;const c=i3dCenter(),cw=toLocal(...P.lonlat);const d=Math.hypot(cw[0]-c[0],cw[1]-c[1]);const b0=bearing(c[0]-cw[0],c[1]-cw[1]);
+  const n=[c[0]+Math.sin(az*D2R)*d,c[1]+Math.cos(az*D2R)*d];const b1=bearing(c[0]-n[0],c[1]-n[1]);P.lonlat=toLL(...n);P.h=nAng(P.h+b1-b0);i3dDraw()}
+function i3dDolly(d){const sh=i3dShot();const P=sh.pose;const c=i3dCenter(),cw=toLocal(...P.lonlat);const d0=Math.hypot(cw[0]-c[0],cw[1]-c[1])||1;P.lonlat=toLL(c[0]+(cw[0]-c[0])*d/d0,c[1]+(cw[1]-c[1])*d/d0);i3dDraw()}
+function i3dBind(){const st=$('#i3dStage');
+  st.addEventListener('pointerdown',e=>{if(!i3dShot()||e.target.closest('button'))return;st.setPointerCapture(e.pointerId);I3.ptr.set(e.pointerId,[e.clientX,e.clientY]);I3.g=null;$('#i3dHint').classList.add('gone')});
+  st.addEventListener('pointermove',e=>{if(!I3.ptr.has(e.pointerId))return;const prev=[...I3.ptr.values()].map(v=>v.slice());I3.ptr.set(e.pointerId,[e.clientX,e.clientY]);const cur=[...I3.ptr.values()];
+    if(cur.length===1){const o=prev[0];i3dPan(cur[0][0]-o[0],cur[0][1]-o[1])}
+    else if(cur.length>=2){const m=(A)=>[(A[0][0]+A[1][0])/2,(A[0][1]+A[1][1])/2],dist=A=>Math.hypot(A[0][0]-A[1][0],A[0][1]-A[1][1]),ang=A=>Math.atan2(A[1][1]-A[0][1],A[1][0]-A[0][0]);
+      const m0=m(prev),m1=m(cur);i3dPan(m1[0]-m0[0],m1[1]-m0[1]);const f=dist(cur)/(dist(prev)||1);if(isFinite(f)&&f>0)i3dZoom(f);let da=(ang(cur)-ang(prev))/D2R;if(da>180)da-=360;if(da<-180)da+=360;if(Math.abs(da)<20){const P=i3dShot().pose;P.r=clamp(P.r+da,-25,25)}}});
+  const up=e=>{I3.ptr.delete(e.pointerId)};st.addEventListener('pointerup',up);st.addEventListener('pointercancel',up);
+  st.addEventListener('wheel',e=>{if(!i3dShot())return;e.preventDefault();i3dZoom(Math.exp(-e.deltaY*0.0015))},{passive:false});
+  $('#i3dAz').oninput=e=>i3dOrbit(+e.target.value);$('#i3dDist').oninput=e=>i3dDolly(+e.target.value);
+  $('#i3dEye').oninput=e=>{i3dShot().pose.eye=+e.target.value;i3dDraw()};$('#i3dRoll').oninput=e=>{i3dShot().pose.r=+e.target.value;i3dDraw()};
+  $('#i3dFov').oninput=e=>{i3dShot().pose.fov=+e.target.value;i3dDraw()};
+  $('#i3d').addEventListener('click',async e=>{const b=e.target.closest('button,[data-i3k]');if(!b)return;
+    if(b.dataset.i3k){I3.k=b.dataset.i3k;const sh=i3dShot();if(sh)i3dFit(sh);i3dUI();i3dDraw();return}
+    const id=b.id;const sh=i3dShot();
+    if(id==='i3dX')i3dClose();
+    else if(id==='i3dCam'||id==='i3dCam2')await i3dTake();
+    else if(id==='i3dOp'){I3.op=I3.op<1?1:0.55;i3dUI();i3dDraw()}
+    else if(id==='i3dGuides'){I3.guides=!I3.guides;i3dUI();i3dDraw()}
+    else if(id==='i3dLevel'&&sh){const a=await autoLevel(sh);if(a==null){toast('Pas assez de lignes horizontales nettes dans la photo.');return}sh.pose.r=a;i3dDraw();toast(Math.abs(a)<0.3?'La photo est déjà droite.':`Inclinaison corrigée de ${fmt(Math.abs(a),1)}°.`)}
+    else if(id==='i3dReset'&&sh){resetPoseDefault(sh);i3dFit(sh);i3dDraw()}
+    else if((id==='i3dFine'||id==='i3dRetouch')&&sh){$('#i3d').hidden=true;const bk=JSON.stringify(sh.pose);const r=await plOpen(sh,'photo');if(r!=='ok'&&id==='i3dFine')sh.pose=JSON.parse(bk);$('#i3d').hidden=false;i3dNorm(sh);i3dUI();i3dDraw()}
+    else if(id==='i3dDel'&&sh){if(I3.k==='shot2')removeFar();else{S.onsite.shot=null}save();i3dUI()}
+    else if(id==='i3dUse'&&sh)await i3dUse()});
+  $('#i3dFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(f)await i3dImport(f)}}
+async function i3dTake(){const far=I3.k==='shot2';const sh=await openCamera({title:far?'Vue lointaine':'Photo pour l\'insertion',tip:far?'Reculez de 30 à 100 m dans la rue, le terrain au centre, téléphone droit':'Depuis la rue, à 10 ou 20 m, visez l\'emplacement du projet, téléphone droit'});
+  $('#i3d').hidden=false;if(!sh)return;i3dSet(sh)}
+function i3dSet(sh){S.onsite=S.onsite||{};S.onsite[I3.k]=sh;const ph=S.photos;const G=shotGeom(sh);
+  if(I3.k==='shot2'){ph.p8=sh.img;ph.p8pos=toLL(...G.cw);ph.p8dir=Math.round(G.h)}else if(!ph.p7||ph.p7FromShot){ph.p7=sh.img;ph.p7FromShot=true;ph.p7pos=toLL(...G.cw);ph.p7dir=Math.round(G.h)}
+  i3dFit(sh);save();i3dUI();i3dDraw();toast('Faites glisser la photo pour amener la maison à sa place, pincez pour ajuster la taille.',5000)}
+async function i3dImport(f,quiet){try{const x=await exifRead(f);const url=await importImage(f,2600);const im=await loadImg(url);let t=f.lastModified||Date.now();if(x&&x.date&&!isNaN(x.date))t=+x.date;
+  const sh={img:url,w:im.naturalWidth,h:im.naturalHeight,t,pose:{fov:66,eye:1.6,p:-3,r:0}};if(x&&exifNear(x)){sh.pose.lonlat=[x.lon,x.lat];if(x.dir!=null)sh.pose.h=x.dir}
+  if(quiet){i3dSetQuiet(sh);return}i3dSet(sh)}catch(e){toast('Photo illisible : '+e.message)}}
+async function i3dUse(){const sh=i3dShot();$('#i3dUse').disabled=true;toast('Calcul de l\'insertion…',2000);try{S.onsite.placed=true;if(I3.k==='shot2')await onsiteApply2();else await onsiteApply();
+  i3dClose();if(typeof isMobile==='function'&&isMobile())setView('sheets');goTab('pcmi6');toast('Insertion ajoutée au dossier. Elle se mettra à jour toute seule si vous modifiez le projet.',5000)}finally{$('#i3dUse').disabled=false}}
+function i3dSetQuiet(sh){S.onsite=S.onsite||{};S.onsite[I3.k]=sh;const ph=S.photos;const G=shotGeom(sh);
+  if(I3.k==='shot2'){ph.p8=sh.img;ph.p8pos=toLL(...G.cw);ph.p8dir=Math.round(G.h)}else if(!ph.p7||ph.p7FromShot){ph.p7=sh.img;ph.p7FromShot=true;ph.p7pos=toLL(...G.cw);ph.p7dir=Math.round(G.h)}save()}
+function i3dCardHTML(){const o=S.onsite||{};const done=!!(S.photos.insFromShot&&S.photos.insImg);const has=!!o.shot;
+  return`<div class="wz-card ${done?'ok':''}" style="border:1.5px solid var(--accent)"><b>${done?'✓ Insertion sur photo faite':'Dernière étape : l\'insertion 3D'}</b>${done?'Vous pouvez la reprendre à tout moment : elle suit les modifications du projet.':has?'Votre photo est prête : posez-y le projet en 3D, en le faisant glisser au doigt.':'Ajoutez une photo de la rue et posez-y le projet en 3D. Sinon, une vue de principe est utilisée.'}
+    <div class="btns" style="margin-top:8px"><button class="btn ${done?'':'primary'}" type="button" id="wzI3d">${done?'Reprendre l\'insertion 3D':'Ouvrir l\'insertion 3D'}</button></div></div>`}
+
 /* insertion : avant / après sur la même planche */
 function insBefore(far){const ph=S.photos,o=S.onsite||{};if(far)return ph.insFromShot2&&o.shot2?o.shot2.img:null;
   if(ph.insMode==='image')return ph.insFromShot&&o.shot&&o.shot.img?o.shot.img:(ph.ins||null);return ph.ins||null}
@@ -3030,7 +3141,7 @@ async function importImage(file,maxPx){
 function downscale(file,maxPx){return importImage(file,maxPx)}
 const PHOTO_LBL={p7:'photo PCMI7',p8:'photo PCMI8',ins:'photo de fond PCMI6',insImg:'image d\'insertion PCMI6'};
 async function setPhoto(k,file){if(!file)return;const mb=(file.size/1048576);toast(`Import de « ${file.name||'image'} » (${mb.toFixed(1).replace('.',',')} Mo)…`,15000);
-  try{S.photos[k]=await importImage(file,k==='insImg'?3200:2200);if(k==='p7'||k==='p8'){const x=await exifRead(file);if(x&&exifNear(x,1.5)){S.photos[k+'pos']=[x.lon,x.lat];if(x.dir!=null)S.photos[k+'dir']=Math.round(x.dir);setTimeout(()=>toast(`Point de vue ${k==='p7'?'7':'8'} placé sur le plan d'après la position GPS de la photo${x.dir!=null?' (direction comprise)':''}.`,5000),1600)}}if(k==='insImg'){S.photos.insMode='image';S.photos.insFromShot=false}document.scrollingElement.scrollTop=0;fillInputs();renderAll();save();goTab(k.startsWith('ins')?'pcmi6':'pcmi'+k.slice(1));toast(`${PHOTO_LBL[k]} importée.`)}
+  try{S.photos[k]=await importImage(file,k==='insImg'?3200:2200);if(k==='p7')S.photos.p7FromShot=false;if(k==='p7'||k==='p8'){const x=await exifRead(file);if(x&&exifNear(x,1.5)){S.photos[k+'pos']=[x.lon,x.lat];if(x.dir!=null)S.photos[k+'dir']=Math.round(x.dir);setTimeout(()=>toast(`Point de vue ${k==='p7'?'7':'8'} placé sur le plan d'après la position GPS de la photo${x.dir!=null?' (direction comprise)':''}.`,5000),1600)}}if(k==='insImg'){S.photos.insMode='image';S.photos.insFromShot=false}document.scrollingElement.scrollTop=0;fillInputs();renderAll();save();goTab(k.startsWith('ins')?'pcmi6':'pcmi'+k.slice(1));toast(`${PHOTO_LBL[k]} importée.`)}
   catch(e){toast(`Impossible d'importer « ${file.name||'image'} » : ${e.message}. Formats acceptés : JPEG, PNG, WebP, HEIC, TIFF, PDF. Si besoin, réenregistrez l'image en JPEG.`,10000)}}
 $$('[data-photo]').forEach(inp=>inp.addEventListener('change',async()=>{document.scrollingElement.scrollTop=0;const f=inp.files[0];await setPhoto(inp.dataset.photo,f);inp.value=''}));
 // glisser-déposer et coller (Ctrl+V) une image sur la planche affichée
@@ -4301,7 +4412,7 @@ async function onsiteFlow(){if(S.demo){toast('Choisissez d\'abord votre terrain.
     if(r==='retake')continue;if(r!=='ok'){save();return false}break}
   await onsiteApply();toast('Photo de l\'environnement et image du projet dans le paysage prêtes.');return true}
 async function onsiteApply(){const sh=S.onsite&&S.onsite.shot;if(!sh)return;const G=shotGeom(sh);const ph=S.photos;
-  ph.p7=sh.img;ph.p7pos=toLL(...G.cw);ph.p7dir=Math.round(G.h);ph.pv6pos=toLL(...G.cw);
+  if(!ph.p7||ph.p7FromShot||ph.p7===sh.img){ph.p7=sh.img;ph.p7FromShot=true;ph.p7pos=toLL(...G.cw);ph.p7dir=Math.round(G.h)}ph.pv6pos=toLL(...G.cw);
   try{ph.insImg=await shotComposite(sh);ph.insMode='image';ph.insFit='contain';ph.insFromShot=true}catch(e){ph.ins=sh.img;ph.insMode='auto'}
   S.onsite.composedFor=onsiteKey();fillInputs();renderAll();save()}
 /* ---------- seconde insertion : vue lointaine (PCMI6-2), qui sert aussi de photo lointaine (PCMI8) ---------- */
@@ -4312,7 +4423,7 @@ async function onsiteFlow2(){if(S.demo){toast('Choisissez d\'abord votre terrain
 async function onsiteApply2(){const sh=S.onsite&&S.onsite.shot2;if(!sh)return;const G=shotGeom(sh);const ph=S.photos;ph.insFromShot2=true;ph.p8=sh.img;ph.p8pos=toLL(...G.cw);ph.p8dir=Math.round(G.h);
   try{ph.insImg2=await shotComposite(sh)}catch(e){}S.onsite.composedFor2=onsiteKey();fillInputs();renderAll();save()}
 function removeFar(){const o=S.onsite;if(o)o.shot2=null;S.photos.insImg2=null;renderAll();save()}
-function onsiteKey(){const p=S.projet;return JSON.stringify([p.x,p.y,p.rot,p.L,p.W,p.niveaux,p.toit,p.pente,p.ouv,p.facadeCouleur,p.couvCouleur,S.clo,S.vege||[]])}
+function onsiteKey(){return JSON.stringify([S.projet,S.clo,S.vege||[],S.photos.vegeAge,S.photos.echelle,typeof amList==='function'?amList():0])}
 async function onsiteRefresh(){const o=S.onsite;if(o&&o.shot2&&S.photos.insImg2&&o.composedFor2!==onsiteKey()){try{S.photos.insImg2=await shotComposite(o.shot2);o.composedFor2=onsiteKey();save()}catch(e){}}
   if(!o||!o.shot||(S.photos.p7!==o.shot.img&&!S.photos.insFromShot))return;if(o.composedFor===onsiteKey())return;
   try{S.photos.insImg=await shotComposite(o.shot);S.photos.insMode='image';o.composedFor=onsiteKey();save()}catch(e){}}
@@ -5051,9 +5162,7 @@ function wzRender(){const el=$('#wiz');if(!el||el.hidden)return;const keys=wzKey
       <button class="btn primary wz-big" type="button" id="wzHere">📍 Je suis à l'emplacement ${port?'du portail':{extension:'de l\'extension',abri:'de l\'abri',garage:'du garage',piscine:'de la piscine',pergola:'de la pergola',carport:'du carport',veranda:'de la véranda'}[wzKind()]||'de la maison'}</button>
       <button class="btn wz-big2" type="button" id="wzPlan">🗺️ Placer sur la vue aérienne</button>
       ${placed?`<span class="wz-okline">✓ Emplacement validé${S.onsite.here?' (position GPS'+(S.onsite.acc?' ± '+Math.round(S.onsite.acc)+' m':'')+')':''}</span>`:''}</div>
-      <div class="wz-place"><b>2. Photo pour l'insertion</b>
-      <button class="btn ${placed&&!shot?'primary':''} wz-big2" type="button" id="wzCam">📷 ${shot?'Reprendre la photo':'Prendre la photo depuis la rue'}</button>
-      ${shot?`<img class="wz-shot" src="${esc(S.photos.insImg||'')}" alt="Insertion">`:`<p class="hint">Depuis la rue, visez l'emplacement : ${port?'le portail':'le projet'} s'incruste en perspective. Vous calez la photo en faisant glisser les limites du terrain sur les clôtures réelles.</p>`}</div>`;
+`;
     if(port){const c=S.clo.find(o=>o.kind==='portail');const L=limits();const l=c?cloLimit(c):null;
       h=`<div class="wz-split"><div>${cam}${l?`<label class="f">Limite<select id="wzPL">${L.map((e,j)=>`<option value="${j}"${e===l?' selected':''}>${esc(edgeLabel(e))} · ${fmt(e.len,1)} m</option>`).join('')}</select></label>
         <label class="f">Position le long de la limite : <b id="wzPPv">${fmt(c.pos,1)} m</b><input type="range" id="wzPP" min="0" max="${l.len.toFixed(1)}" step="0.1" value="${c.pos}"></label>`:''}
@@ -5080,14 +5189,13 @@ function wzRender(){const el=$('#wiz');if(!el||el.hidden)return;const keys=wzKey
   if(k==='photos'){const ph=S.photos;const tag=mode()==='pc'?'PCMI':'DP';const fromSite=!!(S.onsite&&S.onsite.placed&&S.onsite.shot&&(ph.p7===S.onsite.shot.img||(ph.insFromShot&&ph.insImg)));
     const card=(kk,t,d)=>{const has=kk==='ins'?(ph.insMode==='image'?ph.insImg:ph.ins):ph[kk];return`<div class="wz-ph ${has?'ok':''}"><div class="th">${has?`<img src="${has}" alt="">`:'<span>📷</span>'}</div><div><b>${t}</b><span class="hint">${d}</span>
       <div class="btns"><button class="btn sm ${has?'':'primary'}" type="button" data-wzcam="${kk}">${has?'Reprendre sur place':'Prendre sur place'}</button><label class="btn sm">Choisir une photo<input type="file" accept="image/*,.heic,.heif" data-wzph="${kk}" hidden></label></div></div></div>`};
-    h=`<p>Les photos prises depuis l'application placent automatiquement leur point de vue sur le plan de masse (position GPS et boussole).</p>
-      ${fromSite?`<div class="wz-card ok"><b>✓ Insertion (${tag}6) faite à l'étape Implantation</b><span class="hint">La planche ${tag}6 montre l'avant et l'après sur la même page.</span></div>`:''}
-      ${card('p7',`Environnement proche (${tag}7)`,fromSite&&ph.p7===S.onsite.shot.img?'Pour l\'instant, c\'est la photo de l\'insertion. Mieux : une autre photo prise à quelques mètres, qui montre le terrain et les maisons voisines (sinon la même image figure en '+tag+'6 et '+tag+'7).':'Depuis la rue, à quelques mètres : le terrain et les constructions voisines.')}
-      ${fromSite&&ph.insImg?`<div class="wz-card"><b>Votre insertion</b>${compareHTML(insBefore()||ph.p7,ph.insImg)}<span class="hint">Glissez pour comparer avant et après.</span></div>`:''}
-      ${fromSite?`<div class="wz-ph ${ph.insImg2?'ok':''}"><div class="th">${ph.insImg2?`<img src="${ph.insImg2}" alt="">`:'<span>🔭</span>'}</div><div><b>Vue lointaine + 2e insertion (${tag}8 et ${tag}6-2)</b><span class="hint">Facultatif, mais apprécié des mairies : reculez de 30 à 100 m, la photo sert de ${tag}8 et reçoit une seconde insertion.</span>
-        <div class="btns"><button class="btn sm ${ph.insImg2?'':'primary'}" type="button" data-far>${ph.insImg2?'Refaire':'Prendre et caler'}</button>${ph.insImg2?'<button class="btn sm" type="button" data-farx>Retirer</button>':''}</div></div></div>`:''}
-      ${fromSite&&ph.insImg2?'':card('p8',`Environnement lointain (${tag}8)`,'Plus loin dans la rue, pour situer le terrain dans le paysage.')}
-      ${fromSite?'':card('ins',`Photo pour l'insertion (${tag}6)`,'Le terrain vu depuis la rue : le projet y sera incrusté. Astuce : « Je suis sur place » à l\'étape Implantation fait tout d\'un coup.')}
+    const o=S.onsite||{};const shot=o.shot,far=o.shot2;
+    h=`<p>Prenez les photos depuis la rue. Vous poserez le projet dessus à la fin, dans l'<b>insertion 3D</b>, une fois tout réglé.</p>
+      <div class="wz-ph ${shot?'ok':''}"><div class="th">${shot?`<img src="${shot.img}" alt="">`:'<span>📷</span>'}</div><div><b>Photo pour l'insertion (${tag}6)</b><span class="hint">Depuis la rue, à 10 ou 20 m, le terrain bien visible. Le projet y sera incrusté.</span>
+        <div class="btns"><button class="btn sm ${shot?'':'primary'}" type="button" data-wzshot="shot">${shot?'Reprendre sur place':'Prendre sur place'}</button><label class="btn sm">Choisir une photo<input type="file" accept="image/*,.heic,.heif" data-wzshotf="shot" hidden></label></div></div></div>
+      ${card('p7',`Environnement proche (${tag}7)`,ph.p7FromShot?'Pour l\'instant, c\'est la photo de l\'insertion. Mieux : une autre photo prise à quelques mètres, qui montre le terrain et les maisons voisines.':'Depuis la rue, à quelques mètres : le terrain et les constructions voisines.')}
+      <div class="wz-ph ${far?'ok':''}"><div class="th">${far?`<img src="${far.img}" alt="">`:'<span>🔭</span>'}</div><div><b>Environnement lointain (${tag}8)</b><span class="hint">Reculez de 30 à 100 m. Elle pourra aussi recevoir une seconde insertion, appréciée des mairies.</span>
+        <div class="btns"><button class="btn sm" type="button" data-wzshot="shot2">${far?'Reprendre sur place':'Prendre sur place'}</button><label class="btn sm">Choisir une photo<input type="file" accept="image/*,.heic,.heif" data-wzshotf="shot2" hidden></label></div></div></div>
       <p class="hint">Pas de photo maintenant ? Continuez : une vue de principe est générée, vous ajouterez les photos plus tard.</p>`}
   if(k==='vous'){const D=S.dem;const i=(kk,l,t='text',ac='')=>`<label class="f">${l}<input type="${t}" data-b="dem.${kk}" value="${esc(D[kk]||'')}" ${ac}></label>`;
     h=`<p>L'identité du demandeur figure sur chaque planche et dans le récapitulatif du cerfa.</p>
@@ -5097,7 +5205,7 @@ function wzRender(){const el=$('#wiz');if(!el||el.hidden)return;const keys=wzKey
       <details class="pl-adv"${S.meta.auteur||S.meta.logo?' open':''}><summary>Vous préparez le dossier pour quelqu'un ? (cartouche)</summary><label class="f">Dossier établi par<input type="text" data-b="meta.auteur" value="${esc(S.meta.auteur||'')}" placeholder="ex. Atelier Le Dreau — 06 12 34 56 78"></label><div class="btns"><label class="btn sm">${S.meta.logo?'Changer le logo':'Ajouter un logo'}<input type="file" accept="image/*" data-logo hidden></label>${S.meta.logo?'<button class="btn sm" type="button" data-logodel>Retirer le logo</button>':''}</div></details>`}
   if(k==='arbres'){const P=S.terrain.protect;h=`${verdictCard()}<p class="hint">${P&&P.ok&&!protectVerdict().need?'Vous pouvez quand même préparer le dossier : utile si la mairie vous le demande.':'Ajoutez chaque arbre à abattre : sur place au pied de l\'arbre, ou en le touchant sur la vue aérienne. Puis prenez-le en photo.'}</p><div id="arbEditorW">${arbEditorHTML()}</div>`}
   if(k==='fin'){const C=checks();const nb=C.filter(c=>c.lvl==='bad'),nw=C.filter(c=>c.lvl==='warn');const sh=activeSheets();
-    h=`${nextStepsHTML(nb.length)}<div class="btns wz-final" id="wzFinal"><button class="btn primary" type="button" id="wzPrint">Télécharger le dossier en PDF</button><button class="btn" type="button" id="wzZip">Fichiers pour le dépôt en ligne</button><button class="btn" type="button" id="wzCerfa">Formulaire cerfa pré-rempli</button><button class="btn" type="button" id="wzSee">Voir les planches</button><button class="btn" type="button" id="wzSaveP">Enregistrer le projet</button></div><div class="wz-card ${nb.length?'bad':'ok'}"><b>${nb.length?`${nb.length} point${nb.length>1?'s':''} à corriger avant de déposer`:'Aucun point bloquant'}</b>${nb.length?'Sans correction, la mairie refusera probablement le dossier. Revenez aux étapes précédentes pour ajuster.':'Le projet respecte les règles que l\'application sait vérifier.'}${nw.length?` ${nw.length} élément${nw.length>1?'s':''} à vérifier ou compléter :`:''}</div>
+    h=`${i3dCardHTML()}${nextStepsHTML(nb.length)}<div class="btns wz-final" id="wzFinal"><button class="btn primary" type="button" id="wzPrint">Télécharger le dossier en PDF</button><button class="btn" type="button" id="wzZip">Fichiers pour le dépôt en ligne</button><button class="btn" type="button" id="wzCerfa">Formulaire cerfa pré-rempli</button><button class="btn" type="button" id="wzSee">Voir les planches</button><button class="btn" type="button" id="wzSaveP">Enregistrer le projet</button></div><div class="wz-card ${nb.length?'bad':'ok'}"><b>${nb.length?`${nb.length} point${nb.length>1?'s':''} à corriger avant de déposer`:'Aucun point bloquant'}</b>${nb.length?'Sans correction, la mairie refusera probablement le dossier. Revenez aux étapes précédentes pour ajuster.':'Le projet respecte les règles que l\'application sait vérifier.'}${nw.length?` ${nw.length} élément${nw.length>1?'s':''} à vérifier ou compléter :`:''}</div>
       ${nb.concat(nw).slice(0,6).map(c=>`<div class="ck ${c.lvl}"><div class="ic">${c.lvl==='bad'?'×':'!'}</div><div><b>${c.t}</b><span>${c.s}</span></div></div>`).join('')}
       <div class="wz-pieces">${sh.map(s=>`<span class="${sheetReady(s.id)?'ok':'warn'}" title="${esc(s.code)}">${esc(sheetShort(s))}</span>`).join('')}</div>
       
@@ -5131,16 +5239,18 @@ function wzBind(){const k=wzKey(),w=wzState();
   if(k==='implant'){const g=$('#wzPluGo');if(g)g.onclick=wzReadPLU;const a=$('#wzPluApply');if(a)a.onclick=()=>{Object.assign(S.regles,WZ.plu.found);if(!(S.onsite&&S.onsite.placed))autoImplant();save();wzRender();toast('Règles appliquées.')};
     const pb=$('#wzPlace');if(pb)pb.onclick=()=>{autoImplant();if(S.onsite)S.onsite.placed=false;save();wzRender()};
     $$('#wzBody [data-b^="regles."]').forEach(i=>i.addEventListener('change',()=>setTimeout(wzRefresh,120)));
-    $('#wzCam').onclick=async()=>{await onsiteFlow();save();wzRender()};$('#wzHere').onclick=async()=>{await onsiteHere();save();wzRender()};$('#wzPlan').onclick=async()=>{await placeOnPlan();save();wzRender()};
+    $('#wzHere').onclick=async()=>{await onsiteHere();save();wzRender()};$('#wzPlan').onclick=async()=>{await placeOnPlan();save();wzRender()};
     const pl=$('#wzPL');if(pl){const c=S.clo.find(o=>o.kind==='portail');pl.onchange=e=>{const l=limits()[+e.target.value];c.lim=toLL(...l.mid);c.pos=Math.round(l.len/2*10)/10;if(S.onsite)S.onsite.placed=false;save();wzRender()};
       $('#wzPP').oninput=e=>{c.pos=+e.target.value;$('#wzPPv').textContent=fmt(c.pos,1)+' m';const m=$('.wz-masse');if(m)m.innerHTML=wzMasse()};$('#wzPP').onchange=()=>{if(S.onsite)S.onsite.placed=false;save()}}}
   if(k==='ouvertures'){const rr=()=>{const b=$('#oeBox');if(!b)return;b.innerHTML=oeHTML();const pv=$('#wzBody .wz-prev svg');if(pv)pv.outerHTML=wzPreview3d();oeBind(rr)};oeBind(rr);
     $('#wzOuv').onclick=()=>{w.ouvEdited=false;autoOuvertures();OE.sel=null;save();wzRender()};$('#wzStyleBack').onclick=()=>wzGo(2);$$('#wzBody [data-b^="projet.ouv"]').forEach(i=>i.addEventListener('change',()=>setTimeout(()=>{w.ouvEdited=true;wzRender()},150)))}
   if(k==='photos'){$$('[data-wzph]').forEach(inp=>inp.onchange=async()=>{const kk=inp.dataset.wzph;await setPhoto(kk,inp.files[0]);
       if(kk==='p7'||kk==='p8'){if(!S.photos[kk+'pos'])$(`[data-placepv="${kk}"]`).click()}if(kk==='ins'){S.photos.insMode='auto';if(!S.photos.pv6pos)$('[data-placepv="pv6"]').click()}save();wzRender()});
-    $$('[data-wzcam]').forEach(b=>b.onclick=async()=>{const kk=b.dataset.wzcam;if(kk==='ins'){wzGo(wzKeys().indexOf('implant'));$('#wzCam').click();return}await onsitePhoto(kk);wzRender()})}
+    $$('[data-wzcam]').forEach(b=>b.onclick=async()=>{const kk=b.dataset.wzcam;await onsitePhoto(kk);wzRender()});
+    $$('[data-wzshot]').forEach(b=>b.onclick=async()=>{I3.k=b.dataset.wzshot;const far=I3.k==='shot2';const sh=await openCamera({title:far?'Vue lointaine':'Photo pour l\'insertion',tip:far?'Reculez de 30 à 100 m dans la rue, le terrain au centre, téléphone droit':'Depuis la rue, à 10 ou 20 m, visez l\'emplacement du projet, téléphone droit'});if(sh){i3dSetQuiet(sh)}wzRender()});
+    $$('[data-wzshotf]').forEach(inp=>inp.onchange=async()=>{I3.k=inp.dataset.wzshotf;const f=inp.files[0];if(f){await i3dImport(f,true)}wzRender()})}
   if(k==='abords')$$('[data-ab]').forEach(b=>b.onclick=()=>{const A=wzAb();const key=b.dataset.ab,v=b.dataset.v;if(b.dataset.m==='1'){const L=A[key]||[];A[key]=L.includes(v)?L.filter(x=>x!==v):[...L,v]}else A[key]=A[key]===v?null:v;abApply();save();wzRender()});
-  if(k==='fin'){$('#wzPrint').onclick=()=>pdfDossier();$('#wzCerfa').onclick=()=>cerfaRempli();$('#wzZip').onclick=()=>zipDepot();$('#wzSee').onclick=()=>{wzClose();if(isMobile())setView('sheets');goTab('pcmi2')};$('#wzSaveP').onclick=()=>$('#bSave').click()}}
+  if(k==='fin'){const ib=$('#wzI3d');if(ib)ib.onclick=()=>{wzClose();i3dOpen()};$('#wzPrint').onclick=()=>pdfDossier();$('#wzCerfa').onclick=()=>cerfaRempli();$('#wzZip').onclick=()=>zipDepot();$('#wzSee').onclick=()=>{wzClose();if(isMobile())setView('sheets');goTab('pcmi2')};$('#wzSaveP').onclick=()=>$('#bSave').click()}}
 $('#wzNext').onclick=async()=>{const k=wzKey();
   if(k==='terrain'&&!S.demo){const w=wzState();if(!w.done){wzDefaults();w.done=true}else if(w.kind!=='portail'){if(!(S.onsite&&S.onsite.placed))autoImplant();if(!w.ouvEdited)autoOuvertures()}
     if(w.kind!=='portail'&&reglementUrl(S.terrain.zone)&&!WZ.plu)wzReadPLU()}
@@ -5226,7 +5336,7 @@ $('#bDos').onclick=openDossiers;$('#bUndo').onclick=histUndo;$('#bRedo').onclick
 $('#dosImp input').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const d=unpackS(JSON.parse(await f.text()));if(!d.terrain||!d.projet)throw new Error('fichier non reconnu');d.meta=d.meta||{};d.meta.id='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);d.meta.saved=Date.now();
   await idbPut({id:d.meta.id,updated:Date.now(),data:d,thumb:null});toast('Dossier importé.');openDossiers()}catch(err){toast('Import impossible : '+err.message)}});$('#dosClose').onclick=closeDossiers;$('#dosNew').onclick=newDossier;
 startApp();
-expertApply();setTimeout(idbRestore,50);
+expertApply();i3dBind();document.addEventListener('click',e=>{if(e.target.closest('[data-i3dopen]')){e.preventDefault();i3dOpen()}});$('#bI3d').onclick=()=>i3dOpen();setTimeout(idbRestore,50);
 let SHARED=location.hash.startsWith('#d=');if(SHARED)setTimeout(()=>shareLinkOpen(),600);
 
 // application installable : copie locale et mise à jour automatique
