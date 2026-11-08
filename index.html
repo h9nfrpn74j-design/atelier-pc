@@ -535,7 +535,7 @@ body[data-mode="dp-facade"] .pc-only,body[data-mode="dp-toiture"] .pc-only{displ
 .wz-ab{display:grid;gap:6px}.wz-ab>b{font-size:13px}.wz-chips{display:flex;flex-wrap:wrap;gap:6px}.wz-chips button{border:1px solid var(--line);background:var(--panel);border-radius:99px;padding:8px 12px;font:500 13px var(--f-ui);cursor:pointer}.wz-chips button.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .wz-rules{display:grid;gap:2px;border-radius:10px;padding:10px 12px;font-size:13px}.wz-rules.ok{background:#EEF7F1;color:var(--ok)}.wz-rules.bad{background:#FBF0EE;color:var(--bad)}.wz-rules .hint{color:var(--muted)}
 .wz-place{display:grid;gap:8px;border:1px solid var(--line);border-radius:12px;padding:12px}.wz-place>b{font-size:14px}.wz-big2{width:100%;min-height:46px;font-weight:600}.wz-okline{color:var(--ok);font-weight:600;font-size:13px}
-.cam{position:fixed;inset:0;z-index:60;background:#000;color:#fff;display:grid;grid-template-rows:1fr}
+.cam{position:fixed;inset:0;z-index:96;background:#000;color:#fff;display:grid;grid-template-rows:1fr}
 .cam video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
 .cam-top{position:absolute;left:0;right:0;top:0;display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:max(10px,env(safe-area-inset-top)) 14px 10px;background:linear-gradient(rgba(0,0,0,.65),transparent);font:500 13px var(--f-mono)}
 .cam-top b{font:600 15px var(--f-ui);flex:1 1 100%}.cam-top span{background:rgba(0,0,0,.45);padding:3px 8px;border-radius:99px}.cam-top span.ok{color:#9fe0b4}
@@ -2777,7 +2777,7 @@ function i3dBind(){const st=$('#i3dStage');
     else if(id==='i3dDel'&&sh){if(I3.k==='shot2')removeFar();else{S.onsite.shot=null}save();i3dUI()}
     else if(id==='i3dUse'&&sh)await i3dUse()});
   $('#i3dFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(f)await i3dImport(f)}}
-async function i3dTake(){const far=I3.k==='shot2';const sh=await openCamera({title:far?'Vue lointaine':'Photo pour l\'insertion',tip:far?'Reculez de 30 à 100 m dans la rue, le terrain au centre, téléphone droit':'Depuis la rue, à 10 ou 20 m, visez l\'emplacement du projet, téléphone droit'});
+async function i3dTake(){const far=I3.k==='shot2';$('#i3d').hidden=true;const sh=await openCamera({title:far?'Vue lointaine':'Photo pour l\'insertion',tip:far?'Reculez de 30 à 100 m dans la rue, le terrain au centre, téléphone droit':'Depuis la rue, à 10 ou 20 m, visez l\'emplacement du projet, téléphone droit'});
   $('#i3d').hidden=false;if(!sh)return;i3dSet(sh)}
 function i3dSet(sh){S.onsite=S.onsite||{};S.onsite[I3.k]=sh;const ph=S.photos;const G=shotGeom(sh);
   if(I3.k==='shot2'){ph.p8=sh.img;ph.p8pos=toLL(...G.cw);ph.p8dir=Math.round(G.h)}else if(!ph.p7||ph.p7FromShot){ph.p7=sh.img;ph.p7FromShot=true;ph.p7pos=toLL(...G.cw);ph.p7dir=Math.round(G.h)}
