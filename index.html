@@ -1590,7 +1590,7 @@ function renderBuilding(f2,pitch,opt={}){
     if(render&&/bardage|bois|clin/i.test(p.facade||'')){const P2=w.pts.map(pt=>{const d=[pt[0]-w.c[0],pt[1]-w.c[1]];return[d[0]*w.r[0]+d[1]*w.r[1],pt[2]]});const zs=P2.map(q=>q[1]);const vert=/vertical/i.test(p.facade);
       if(vert){for(let q=-L2+0.13;q<L2;q+=0.13){let lo=1e9,hi=-1e9;for(let i=0;i<P2.length;i++){const A=P2[i],B=P2[(i+1)%P2.length];if((A[0]-q)*(B[0]-q)<=0&&A[0]!==B[0]){const z=A[1]+(B[1]-A[1])*(q-A[0])/(B[0]-A[0]);lo=Math.min(lo,z);hi=Math.max(hi,z)}}if(hi>lo)out+=line(Q(q,lo,0.006),Q(q,hi,0.006),sw*0.35,shade(wallC,k*0.8))}}
       else for(let z=Math.min(...zs)+0.15;z<Math.max(...zs);z+=0.15){let lo=1e9,hi=-1e9;for(let i=0;i<P2.length;i++){const A=P2[i],B=P2[(i+1)%P2.length];if((A[1]-z)*(B[1]-z)<=0&&A[1]!==B[1]){const q=A[0]+(B[0]-A[0])*(z-A[1])/(B[1]-A[1]);lo=Math.min(lo,q);hi=Math.max(hi,q)}}if(hi>lo)out+=line(Q(lo,z,0.006),Q(hi,z,0.006),sw*0.35,shade(wallC,k*0.8))}}
-    if(zb<-0.02)out+=fillOnly([Q(-L2,zb,0.005),Q(L2,zb,0.005),Q(L2,0,0.005),Q(-L2,0,0.005)],shade(wallC,k*0.8))+line(Q(-L2,0,0.006),Q(L2,0,0.006),sw*0.45,shade(wallC,k*0.62));
+    if(zb<-0.02&&!w.tri)out+=fillOnly([Q(-L2,zb,0.005),Q(L2,zb,0.005),Q(L2,0,0.005),Q(-L2,0,0.005)],shade(wallC,k*0.8))+line(Q(-L2,0,0.006),Q(L2,0,0.006),sw*0.45,shade(wallC,k*0.62));
     const tops=w.pts.slice(2).map(q=>q[2]);const flatTop=Math.max(...tops)-Math.min(...tops)<0.01;
     if(flatTop&&!(w.flat??p.toit==='plat')&&p.debord>0.05){const zt=tops[0];const d=Math.min(0.55,0.25+p.debord*0.5);out+=render?gradPoly([Q(-L2,zt-d*1.6,0.004),Q(L2,zt-d*1.6,0.004),Q(L2,zt,0.004),Q(-L2,zt,0.004)],Q(0,zt,0.004),Q(0,zt-d*1.6,0.004),0.3):fillOnly([Q(-L2,zt-d,0.004),Q(L2,zt-d,0.004),Q(L2,zt,0.004),Q(-L2,zt,0.004)],'rgba(0,0,0,0.08)')}
     if(flatTop&&!(w.flat??p.toit==='plat')&&p.gouttieres!==false)out+=gutterDraw(w,tops[0],zb,Q,k,{fillOnly,line,sw,render,ink});
@@ -2823,15 +2823,17 @@ function openPartExtras(walls,roofs,h,O){const p=S.projet;const zb=h.zb,E=h.E;co
     for(const[n,[a,b]]of f)ex.push({x:true,col,nrm:[n[0],n[1],0],n,pts:[[...a,z0],[...b,z0],[...b,z1],[...a,z1]]})};
   const lo=Math.min(O.uo,O.uEnd),hi=Math.max(O.uo,O.uEnd);
   /* dalle */
-  ex.push({x:true,floor:true,n:[0,0],col:'#b9b4aa',nrm:[0,0,1],pts:[[lo,-p.W/2,zb+0.01],[hi,-p.W/2,zb+0.01],[hi,p.W/2,zb+0.01],[lo,p.W/2,zb+0.01]]});
+  const zs=zb<-0.02?0:zb+0.01;ex.push({x:true,floor:true,n:[0,0],col:'#bdb8ae',nrm:[0,0,1],pts:[[lo,-p.W/2,zs],[hi,-p.W/2,zs],[hi,p.W/2,zs],[lo,p.W/2,zs]]});
+  if(zs>zb+0.02){const cc='#a39e94';ex.push({x:true,col:cc,n:[0,1],nrm:[0,1,0],pts:[[hi,p.W/2,zb],[lo,p.W/2,zb],[lo,p.W/2,zs],[hi,p.W/2,zs]]},{x:true,col:cc,n:[0,-1],nrm:[0,-1,0],pts:[[lo,-p.W/2,zb],[hi,-p.W/2,zb],[hi,-p.W/2,zs],[lo,-p.W/2,zs]]});
+    const u=O.uEnd;ex.push({x:true,col:cc,n:[O.sgn,0],nrm:[O.sgn,0,0],pts:O.sgn>0?[[u,-p.W/2,zb],[u,p.W/2,zb],[u,p.W/2,zs],[u,-p.W/2,zs]]:[[u,p.W/2,zb],[u,-p.W/2,zb],[u,-p.W/2,zs],[u,p.W/2,zs]]})}
   /* poteaux */
-  const n=Math.max(1,Math.ceil(O.L/3.6));for(let k=1;k<=n;k++){const u=O.uo+O.sgn*(O.L*k/n-(k===n?ps+0.02:0));for(const v of[-p.W/2+ps+0.02,p.W/2-ps-0.02])box(u,v,zb,E-bh,ps,ps,post)}
+  const n=Math.max(1,Math.ceil(O.L/3.6));for(let k=1;k<=n;k++){const u=O.uo+O.sgn*(O.L*k/n-(k===n?ps+0.02:0));for(const v of[-p.W/2+ps+0.02,p.W/2-ps-0.02])box(u,v,zs,E-bh,ps,ps,post)}
   /* sablières et poutre de rive sous le pignon */
   for(const sv of[-1,1]){const v=sv*p.W/2;ex.push({x:true,col:beam,n:[0,sv],nrm:[0,sv,0],pts:sv>0?[[hi,v,E-bh],[lo,v,E-bh],[lo,v,E],[hi,v,E]]:[[lo,v,E-bh],[hi,v,E-bh],[hi,v,E],[lo,v,E]]})}
   {const u=O.uEnd;ex.push({x:true,col:beam,n:[O.sgn,0],nrm:[O.sgn,0,0],pts:O.sgn>0?[[u,-p.W/2,E-bh],[u,p.W/2,E-bh],[u,p.W/2,E],[u,-p.W/2,E]]:[[u,p.W/2,E-bh],[u,-p.W/2,E-bh],[u,-p.W/2,E],[u,p.W/2,E]]})}
   /* sous-face de la couverture */
-  const ue=O.uEnd+O.sgn*(+p.debord||0);const a=Math.min(O.uo,ue),b=Math.max(O.uo,ue);
-  for(const r of roofs){const c=clipU(r.pts,a,b);if(c.length<3)continue;const pts=c.map(q=>[q[0],q[1],q[2]-0.2]).reverse();ex.push({x:true,col:under,n:[0,0],nrm:r.nrm.map(x=>-x),pts})}
+  const ue=O.uEnd;const a=Math.min(O.uo,ue),b=Math.max(O.uo,ue);
+  for(const r of roofs){const c=clipU(r.pts,a,b);if(c.length<3)continue;const pts=c.map(q=>[q[0],q[1],q[2]-0.03]).reverse();ex.push({x:true,col:under,n:[0,0],nrm:r.nrm.map(x=>-x),pts})}
   walls.push(...ex)}
 function openPartMasse(k,W){const O=openPart();if(!O)return'';const p=S.projet;const a=Math.min(O.uo,O.uEnd),b=Math.max(O.uo,O.uEnd),hb=p.W/2;
   const R=[W(a,-hb),W(b,-hb),W(b,hb),W(a,hb)];const pt=q=>q[0].toFixed(3)+','+(-q[1]).toFixed(3);let o=`<polygon points="${R.map(pt).join(' ')}" fill="#fff" fill-opacity=".82" stroke="#fff" stroke-width="${0.6*k}" pointer-events="none"/>`;
