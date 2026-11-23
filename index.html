@@ -923,6 +923,8 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
       <label class="f">Menuiseries
         <div style="display:grid;grid-template-columns:1fr 38px;gap:8px"><input type="text" data-b="projet.menuis"><input type="color" data-b="projet.menuisCouleur" aria-label="Couleur des menuiseries"></div>
       </label>
+      <div class="grid2"><label class="f">Pose du bardage<select data-b="projet.bardageSens"><option value="h">Lames horizontales</option><option value="v">Lames verticales</option></select></label><label class="f">Portes de garage<select data-b="projet.garType"><option value="sectionnelle">Sectionnelles</option><option value="rideau">À rideau</option><option value="basculante">Basculantes</option><option value="battante">Battantes</option></select></label></div>
+      <div class="grid2"><label class="f">Habillages (rives, angles)<input type="color" data-b="projet.habCouleur" aria-label="Teinte des habillages"></label><label class="f">Gouttières et descentes<input type="color" data-b="projet.gouttCouleur" aria-label="Teinte des gouttières"></label></div>
       <div class="grid2"><label class="f">Volets<select data-b="projet.volets"><option value="">Sans volets</option><option value="roulants">Volets roulants (coffre intégré)</option><option value="battants">Volets battants</option></select></label><label class="f">Teinte des volets<input type="color" data-b="projet.voletsCouleur" aria-label="Couleur des volets"></label></div>
       <label class="toggle"><input type="checkbox" data-b="projet.gouttieres"> Gouttières et descentes d'eaux pluviales dessinées</label>
       <div class="swatches" id="swMen" aria-label="Choix rapide"></div>
@@ -1514,6 +1516,9 @@ function texMake(kind){
   if(kind==='bois'){const W=240,H=120;const c=texCanvas(W,H),g=c.getContext('2d');const R=texRng(41);const n=texNoise(W,H,20,43);const im=g.createImageData(W,H),D=im.data;const ph=H/4;
     for(let y=0;y<H;y++){const pl=Math.floor(y/ph);const pv=texRng(50+pl)()-0.5;for(let x=0;x<W;x++){const s=Math.sin((y+n(x,y)*14)*1.7+pl*3)*0.35+pv*0.8+(R()-0.5)*0.15;let v=s;if(y%ph<1.2)v=-1.4;texPut(D,(y*W+x)*4,v,0.3)}}
     g.putImageData(im,0,0);return{url:c.toDataURL('image/png'),w:1.2,h:0.6}}
+  if(kind==='boisv'){const W=96,H=240;const c=texCanvas(W,H),g=c.getContext('2d');const R=texRng(47);const n=texNoise(W,H,20,53);const im=g.createImageData(W,H),D=im.data;const pw=W/4;
+    for(let x=0;x<W;x++){const pl=Math.floor(x/pw);const pv=texRng(60+pl)()-0.5;for(let y=0;y<H;y++){const s2=Math.sin((x+n(x,y)*14)*1.7+pl*3)*0.3+pv*0.8+(R()-0.5)*0.15;let v=s2;if(x%pw<1.4)v=-1.5;texPut(D,(y*W+x)*4,v,0.3)}}
+    g.putImageData(im,0,0);return{url:c.toDataURL('image/png'),w:0.667,h:1.2}}
   /* toitures : rangs de tuiles avec ombre de recouvrement */
   const roof={tile:{tw:0.25,rh:0.34,st:0,sh:0.6,a:0.2},canal:{tw:0.2,rh:0.4,st:0,sh:0.45,a:0.2},tileS:{tw:0.17,rh:0.2,st:0.5,sh:0.5,a:0.2},slate:{tw:0.25,rh:0.17,st:0.5,sh:0.55,a:0.22},green:{tw:0.5,rh:0.5,st:0,sh:0,a:0.5,green:1},rib:{tw:0.5,rh:1,st:0,sh:0,a:0.3,rib:1}}[kind];
   if(!roof)return null;const cols=roof.green||roof.rib?2:8,rows=roof.green||roof.rib?2:6;const px=40;const W=Math.round(cols*roof.tw/roof.tw*px*(roof.tw>=0.25?1.25:1)),H=Math.round(W*rows*roof.rh/(cols*roof.tw));
@@ -1567,7 +1572,7 @@ function renderBuilding(f2,pitch,opt={}){
   let defs=`<linearGradient id="${id}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${render?(opt.sky?hexMix('#dfe9ee',opt.sky,0.6):'#dfe9ee'):'#d7e2e6'}"/><stop offset=".55" stop-color="${render?(opt.sky?hexMix('#9fb2bc',opt.sky,0.3):'#a9bac3'):'#c3d0d6'}"/><stop offset="1" stop-color="${render?(opt.sky?hexMix('#5f6e66',opt.sky,0.15):'#7d9098'):'#b3c3ca'}"/></linearGradient>`;
   if(render)defs+=`<filter id="${id}gr" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="${(/bardage|bois/i.test(p.facade||'')?1.2:6.5)}" numOctaves="2" seed="3" result="n"/><feColorMatrix in="n" type="saturate" values="0" result="g"/><feComponentTransfer in="g" result="g2"><feFuncA type="linear" slope="0" intercept="${/bardage|bois/i.test(p.facade||'')?0.10:0.07}"/></feComponentTransfer><feComposite in="g2" in2="SourceGraphic" operator="in" result="t"/><feBlend in="t" in2="SourceGraphic" mode="multiply"/></filter>`;
   let out='';const zb=h.zb;
-  const TXo=render&&opt.tex!==false;const TW=TXo?texGet(wallTexKind(p.facade)):null,TR=TXo?texGet(COUV_PAT[p.couv]||'tile'):null,TF=TXo?texGet('beton'):null;let tq=0;
+  const TXo=render&&opt.tex!==false;const TW=TXo?texGet(wallTexKind(p.facade)==='bois'&&p.bardageSens==='v'?'boisv':wallTexKind(p.facade)):null,TR=TXo?texGet(COUV_PAT[p.couv]||'tile'):null,TF=TXo?texGet('beton'):null;let tq=0;
   const txRef={};const txUse=(T,k)=>{if(!T)return null;if(!txRef[k]){txRef[k]=`${id}t${k}`;defs+=`<image id="${txRef[k]}" href="${T.url}" width="${T.w}" height="${T.h}" preserveAspectRatio="none"/>`}return{...T,ref:txRef[k]}};
   const texFill=(T,k,o,u,v)=>{const R=txUse(T,k);return R?texPattern(V,`${id}p${tq++}`,R,o,u,v,x=>{defs+=x}):null};
   let gq=0;const gradPoly=(pts,from,to,a)=>{const gid=`${id}q${gq++}`;const A=V.P(from),B=V.P(to);if(![...A,...B].every(Number.isFinite))return'';defs+=`<linearGradient id="${gid}" gradientUnits="userSpaceOnUse" x1="${A[0].toFixed(3)}" y1="${(-A[1]).toFixed(3)}" x2="${B[0].toFixed(3)}" y2="${(-B[1]).toFixed(3)}"><stop offset="0" stop-color="#000" stop-opacity="${a.toFixed(3)}"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient>`;return fillOnly(pts,`url(#${gid})`)};
@@ -1612,8 +1617,8 @@ function renderBuilding(f2,pitch,opt={}){
   // toiture : épaisseur (rive, bandeau), plan, motif de couverture
   const vis=VR.map((r,ri)=>({...r,ri,dd:V.side(r.nrm,r.pts[0])})).filter(r=>r.dd<1e-6).sort((x,y)=>avgD(y.pts)-avgD(x.pts));const th=p.toit==='plat'?0:0.2;
   const pat=COUV_PAT[p.couv]||'tile';
-  if(th)for(const r of vis){const low=r.pts.map(q=>[q[0],q[1],q[2]-th]);if(r.pts.length>4){const N=r.pts.length;for(let i=0;i<N;i++){const j=(i+1)%N;const qd=[r.pts[i],r.pts[j],low[j],low[i]].map(V.P);out+=`<polygon points="${qd.map(v=>v[0].toFixed(3)+','+(-v[1]).toFixed(3)).join(' ')}" fill="${shade(rcOf(r),render?0.5:0.62)}" stroke="${ink}" stroke-width="${sw*0.6}" stroke-linejoin="round"/>`}[...r.pts,...low].forEach(q=>pts2.push(V.P(q)));continue}const hu=hull2([...r.pts,...low].map(V.P)).map(v=>v[0].toFixed(3)+','+(-v[1]).toFixed(3));
-    [...r.pts,...low].forEach(q=>pts2.push(V.P(q)));out+=`<polygon points="${hu.join(' ')}" fill="${shade(rcOf(r),render?0.5:0.62)}" stroke="${ink}" stroke-width="${sw}" stroke-linejoin="round"/>`}
+  if(th)for(const r of vis){const low=r.pts.map(q=>[q[0],q[1],q[2]-th]);if(r.pts.length>4){const N=r.pts.length;for(let i=0;i<N;i++){const j=(i+1)%N;const qd=[r.pts[i],r.pts[j],low[j],low[i]].map(V.P);out+=`<polygon points="${qd.map(v=>v[0].toFixed(3)+','+(-v[1]).toFixed(3)).join(' ')}" fill="${shade(p.habCouleur||rcOf(r),render?0.5:0.62)}" stroke="${ink}" stroke-width="${sw*0.6}" stroke-linejoin="round"/>`}[...r.pts,...low].forEach(q=>pts2.push(V.P(q)));continue}const hu=hull2([...r.pts,...low].map(V.P)).map(v=>v[0].toFixed(3)+','+(-v[1]).toFixed(3));
+    [...r.pts,...low].forEach(q=>pts2.push(V.P(q)));out+=`<polygon points="${hu.join(' ')}" fill="${shade(p.habCouleur||rcOf(r),render?0.5:0.62)}" stroke="${ink}" stroke-width="${sw}" stroke-linejoin="round"/>`}
   for(const r of vis){if(Math.abs(r.dd)<1e-3)continue;const k=lit(r.nrm);out+=poly(r.pts,shade(rcOf(r),k));const flatR=Math.hypot(r.nrm[0],r.nrm[1])<0.01;
     if(TXo){const n=r.nrm;const c=r.pts.reduce((a,q)=>[a[0]+q[0]/r.pts.length,a[1]+q[1]/r.pts.length,a[2]+q[2]/r.pts.length],[0,0,0]);
       if(flatR){const fl=texFill(TF,'f',c,[1,0,0],[0,1,0]);if(fl)out+=fillOnly(r.pts,fl,'opacity=".7"')}
@@ -2684,7 +2689,7 @@ function voletsDraw(o,q0,q1,Q,k,X){const p=S.projet;if(!p.volets||o.o.k!=='win')
     const n=Math.max(3,Math.round((b-a)/0.11));for(let i=1;i<n;i++){const q=a+(b-a)*i/n;s+=X.line(Q(q,o.z0+0.03,0.035),Q(q,o.z1-0.03,0.035),X.sw*0.25,shade(col,k*0.72))}
     for(const z of[o.z0+(o.z1-o.z0)*0.2,o.z1-(o.z1-o.z0)*0.2])s+=X.line(Q(a+0.03,z,0.04),Q(b-0.03,z,0.04),X.sw*0.6,shade(col,k*0.6))}
   return s}
-function gutterDraw(w,zt,zb,Q,k,X){const p=S.projet;const d=Math.max(0.1,+p.debord||0.3);const L2=w.len/2;const z=zt-d*Math.tan((+p.pente||35)*D2R)-0.36;const zinc='#8d9599';let s='';
+function gutterDraw(w,zt,zb,Q,k,X){const p=S.projet;const d=Math.max(0.1,+p.debord||0.3);const L2=w.len/2;const z=zt-d*Math.tan((+p.pente||35)*D2R)-0.36;const zinc=p.gouttCouleur||'#8d9599';let s='';
   s+=X.fillOnly([Q(-L2-d,z,d+0.02),Q(L2+d,z,d+0.02),Q(L2+d,z+0.12,d+0.02),Q(-L2-d,z+0.12,d+0.02)],shade(zinc,k*1.05))+X.line(Q(-L2-d,z,d+0.03),Q(L2+d,z,d+0.03),X.sw*0.35,shade(zinc,k*0.7));
   const q=L2-0.22;s+=X.fillOnly([Q(q-0.045,zb,0.07),Q(q+0.045,zb,0.07),Q(q+0.045,z-0.25,0.07),Q(q-0.045,z-0.25,0.07)],shade(zinc,k))+X.line(Q(q,z-0.25,0.07),Q(q,z,d),X.sw*1.6,shade(zinc,k*0.92));
   if(!X.render)s+=X.line(Q(q-0.045,zb,0.08),Q(q-0.045,z-0.25,0.08),X.sw*0.4,X.ink)+X.line(Q(q+0.045,zb,0.08),Q(q+0.045,z-0.25,0.08),X.sw*0.4,X.ink);return s}
@@ -2866,10 +2871,11 @@ function exRidge(e,R){if(!e.toit||e.toit==='plat')return null;let best=null;for(
   if(e.toit==='mono'){const nn=[-best.d[1],best.d[0]];return{mono:true,a:[c[0]+nn[0]*0.0,c[1]+nn[1]*0.0],d:best.d,n:nn,m0,m1,c}}
   return{a:[c[0]+best.d[0]*m0,c[1]+best.d[1]*m0],b:[c[0]+best.d[0]*m1,c[1]+best.d[1]*m1]}}
 /* ================= Assistant : annexe sur mesure (garage, atelier, hangar) ================= */
-function gState(){const w=wzState(),p=S.projet;const d={gL:p.L,gW:p.W,gH:Math.round((+p.hEtage||2.5)*100)/100,gUse:p.usage||'garage',gToit:p.toit==='mono'?'mono':'2pans',gPct:pentePct()||30,gCouv:p.couv,gFac:p.facade,gOpen:(+p.ouvL||0)>0,gOpenL:+p.ouvL||6,gOpenSide:p.ouvSide||'g'};for(const[k,v]of Object.entries(d))if(w[k]==null)w[k]=v;return w}
-function gApplyDims(){const w=wzState(),p=S.projet;if(w.gL==null)return false;p.L=Math.max(2,+w.gL||p.L);p.W=Math.max(2,+w.gW||p.W);p.niveaux=1;p.combles=false;p.hEtage=Math.max(1.8,+w.gH||2.5);p.nature='annexe';p.usage=w.gUse||'garage';p.garageSurf=null;p.park=0;
+function gState(){const w=wzState(),p=S.projet;const d={gL:p.L,gW:p.W,gH:Math.round(((+p.hEtage||2.5)+(p.hPlancher==null?0.2:+p.hPlancher))*100)/100,gUse:p.usage||'garage',gToit:p.toit==='mono'?'mono':'2pans',gPct:pentePct()||30,gCouv:p.couv,gFac:p.facade,gOpen:(+p.ouvL||0)>0,gOpenL:+p.ouvL||6,gOpenSide:p.ouvSide||'g'};for(const[k,v]of Object.entries(d))if(w[k]==null)w[k]=v;return w}
+function gApplyDims(){const w=wzState(),p=S.projet;if(w.gL==null)return false;p.L=Math.max(2,+w.gL||p.L);p.W=Math.max(2,+w.gW||p.W);p.niveaux=1;p.combles=false;p.hEtage=Math.max(1.8,(+w.gH||2.7)-(p.hPlancher==null?0.2:+p.hPlancher));p.nature='annexe';p.usage=w.gUse||'garage';p.garageSurf=null;p.park=0;
   p.ouvL=w.gOpen?Math.min(+w.gOpenL||0,p.L-1.5):0;p.ouvSide=w.gOpenSide||'g';w.gsurf=Math.round(p.L*p.W);return true}
-function gApplyLook(){const w=wzState(),p=S.projet;if(w.gL==null)return;p.toit=w.gToit||'2pans';p.pente=Math.round(Math.atan((+w.gPct||30)/100)/D2R*100)/100;if(w.gCouv&&COUV[w.gCouv]){p.couv=w.gCouv;p.couvCouleur=COUV[w.gCouv]}
+function gApplyLook(){const w=wzState(),p=S.projet;if(w.gL==null)return;try{gApplyLook0(w,p)}finally{if(w.preset&&w.preset.projet)Object.assign(p,w.preset.projet)}}
+function gApplyLook0(w,p){p.toit=w.gToit||'2pans';p.pente=Math.round(Math.atan((+w.gPct||30)/100)/D2R*100)/100;if(w.gCouv&&COUV[w.gCouv]){p.couv=w.gCouv;p.couvCouleur=COUV[w.gCouv]}
   if(w.gFac){const f=SW_FAC.find(x=>x[0]===w.gFac);if(f){p.facade=f[0];p.facadeCouleur=f[1]}}if(p.toit==='mono')p.debord=Math.min(+p.debord||0.3,0.4)}
 function gHTML(){const w=gState(),p=S.projet;const sf=surfaces();const O=openPart();const h=heights();
   const sel=(id,opts,v)=>`<select id="${id}">${opts.map(([k,t])=>`<option value="${esc(k)}"${String(v)===String(k)?' selected':''}>${esc(t)}</option>`).join('')}</select>`;
@@ -2922,7 +2928,7 @@ function facMatLabels(side,r,MD,fw,ops,h,k,x0){const P=S.projet;const X=q=>q[0]*
   // menuiseries : ouverture la plus à droite
   const opk=op=>op.o.k||'win';const wins=ops.filter(op=>opk(op)!=='gar');
   if(wins.length){const op=wins.slice().sort((a,b)=>(opk(a)==='win')-(opk(b)==='win')||a.q-b.q).pop();items.push({t:'Menuiseries : '+P.menuis,tg:[op.q+op.o.w/2-0.08,op.z0+(op.z1-op.z0)*0.62]})}
-  const gar=ops.find(op=>opk(op)==='gar');if(gar)items.push({t:'Porte de garage : sectionnelle, teinte des menuiseries',tg:[gar.q+gar.o.w/2-0.15,gar.z0+(gar.z1-gar.z0)*0.3]});
+  const gar=ops.find(op=>opk(op)==='gar');if(gar)items.push({t:`Porte de garage : ${{rideau:'à rideau',sectionnelle:'sectionnelle',basculante:'basculante',battante:'battante'}[S.projet.garType||'sectionnelle']}, teinte des menuiseries`,tg:[gar.q+gar.o.w/2-0.15,gar.z0+(gar.z1-gar.z0)*0.3]});
   if(!items.length)return'';
   const fs=1.75*k,lh=fs*1.2;const wrap=t=>{const out=[];let cur='';for(const w of String(t).split(/\s+/)){if(cur&&(cur+' '+w).length>21){out.push(cur);cur=w}else cur=cur?cur+' '+w:w}if(cur)out.push(cur);return out};
   items.sort((a,b)=>b.tg[1]-a.tg[1]);let zPrev=Infinity;let o='';const xt=x0+2*k;
@@ -3118,7 +3124,7 @@ ${demTxt}<p>Le projet consiste en ${natTxt}, de ${fmt(P.L)} m × ${fmt(P.W)} m, 
 <h3>c) Traitement des constructions, clôtures, végétation ou aménagements situés en limite de terrain</h3>
 <p>${P.cloture?esc(P.cloture):'<span class="todo">[Décrire les clôtures et le traitement des limites.]</span>'}</p>
 <h3>d) Matériaux et couleurs des constructions</h3>
-<p>Façades : ${esc(P.facade)}. Couverture : ${esc(P.toit==='plat'?'toiture-terrasse, étanchéité':P.couv)}. Menuiseries extérieures : ${esc(P.menuis)}.${P.volets==='battants'?' Volets battants, teinte '+esc(colorName(P.voletsCouleur||P.menuisCouleur))+'.':P.volets==='roulants'?' Volets roulants à coffre intégré, de la teinte des menuiseries.':''}${P.toit!=='plat'&&P.gouttieres!==false?' Gouttières et descentes en zinc.':''}${hasG?' La porte de garage est de même teinte que les menuiseries.':''}</p>
+<p>Façades : ${esc(P.facade)}. Couverture : ${esc(P.toit==='plat'?'toiture-terrasse, étanchéité':P.couv)}. Menuiseries extérieures : ${esc(P.menuis)}.${P.volets==='battants'?' Volets battants, teinte '+esc(colorName(P.voletsCouleur||P.menuisCouleur))+'.':P.volets==='roulants'?' Volets roulants à coffre intégré, de la teinte des menuiseries.':''}${P.toit!=='plat'&&P.gouttieres!==false?(P.gouttCouleur&&P.gouttCouleur.toUpperCase()!=='#8D9599'?` Gouttières demi-rondes et descentes laquées${P.gouttCouleur===P.facadeCouleur?', dans la teinte du bardage':' teinte '+esc(colorName(P.gouttCouleur))}.`:' Gouttières et descentes en zinc.'):''}${/bardage/i.test(P.facade||'')?` Bardage posé à lames ${P.bardageSens==='v'?'verticales':'horizontales'}.`:''}${P.habCouleur?` Habillages (rives, égouts, angles, encadrements)${P.habCouleur===P.facadeCouleur?' dans la teinte du bardage':' teinte '+esc(colorName(P.habCouleur))}.`:''}${/G/.test(Object.values(P.ouv||{}).join(' '))?` Portes de garage ${{rideau:'à rideau métallique',sectionnelle:'sectionnelles',basculante:'basculantes',battante:'battantes'}[P.garType||'sectionnelle']}, teinte des menuiseries.`:''}${hasG?' La porte de garage est de même teinte que les menuiseries.':''}</p>
 <h3>e) Traitement des espaces libres, notamment les plantations</h3>
 <p>${P.plantations?esc(P.plantations):vegeTxt()?'':'<span class="todo">[Décrire les espaces verts et les plantations prévues.]</span>'}${vegeTxt()?' '+esc(vegeTxt()):''}${amText()?' '+esc(amText()):''}</p>
 <h3>f) Organisation et aménagement des accès au terrain, aux constructions et aux aires de stationnement</h3>
@@ -5176,6 +5182,7 @@ function autoOuvertures(){const p=S.projet,w=wzState();const sd=sidesDef();const
   const sc=sd.map(s=>{const n=sideWorldNormal(s.n);return{s,rue:n[0]*rueN[0]+n[1]*rueN[1],sud:-n[1]}});
   const rue=sc.slice().sort((a,b)=>b.rue-a.rue)[0].s;const jardin=sc.slice().sort((a,b)=>a.rue-b.rue)[0].s;const sud=sc.slice().sort((a,b)=>b.sud-a.sud)[0].s;
   const out={};w.front=rue.id;
+  if(w.kind==='garage'&&w.preset&&w.preset.ouvRue!=null){for(const s of sd)out[s.id]=s===rue?w.preset.ouvRue:'';out.SJ=w.preset.ouvSJ||'';p.ouv=out;return}
   if(w.kind==='garage'){for(const s of sd)out[s.id]=s===rue?(Math.abs(s.n[1])>0.5&&(openPart()?openPart().Lc:s.len)>=7?'G G':'G'):s===jardin?'P':(s.len>=4?'FE':'');p.ouv=out;return}
   if(w.kind==='abri'){for(const s of sd)out[s.id]=s===rue?'P':'';p.ouv=out;return}
   if(w.kind==='extension'){const att=w.attach||'S1';const opp={S1:'S3',S3:'S1',S2:'S4',S4:'S2'}[att];w.front=opp;
@@ -5449,7 +5456,13 @@ $('#dosImp input').addEventListener('change',async e=>{const f=e.target.files[0]
   await idbPut({id:d.meta.id,updated:Date.now(),data:d,thumb:null});toast('Dossier importé.');openDossiers()}catch(err){toast('Import impossible : '+err.message)}});$('#dosClose').onclick=closeDossiers;$('#dosNew').onclick=newDossier;
 startApp();
 expertApply();i3dBind();document.addEventListener('click',e=>{if(e.target.closest('[data-i3dopen]')){e.preventDefault();i3dOpen()}});$('#bI3d').onclick=()=>i3dOpen();setTimeout(idbRestore,50);
-let SHARED=location.hash.startsWith('#d=');if(SHARED)setTimeout(()=>shareLinkOpen(),600);
+let SHARED=location.hash.startsWith('#d=')||location.hash.startsWith('#modele=');if(location.hash.startsWith('#d='))setTimeout(()=>shareLinkOpen(),600);
+/* lien « modèle » : un bâtiment déjà réglé, à poser sur son terrain avec l'assistant */
+function modeleOpen(){const h=location.hash;if(!h.startsWith('#modele='))return;let d;try{const b=h.slice(8).replace(/-/g,'+').replace(/_/g,'/');d=JSON.parse(decodeURIComponent(escape(atob(b))))}catch(e){toast('Lien de modèle illisible.');return}
+  try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
+  try{homeClose()}catch(e){}newDossier();const w=wzState();w.kind=d.kind||'garage';w.preset=d;Object.assign(w,d.wz||{});WZ.step=Math.min(1,WZ.step);wzRender();
+  toast(`Modèle chargé : ${d.nom||'bâtiment'}. Choisissez maintenant votre terrain, le bâtiment s'y posera tel quel.`,7000)}
+if(location.hash.startsWith('#modele='))setTimeout(modeleOpen,900);
 
 // application installable : copie locale et mise à jour automatique
 if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&location.hostname!=='localhost'){navigator.serviceWorker.register('sw.js').catch(()=>{})}
