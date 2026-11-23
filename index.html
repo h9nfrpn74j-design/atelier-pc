@@ -1098,7 +1098,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
   <div class="home-links"><button type="button" data-home="demo"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>Voir l'exemple</button><button type="button" data-home="import"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5h6l2 2h10v4"/><path d="M3 7v12h16l3-8H6z"/></svg>Importer un dossier</button></div>
 </div></div>
 <div class="wiz" id="wiz" hidden role="dialog" aria-modal="true" aria-labelledby="wzTitle"><div class="wz-box">
-  <div class="wz-top"><div class="wz-head"><span class="tag">⚡ EXPRESS</span><h2 id="wzTitle"></h2><span id="wzTime"></span><button class="wz-x" id="wzClose" type="button" aria-label="Fermer l'assistant et passer au mode complet" title="Mode complet">×</button></div><div id="wzSteps"></div></div>
+  <div class="wz-top"><div class="wz-head"><span class="tag">⚡ GUIDÉ</span><h2 id="wzTitle"></h2><span id="wzTime"></span><button class="wz-x" id="wzClose" type="button" aria-label="Fermer l'assistant et passer au mode complet" title="Mode complet">×</button></div><div id="wzSteps"></div></div>
   <div id="wzBody"></div>
   <div class="wz-foot"><button class="btn" id="wzPrev" type="button">Précédent</button><button class="btn primary" id="wzNext" type="button">Continuer</button></div>
 </div></div>
@@ -4569,9 +4569,11 @@ function ouvSer(L){const c=L.map(lv=>lv.slice().sort((a,b)=>a.at-b.at));while(c.
 function ouvExplicit(s){const L=ouvParse((S.projet.ouv||{})[s.id]);for(const lv of L){const n=lv.length;lv.forEach((t,i)=>{if(t.at==null)t.at=Math.round((i+0.5)*s.len/n*100)/100;t.at=clamp(t.at,tokW(t)/2,s.len-tokW(t)/2)})}return L}
 function nLevels(){const p=S.projet;if(typeof OE!=='undefined'&&/^[AB]\d/.test(OE.side||'')){const G=wingsGeo().find(g=>g.pre===OE.side[0]);if(G)return G.nw}return p.niveaux+(p.combles&&p.toit!=='plat'?1:0)}
 const OE={side:null,sel:null,drag:null,lvl:0};
-function sideLabel(s){if(s.wing){const two=wingsGeo().length>1;return(two?(s.id[0]==='A'?'Aile 1':'Aile 2'):'Aile')+' · '+(/1$/.test(s.id)?'bout':'côté '+sideName(s).replace('Façade ','').toLowerCase())}const f=frontSide();if(s.id===f.id)return'Façade avant';const r=[-f.n[1],f.n[0]];const d=s.n[0]*f.n[0]+s.n[1]*f.n[1];if(d<-0.5)return'Façade arrière';return(s.n[0]*r[0]+s.n[1]*r[1]>0.5)?'Pignon droit':'Pignon gauche'}
+function sideLabel(s){if(s.id==='SJ')return'Mur sous l\'abri';if(s.wing){const two=wingsGeo().length>1;return(two?(s.id[0]==='A'?'Aile 1':'Aile 2'):'Aile')+' · '+(/1$/.test(s.id)?'bout':'côté '+sideName(s).replace('Façade ','').toLowerCase())}const f=frontSide();if(s.id===f.id)return'Façade avant';const r=[-f.n[1],f.n[0]];const d=s.n[0]*f.n[0]+s.n[1]*f.n[1];if(d<-0.5)return'Façade arrière';return(s.n[0]*r[0]+s.n[1]*r[1]>0.5)?'Pignon droit':'Pignon gauche'}
 function sideOrder(){const sd=sidesDef();const f=frontSide();return[sd.find(s=>s.id===f.id),...sd.filter(s=>s.id!==f.id).sort((a,b)=>{const o=x=>({'Façade arrière':1,'Pignon gauche':2,'Pignon droit':3})[sideLabel(x)];return o(a)-o(b)}),...aileSides()]}
-function oeHTML(){const sd=sideOrder();if(!OE.side||!sd.some(s=>s.id===OE.side))OE.side=sd[0].id;const s=sd.find(x=>x.id===OE.side);const L=ouvExplicit(s);const nl=nLevels();OE.lvl=Math.min(OE.lvl,nl-1);
+/* côtés modifiables dans l'éditeur : avec une partie ouverte, les longs pans ne couvrent que la partie fermée et le pignon ouvert laisse place au mur sous l'abri */
+function oeSides(){const O=openPart();const L=sideOrder();if(!O)return L;return L.map(s=>{if(s.wing)return s;if(Math.abs(s.n[1])>0.5)return{...s,len:O.Lc};if(Math.sign(s.n[0])===O.sgn)return{...s,id:'SJ',len:S.projet.W};return s})}
+function oeHTML(){const sd=oeSides();if(!OE.side||!sd.some(s=>s.id===OE.side))OE.side=sd[0].id;const s=sd.find(x=>x.id===OE.side);const L=ouvExplicit(s);const nl=nLevels();OE.lvl=Math.min(OE.lvl,nl-1);
   const sel=OE.sel&&L[OE.sel[0]]&&L[OE.sel[0]][OE.sel[1]]?L[OE.sel[0]][OE.sel[1]]:null;if(!sel)OE.sel=null;
   return`<div class="oe-tabs">${sd.map(x=>`<button type="button" data-oes="${x.id}" class="${x.id===OE.side?'on':''}">${sideLabel(x)} <small>${esc(sideName(x).replace('Façade ',''))}</small></button>`).join('')}</div>
   <div class="oe-wrap">${oeSVG(s,L)}</div>
@@ -4581,26 +4583,27 @@ function oeHTML(){const sd=sideOrder();if(!OE.side||!sd.some(s=>s.id===OE.side))
     <button class="btn sm" type="button" id="oeDel">Supprimer</button></div>`:`<p class="hint">Touchez une ouverture pour la modifier, faites-la glisser pour la déplacer.</p>`}
   <div class="oe-add">${nl>1?`<select id="oeLvl">${Array.from({length:nl},(_,i)=>`<option value="${i}"${i===OE.lvl?' selected':''}>${i===0?'Rez-de-chaussée':S.projet.combles&&i===nl-1&&S.projet.toit!=='plat'?'Combles':'Étage '+i}</option>`).join('')}</select>`:''}
     ${Object.entries(OE_T).map(([k,v])=>`<button class="btn sm" type="button" data-oeadd="${k}">+ ${v}</button>`).join('')}</div>`}
-function oeSVG(s,L){const p=S.projet;const M=model();const w=M.walls.find(x=>x.id===s.id);const len=s.len;
-  const fx=pt=>{const d=[pt[0]-w.c[0],pt[1]-w.c[1]];return d[0]*w.r[0]+d[1]*w.r[1]+len/2};const poly=w.pts.map(pt=>[fx(pt),pt[2]]);
+function oeSVG(s,L){const p=S.projet;const M=model();const w=M.walls.find(x=>x.id===s.id);const len=w&&w.len?w.len:s.len;
+  const fx=pt=>{const d=[pt[0]-w.c[0],pt[1]-w.c[1]];return d[0]*w.r[0]+d[1]*w.r[1]+len/2};const poly=w.pts.map(pt=>[fx(pt),Math.max(pt[2],0)]);
   const top=Math.max(...poly.map(q=>q[1])),bot=Math.min(...poly.map(q=>q[1]),0);const pad=0.7;const vb=[-pad,-(top+pad),len+2*pad,top-bot+2*pad+0.5];
   const P=q=>q[0].toFixed(3)+','+(-q[1]).toFixed(3);let o=`<polygon points="${poly.map(P).join(' ')}" fill="${p.facadeCouleur||'#ddd'}" stroke="#333" stroke-width="0.04"/>`;
   o+=`<line x1="${-pad}" y1="${-bot}" x2="${len+pad}" y2="${-bot}" stroke="#6b5" stroke-width="0.06"/>`;
   for(let k=1;k<nLevels();k++)o+=`<line x1="0" y1="${-k*p.hEtage}" x2="${len}" y2="${-k*p.hEtage}" stroke="#555" stroke-width="0.02" stroke-dasharray="0.15 0.1"/>`;
   L.forEach((lv,k)=>{if(k>=nLevels())return;lv.forEach((t,i)=>{const o2=OT[t.k];const ww=tokW(t);const x0=t.at-ww/2;const z0=k*p.hEtage+o2.s,z1=z0+o2.h;const on=OE.sel&&OE.sel[0]===k&&OE.sel[1]===i;
     const fill=o2.k==='door'?(p.menuisCouleur||'#eee'):o2.k==='gar'?shade(p.menuisCouleur||'#ddd',0.92):'#A9C4D3';
-    o+=`<g data-oi="${k},${i}" style="cursor:grab"><rect x="${x0.toFixed(3)}" y="${(-z1).toFixed(3)}" width="${ww.toFixed(3)}" height="${o2.h.toFixed(3)}" fill="${fill}" stroke="${on?'#E0A92A':p.menuisCouleur&&p.menuisCouleur!=='#F3F2EE'?p.menuisCouleur:'#555'}" stroke-width="${on?0.12:0.06}"/>
-      <text x="${t.at.toFixed(3)}" y="${(-(z0+z1)/2+0.12).toFixed(3)}" font-size="0.34" text-anchor="middle" font-weight="700" fill="#18211F" pointer-events="none">${t.k}</text></g>`;
+    o+=`<g data-oi="${k},${i}" style="cursor:grab"><rect x="${x0.toFixed(3)}" y="${(-z1).toFixed(3)}" width="${ww.toFixed(3)}" height="${o2.h.toFixed(3)}" fill="${fill}" stroke="${on?'#E0A92A':oeInk(fill)==='#ffffff'?'#c9d0d8':p.menuisCouleur&&p.menuisCouleur!=='#F3F2EE'?p.menuisCouleur:'#555'}" stroke-width="${on?0.12:0.06}"/>
+      <text x="${t.at.toFixed(3)}" y="${(-(z0+z1)/2+0.12).toFixed(3)}" font-size="0.34" text-anchor="middle" font-weight="700" fill="${o2.k==='win'?'#18211F':oeInk(fill)}" pointer-events="none">${t.k}</text></g>`;
     if(on){o+=`<line x1="0" y1="${(-z0+0.25).toFixed(3)}" x2="${x0.toFixed(3)}" y2="${(-z0+0.25).toFixed(3)}" stroke="#E0A92A" stroke-width="0.04"/><text x="${(x0/2).toFixed(3)}" y="${(-z0+0.18).toFixed(3)}" font-size="0.3" text-anchor="middle" fill="#7a5212">${fmt(x0,2)} m</text>
       <line x1="${(x0+ww).toFixed(3)}" y1="${(-z0+0.25).toFixed(3)}" x2="${len}" y2="${(-z0+0.25).toFixed(3)}" stroke="#E0A92A" stroke-width="0.04"/><text x="${((x0+ww+len)/2).toFixed(3)}" y="${(-z0+0.18).toFixed(3)}" font-size="0.3" text-anchor="middle" fill="#7a5212">${fmt(len-x0-ww,2)} m</text>`}})});
-  o+=`<text x="${len/2}" y="${(-bot+0.45).toFixed(2)}" font-size="0.32" text-anchor="middle" fill="#555">${fmt(len,2)} m</text>`;
+  o+=`<text x="${len/2}" y="${(-bot+0.45).toFixed(2)}" font-size="0.32" text-anchor="middle" fill="#555">${fmt(len,2)} m${s.id!=='SJ'&&openPart()&&Math.abs(s.n[1])>0.5?' (partie fermée)':''}</text>`;
   return`<svg id="oeSvg" viewBox="${vb.map(v=>v.toFixed(2)).join(' ')}">${o}</svg>`}
+function oeInk(c){const h=String(c||'#ddd').replace('#','');const v=[0,2,4].map(i=>parseInt(h.substr(i,2),16)||0);return(0.3*v[0]+0.59*v[1]+0.11*v[2])<110?'#ffffff':'#18211F'}
 function oeClamp(lv,t,len){const ww=tokW(t);let lo=ww/2,hi=len-ww/2;for(const o of lv){if(o===t)continue;const ow=tokW(o);if(o.at<=t.at)lo=Math.max(lo,o.at+ow/2+0.1+ww/2);else hi=Math.min(hi,o.at-ow/2-0.1-ww/2)}
   t.at=lo<=hi?clamp(t.at,lo,hi):clamp(t.at,ww/2,len-ww/2);return lo<=hi}
 function oeSave(s,L){S.projet.ouv=S.projet.ouv||{};S.projet.ouv[s.id]=ouvSer(L);if(S.wz)S.wz.ouvEdited=true;save()}
 function oeFree(s,lv,ww){const items=lv.map(t=>[t.at-tokW(t)/2,t.at+tokW(t)/2]).sort((a,b)=>a[0]-b[0]);let best=null,x=0.3;for(const[a,b]of items.concat([[s.len-0.3,s.len]])){const g=a-x;if(g>=ww+0.2&&(!best||g>best[1]-best[0]))best=[x,a];x=Math.max(x,b)}
   return best?(best[0]+best[1])/2:null}
-function oeBind(rerender){const sd=allSides();const s=sd.find(x=>x.id===OE.side);if(!s)return;const get=()=>ouvExplicit(s);
+function oeBind(rerender){const sd=oeSides().concat(allSides().filter(x=>!oeSides().some(y=>y.id===x.id)));const s=sd.find(x=>x.id===OE.side);if(!s)return;const get=()=>ouvExplicit(s);
   $$('[data-oes]').forEach(b=>b.onclick=()=>{OE.side=b.dataset.oes;OE.sel=null;rerender()});
   const lvSel=$('#oeLvl');if(lvSel)lvSel.onchange=e=>{OE.lvl=+e.target.value};
   $$('[data-oeadd]').forEach(b=>b.onclick=()=>{const L=get();while(L.length<=OE.lvl)L.push([]);const k=b.dataset.oeadd;const ww=OT[k].w;const at=oeFree(s,L[OE.lvl],ww);
