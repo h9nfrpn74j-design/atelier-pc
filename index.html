@@ -839,6 +839,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
       <div class="grid2 pc-only"><label class="f">Usage de l'annexe<select data-b="projet.usage"><option value="garage">Garage / stationnement</option><option value="atelier">Atelier / stockage</option><option value="abri">Abri de jardin</option><option value="autre">Autre</option></select></label>
       <label class="f">Garage intégré (m², hors SDP)<input type="number" step="0.5" min="0" data-b="projet.garageSurf" placeholder="auto"></label></div>
       <div class="grid2 pc-only ann-only"><label class="f">Partie ouverte sur poteaux (m)<input type="number" step="0.1" min="0" data-b="projet.ouvL" placeholder="0 = fermé"></label><label class="f">Côté de la partie ouverte<select data-b="projet.ouvSide"><option value="g">À gauche, vu de la rue</option><option value="d">À droite, vu de la rue</option></select></label></div>
+      <div class="grid2 pc-only ann-only"><label class="f">Poteaux et poutres<select data-b="projet.charpente"><option value="bois">Bois</option><option value="metal">Métal</option></select></label><label class="f">Teinte (ex. RAL 7024)<input type="color" data-b="projet.charpenteCouleur" aria-label="Couleur des poteaux"></label></div>
       <label class="f pc-only">Décrivez votre projet
         <textarea data-b="projet.desc" id="desc" rows="4" placeholder="Maison de plain-pied 14 x 10 m, toit 2 pans à 35°, tuiles terre cuite, enduit ton pierre, menuiseries alu gris anthracite, garage, 2 places, à 6 m de la rue, tout-à-l'égout"></textarea>
       </label>
@@ -2818,7 +2819,7 @@ function openPartWalls(walls,h,O){const p=S.projet;
   const s={id:'SJ',n:[O.sgn,0],half:Math.abs(O.uo),len:p.W};walls.push({...wallBuild(s,[O.uo,0],[-s.n[1],s.n[0]],h,false),inner:true})}
 function clipU(pts,u0,u1){let P=pts;for(const[lim,sg]of[[u0,1],[u1,-1]]){const out=[];for(let i=0;i<P.length;i++){const A=P[i],B=P[(i+1)%P.length];const ia=(A[0]-lim)*sg>=0,ib=(B[0]-lim)*sg>=0;
     if(ia)out.push(A);if(ia!==ib){const t=(lim-A[0])/(B[0]-A[0]);out.push([lim,A[1]+(B[1]-A[1])*t,A[2]+(B[2]-A[2])*t])}}P=out;if(P.length<3)return[]}return P}
-function openPartExtras(walls,roofs,h,O){const p=S.projet;const zb=h.zb,E=h.E;const bh=0.22,ps=0.08;const post='#8a6a4a',beam='#7d5f42',under='#8b8880';const ex=[];
+function openPartExtras(walls,roofs,h,O){const p=S.projet;const zb=h.zb,E=h.E;const metal=p.charpente==='metal';const bh=metal?0.2:0.22,ps=metal?0.06:0.08;const post=p.charpenteCouleur||(metal?'#474A51':'#8a6a4a'),beam=shade(post,0.9),under='#8b8880';const ex=[];
   const box=(u,v,z0,z1,hu,hv,col)=>{const f=[[[1,0],[[u+hu,v-hv],[u+hu,v+hv]]],[[-1,0],[[u-hu,v+hv],[u-hu,v-hv]]],[[0,1],[[u+hu,v+hv],[u-hu,v+hv]]],[[0,-1],[[u-hu,v-hv],[u+hu,v-hv]]]];
     for(const[n,[a,b]]of f)ex.push({x:true,col,nrm:[n[0],n[1],0],n,pts:[[...a,z0],[...b,z0],[...b,z1],[...a,z1]]})};
   const lo=Math.min(O.uo,O.uEnd),hi=Math.max(O.uo,O.uEnd);
@@ -2842,7 +2843,7 @@ function openPartMasse(k,W){const O=openPart();if(!O)return'';const p=S.projet;c
   const n=Math.max(1,Math.ceil(O.L/3.6));const s=0.12;for(let i=1;i<=n;i++){const u=O.uo+O.sgn*(O.L*i/n-(i===n?0.1:0));for(const v of[-hb+0.1,hb-0.1]){o+=`<polygon points="${[W(u-s,v-s),W(u+s,v-s),W(u+s,v+s),W(u-s,v+s)].map(pt).join(' ')}" fill="#111" pointer-events="none"/>`}}
   const c=W((a+b)/2,0);const ang=readableAng(bat().U[0],bat().U[1]);const fs=Math.min(1.6*k,O.L*0.8/9);
   o+=`<text x="${c[0].toFixed(3)}" y="${(-c[1]).toFixed(3)}" font-size="${fs.toFixed(3)}" text-anchor="middle" dominant-baseline="middle" font-weight="600" transform="rotate(${ang.toFixed(2)} ${c[0].toFixed(3)} ${(-c[1]).toFixed(3)})" pointer-events="none">Partie ouverte ${fmt(O.L*p.W,0)} m²</text>`;return o}
-function openPartText(){const O=openPart();if(!O)return'';const p=S.projet;return` Sur ${fmt(O.L,1)} m de longueur, le bâtiment est ouvert sur poteaux (abri pour véhicules, ${fmt(O.L*p.W,1)} m² couverts sans surface de plancher) ; la partie fermée mesure ${fmt(O.Lc,1)} × ${fmt(p.W,1)} m.`}
+function openPartText(){const O=openPart();if(!O)return'';const p=S.projet;return` Sur ${fmt(O.L,1)} m de longueur, le bâtiment est ouvert sur poteaux ${p.charpente==='metal'?'métalliques':'bois'}${p.charpente==='metal'&&String(p.charpenteCouleur||'').toUpperCase()==='#474A51'?' gris graphite (RAL 7024)':p.charpenteCouleur?' teinte '+esc(colorName(p.charpenteCouleur)):''} (abri pour véhicules, ${fmt(O.L*p.W,1)} m² couverts sans surface de plancher) ; la partie fermée mesure ${fmt(O.Lc,1)} × ${fmt(p.W,1)} m.`}
 /* pente affichée aussi en % */
 function penteTxt(){const p=S.projet;return`${fmt(pentePct(),0)} % (${fmt(+p.pente,1)}°)`}
 function pentePct(){const p=S.projet;return Math.round(Math.tan((+p.pente||0)*D2R)*1000)/10}
@@ -2878,11 +2879,12 @@ function gHTML(){const w=gState(),p=S.projet;const sf=surfaces();const O=openPar
     ${couvHint()?`<p class="hint" style="margin:-4px 0 6px">${couvHint()}</p>`:''}
     <label class="f">Façades${sel('gFac',SW_FAC.map(x=>[x[0],x[0]]),w.gFac||p.facade)}</label>
     <label class="toggle"><input type="checkbox" id="gOpen"${w.gOpen?' checked':''}> Une partie ouverte sur poteaux (abri pour voitures, bois…)</label>
-    ${w.gOpen?`<div class="grid2"><label class="f">Longueur ouverte (m)<input type="number" id="gOpenL" min="1" max="${Math.max(1,(+w.gL||p.L)-1.5)}" step="0.1" value="${w.gOpenL}"></label><label class="f">Côté (vu de la rue)${sel('gOpenSide',[['g','À gauche'],['d','À droite']],w.gOpenSide)}</label></div>`:''}
+    ${w.gOpen?`<div class="grid2"><label class="f">Poteaux et poutres${sel('gCh',[['bois','Bois'],['metal','Métal gris graphite (RAL 7024)']],p.charpente==='metal'?'metal':'bois')}</label></div><div class="grid2"><label class="f">Longueur ouverte (m)<input type="number" id="gOpenL" min="1" max="${Math.max(1,(+w.gL||p.L)-1.5)}" step="0.1" value="${w.gOpenL}"></label><label class="f">Côté (vu de la rue)${sel('gOpenSide',[['g','À gauche'],['d','À droite']],w.gOpenSide)}</label></div>`:''}
     <p class="hint">${fmt(p.L,1)} × ${fmt(p.W,1)} m · emprise ${fmt(p.L*p.W,0)} m²${O?` dont ${fmt(O.L*p.W,0)} m² ouverts`:''} · faîtage ≈ ${fmt(h.hF||h.F,2)} m · surface de plancher ${fmt(sf.sdp,0)} m²${(p.usage||'garage')==='garage'?' (garage : surfaces de stationnement déduites)':''}</p>`}
 function gBind(upd){const w=wzState();const num=(id,k)=>{const el=$('#'+id);if(el)el.onchange=()=>{w[k]=+el.value;upd()}};
   num('gL','gL');num('gW','gW');num('gH','gH');num('gPct','gPct');num('gOpenL','gOpenL');
   for(const[id,k]of[['gToit','gToit'],['gCouv','gCouv'],['gFac','gFac'],['gOpenSide','gOpenSide']]){const el=$('#'+id);if(el)el.onchange=()=>{w[k]=el.value;if(k==='gCouv'&&/fibres-ciment/i.test(el.value)&&(+w.gPct||0)>30)w.gPct=15;upd()}}
+  {const c=$('#gCh');if(c)c.onchange=()=>{const p=S.projet;p.charpente=c.value;p.charpenteCouleur=c.value==='metal'?'#474A51':'#8A6A4A';upd()}}
   $$('input[name=gUse]').forEach(r=>r.onchange=()=>{w.gUse=r.value;upd()});const o=$('#gOpen');if(o)o.onchange=e=>{w.gOpen=e.target.checked;upd()}}
 /* constructions existantes dans l'assistant (à conserver ou à démolir) */
 function wzExHTML(){const L=S.existants||[];
@@ -3191,7 +3193,7 @@ function save(){saveLocal()}
 function status(sel,cls,msg){const el=$(sel);el.className='status '+cls;el.textContent=msg}
 
 /* ================= Interactions ================= */
-function fillInputs(){aileEnsure();if(S.projet&&S.projet.gouttieres==null)S.projet.gouttieres=true;if(S.projet&&!S.projet.voletsCouleur)S.projet.voletsCouleur=S.projet.menuisCouleur||'#3a3f44';$$('[data-b]').forEach(el=>{const v=getPath(S,el.dataset.b);if(el.type==='checkbox')el.checked=!!v;else if(el.type==='radio')el.checked=el.value===v;else el.value=v??''});$('#modeNb').checked=!!S.ui.modeNb;$('#modeVoie').checked=!!S.ui.modeVoie;aileUI()}
+function fillInputs(){aileEnsure();if(S.projet&&S.projet.gouttieres==null)S.projet.gouttieres=true;if(S.projet&&!S.projet.charpenteCouleur)S.projet.charpenteCouleur=S.projet.charpente==='metal'?'#474A51':'#8A6A4A';if(S.projet&&!S.projet.voletsCouleur)S.projet.voletsCouleur=S.projet.menuisCouleur||'#3a3f44';$$('[data-b]').forEach(el=>{const v=getPath(S,el.dataset.b);if(el.type==='checkbox')el.checked=!!v;else if(el.type==='radio')el.checked=el.value===v;else el.value=v??''});$('#modeNb').checked=!!S.ui.modeNb;$('#modeVoie').checked=!!S.ui.modeVoie;aileUI()}
 document.addEventListener('input',e=>{const el=e.target.closest('[data-b]');if(!el)return;let v;
   if(el.type==='checkbox')v=el.checked;else if(el.type==='radio'){if(!el.checked)return;v=el.value}else if(el.type==='number'||el.type==='range')v=el.value===''?null:parseFloat(el.value);else v=el.value;
   setPath(S,el.dataset.b,v);$$(`[data-b="${el.dataset.b}"]`).forEach(x=>{if(x!==el&&x.type!=='checkbox'&&x.type!=='radio')x.value=v??''});
