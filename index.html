@@ -245,10 +245,12 @@ nav.tabs button .d{width:7px;height:7px;border-radius:50%}
 .cart .c-pcs{display:flex;flex-wrap:wrap;gap:.6mm;padding:1.5mm 4mm;flex:none;border-top:.35mm solid #111}
 .cart .c-pcs i{font:600 5pt/1 var(--f-tech);font-style:normal;padding:.7mm .8mm;border:.15mm solid #b9c1bd;color:#5A6863;letter-spacing:.03em}
 .cart .c-pcs i.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.cart .c-revs{flex:none;padding:1.4mm 4mm;border-top:.15mm solid #c9cfcc;display:grid;gap:.5mm;font-size:6.3pt}
+.cart .c-revs>div{display:grid;grid-template-columns:4mm 16mm 1fr;gap:1.4mm;align-items:baseline}.cart .c-revs b{font:700 7pt var(--f-tech)}.cart .c-revs span{color:#5A6863}.cart .c-revs em{font-style:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cart .c-foot{flex:none;padding:1.5mm 4mm;border-top:.15mm solid #c9cfcc;font:500 6pt var(--f-tech);color:#5A6863;display:flex;justify-content:space-between;letter-spacing:.04em}
 .lg{display:grid;grid-template-columns:8mm 1fr;align-items:center;gap:1.8mm;line-height:1.15}
 .cart .c-h{font:700 6.2pt var(--f-tech);text-transform:uppercase;letter-spacing:.12em;color:#18211F;margin-bottom:.4mm}
-.mats{display:grid;gap:1.6mm}.mat{display:grid;grid-template-columns:7mm 1fr;gap:2mm;align-items:center}
+.mats{display:grid;gap:1.2mm}.mat{display:grid;grid-template-columns:7mm 1fr;gap:2mm;align-items:center}
 .mat{align-items:start}.mat i{width:7mm;height:7mm;border:.15mm solid #18211F;box-shadow:inset 0 0 0 .5mm rgba(255,255,255,.18)}
 .mat em u{text-decoration:none;font-weight:600;color:#18211F}.mat>div>b{margin-bottom:.4mm}
 .mat span{display:block;font:600 5.6pt var(--f-tech);text-transform:uppercase;letter-spacing:.1em;color:#5A6863}.mat b{display:block;font:600 7.6pt/1.2 var(--f-tech)}.mat em{display:block;font:400 6.7pt/1.3 var(--f-tech);color:#3d4a46;font-style:normal}
@@ -837,6 +839,9 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
           <select data-b="regles.hRef"><option value="faitage">au faîtage</option><option value="egout">à l'égout</option></select>
         </label>
       </div>
+      <label class="f">Point de mesure de la hauteur<select data-b="regles.hPoint"><option value="bas">Terrain naturel au point le plus bas</option><option value="milieu">Milieu de la façade (terrain avant travaux)</option></select></label>
+      <div class="grid3"><label class="f">Annexe : hauteur max. (m)<input type="number" step="0.1" min="0" data-b="regles.annexeH" placeholder="—"></label><label class="f">Annexe : emprise max. (m²)<input type="number" step="1" min="0" data-b="regles.annexeEmp" placeholder="—"></label><label class="f">Carport : hauteur max. (m)<input type="number" step="0.1" min="0" data-b="regles.carportH" placeholder="—"></label></div>
+      <p class="hint">Exemple PLUi du Grand Périgueux (zones U, A et N) : annexe non accolée 2,50 m et, en zone A/N, 50 m² ; carport (abri non entièrement clos) 4 m.</p>
       <label class="f">Hauteur max. des clôtures (m, vide = sans règle)<input type="number" step="0.05" min="0" data-b="regles.hClo"></label>
       <label class="f">Emprise au sol max. (% du terrain, vide = sans règle)<input type="number" step="1" min="0" max="100" data-b="regles.ces"></label>
     </div>
@@ -1093,6 +1098,9 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
         <label class="f">Date des plans<input type="date" data-b="meta.date"></label>
         <label class="f">Indice<input type="text" data-b="meta.indice"></label>
       </div>
+      <label class="f">Objet de cet indice (repris dans le cartouche)<input type="text" data-b="meta.revNote" placeholder="ex. Première émission"></label>
+      <div class="btns"><button class="btn sm" type="button" id="bNewRev">Nouvel indice (après des modifications)</button></div>
+      <p class="hint" id="revList"></p>
       <label class="f">Dossier établi par (cartouche et page de garde)<input type="text" data-b="meta.auteur" placeholder="ex. Atelier Le Dreau — 06 12 34 56 78"></label>
       <div class="btns"><label class="btn sm">Logo du cartouche<input type="file" accept="image/*" data-logo hidden></label><button class="btn sm" type="button" data-logodel>Retirer le logo</button></div>
       <p class="hint">La notice PCMI4 se rédige toute seule à partir de vos réglages et se met à jour à chaque modification. Pour ajouter vos propres informations, écrivez dans les cadres en pointillé sous chaque rubrique de la planche : ils sont conservés et imprimés à la suite du texte généré.</p>
@@ -1421,8 +1429,11 @@ function heights(){
   const auto=ok?(p.regrade?Math.round((TNmoy+p.hPlancher)*100)/100:TNmax+p.hPlancher):null;let pl=auto,plBad=false;
   if(p.plancherNGF!=null&&p.plancherNGF!==''){const v=+p.plancherNGF;if(!ok||Math.abs(v-auto)<=3)pl=ok?v:null;else plBad=true}
   const zb=ok&&!p.regrade?Math.min(-p.hPlancher,TNmin-pl):-p.hPlancher;
-  const hE=ok?pl+E-TNmin:p.hPlancher+E, hF=ok?pl+F-TNmin:p.hPlancher+F;
-  return{E,F,t,a,b,tn,ok,TNmin,TNmax,TNmoy,pl,plBad,zb,hE,hF,egNGF:ok?pl+E:null,faNGF:ok?pl+F:null};
+  // point de référence de la hauteur : point bas du terrain (par défaut) ou milieu de chaque façade (selon le PLU)
+  let TNref=TNmin,refTxt='au point le plus bas du terrain naturel';
+  if(ok&&S.regles&&S.regles.hPoint==='milieu'){const C=B.corners;const mids=C.map((q,i)=>{const r2=C[(i+1)%C.length];return alt((q[0]+r2[0])/2,(q[1]+r2[1])/2)});if(mids.every(z=>z!=null)){TNref=Math.min(...mids);refTxt='au milieu de la façade, depuis le terrain naturel avant travaux'}}
+  const hE=ok?pl+E-TNref:p.hPlancher+E, hF=ok?pl+F-TNref:p.hPlancher+F;
+  return{E,F,t,a,b,tn,ok,TNmin,TNmax,TNmoy,TNref,refTxt,pl,plBad,zb,hE,hF,egNGF:ok?pl+E:null,faNGF:ok?pl+F:null};
 }
 /* Terrain fini : plateforme au droit de la construction (si « terrain repris »), raccordée au TN par un talus à 1/2 */
 function finishedRel(lu,lv,natRel){const p=S.projet;if(!p.regrade||natRel==null)return natRel;const plat=-p.hPlancher;
@@ -1863,7 +1874,11 @@ function checks(){if(mode()!=='pc'&&mode()!=='dp-constr')return dpChecks();
   else if(R.reculVoie!=null&&D.dv!=null)add(D.dv+0.005>=R.reculVoie?'ok':'bad',`Recul par rapport à la voie : ${fmt(D.dv)} m`,`Minimum exigé : ${fmt(R.reculVoie)} m.`);
   if(D.dl!=null&&R.reculLim!=null){const enLim=D.dl<0.05;const ok=enLim?R.limiteOk:D.dl+1e-6>=R.reculLim;
     add(ok?'ok':'bad',`Recul minimal aux limites séparatives : ${fmt(D.dl)} m`,enLim?(R.limiteOk?'Implantation en limite autorisée.':'Implantation en limite non autorisée par vos règles.'):`Minimum exigé : ${fmt(R.reculLim)} m${R.limiteOk?' (ou en limite)':''}.`)}
-  if(R.hMax){const v=R.hRef==='egout'?h.hE:h.hF;add(v<=R.hMax+1e-6?'ok':'bad',`Hauteur ${R.hRef==='egout'?'à l\'égout':'au faîtage'} : ${fmt(v)} m`,`Maximum autorisé : ${fmt(R.hMax)} m, mesuré depuis le terrain naturel au point le plus bas de l'emprise.`)}
+  if(S.projet.nature==='annexe'&&(R.annexeH||R.annexeEmp||R.carportH)){const sf=surfaces(),O=openPart();
+    if(R.annexeH)add(h.hE<=+R.annexeH+1e-6?'ok':'bad',`Annexe : hauteur ${fmt(h.hE)} m pour ${fmt(+R.annexeH)} m maximum`,`Hauteur à l'égout mesurée ${h.refTxt}. ${O&&R.carportH?`La partie ouverte relève de la règle « carport » (${fmt(+R.carportH)} m), mais le bâtiment forme un seul volume : l'instructeur peut lui appliquer la règle d'annexe. À faire confirmer en mairie.`:''}`);
+    if(R.annexeEmp){const v=O?sf.empClos:sf.emprise;add(v<=+R.annexeEmp+1e-6?'ok':'bad',`Annexe : emprise ${fmt(v,0)} m² pour ${fmt(+R.annexeEmp,0)} m² maximum`,O?`Partie fermée seulement ; avec l'abri ouvert, l'emprise totale est de ${fmt(sf.emprise,0)} m².`:'')}
+    if(R.carportH&&O)add(h.hF<=+R.carportH+1e-6?'ok':'warn',`Abri ouvert : ${fmt(h.hF)} m au faîtage pour ${fmt(+R.carportH)} m (règle carport)`,'')}
+  if(R.hMax){const v=R.hRef==='egout'?h.hE:h.hF;add(v<=R.hMax+1e-6?'ok':'bad',`Hauteur ${R.hRef==='egout'?'à l\'égout':'au faîtage'} : ${fmt(v)} m`,`Maximum autorisé : ${fmt(R.hMax)} m, mesurée ${h.refTxt}.`)}
   const TT=totals(),K=exKept(),DM=exDem();
   if(S.existants.length)add('info',`${S.existants.length} construction${S.existants.length>1?'s':''} existante${S.existants.length>1?'s':''} sur le terrain`,`${K.length} conservée${K.length>1?'s':''}, ${DM.length} à démolir. Vérifiez la liste à l'étape 01 : usage, hauteur et surface de plancher.`);
   const ov=K.filter(e=>polysOverlap(batShrunk(),exRing(e)));
@@ -1880,6 +1895,7 @@ function checks(){if(mode()!=='pc'&&mode()!=='dp-constr')return dpChecks();
   if(h.plBad)add('bad','Cote NGF du plancher incohérente',`Vous avez saisi ${fmt(+S.projet.plancherNGF)} alors que le terrain est entre ${fmt(h.TNmin)} et ${fmt(h.TNmax)} NGF sous la construction. La valeur est ignorée : videz le champ ou saisissez une altitude NGF (et non une hauteur).`);
   if(S.projet.regrade&&h.ok){const plat=h.pl-S.projet.hPlancher;const dz=h.tn.map(z=>z-plat);add('info','Terrain repris au droit de la construction',`Plateforme à ${fmt(plat)} NGF : déblai jusqu'à ${fmt(Math.max(0,...dz))} m et remblai jusqu'à ${fmt(Math.max(0,...dz.map(x=>-x)))} m aux angles. Les hauteurs du PLU restent mesurées depuis le terrain naturel avant travaux.`)}
   gpuChecks(add);
+  if(!S.demo)add(S.meta.backupAt?'ok':'warn',S.meta.backupAt?`Copie de sauvegarde du ${frDate(S.meta.backupAt.slice(0,10))}`:'Aucune copie de sauvegarde de votre dossier',S.meta.backupAt?'Refaites-en une après chaque grosse modification (bouton « Enregistrer »).':'Votre dossier n\'existe que dans ce navigateur. Cliquez sur « Enregistrer » pour télécharger une copie (fichier .json) et la garder en lieu sûr : « Ouvrir » la recharge sur n\'importe quel appareil.');
   {const B2=!noBuild();const ep=amList().filter(a=>a.k==='ep');if(B2&&!ep.length)add('warn','Eaux pluviales : aucun ouvrage dessiné',`Beaucoup de PLU imposent de gérer les eaux de toiture sur la parcelle (infiltration, cuve). Ajoutez-le dans « Abords et aménagements » : volume conseillé ${fmt(epVolConseil(),1)} m³.`);
    else if(B2){const v=ep.filter(a=>a.type!=='reseau').reduce((s2,a)=>s2+(+a.vol||0),0);const bad=ep.filter(a=>a.type==='puits'||a.type==='tranchee').some(a=>{const g=epGeom(a);const c=toBld(g.x,g.y);const P2=S.projet;return Math.abs(c[0])<P2.L/2+5&&Math.abs(c[1])<P2.W/2+5});add(bad?'warn':'ok',`Eaux pluviales : ${ep.map(a=>(EP_T[a.type]||'').toLowerCase()).join(', ')}${v?` (${fmt(v,1)} m³)`:''}`,bad?'Un ouvrage d\'infiltration doit se trouver à plus de 5 m des fondations : déplacez-le sur le plan de masse.':`${epDescentes().length} descentes reliées à l'ouvrage. Volume conseillé : ${fmt(epVolConseil(),1)} m³.`)}}
   {const t=terrassements();if(t)add('info',`Terrassements : ${fmt(t.de,0)} m³ de déblai, ${fmt(t.re,0)} m³ de remblai`,`Estimation sous l'emprise, pour une plateforme à ${fmt(t.plat)} NGF. Les terres en excès doivent être évacuées ou régalées sur la parcelle.`)}
@@ -2164,6 +2180,17 @@ function terrFacade(side,r,k){let o='';const P=S.projet;for(const a of amList())
     if(dn>0.5)o+=textS([(x0+x1)/2,zt+0.35],'Terrasse',1.6*k,'text-anchor="middle" fill="#333"')}
   return o}
 /* ================= PCMI5 : façades ================= */
+/* silhouette des constructions démolies, en pointillé rouge, projetée sur la façade */
+var DEMF='';
+function demFacade(side,r,k,m0,ext,h){if(mode()!=='pc'||S.ui.facDem===false)return'';let o='';const P=S.projet;
+  for(const e of exDem()){const R=exRing(e);if(!R||R.length<3)continue;const L=R.map(q=>toBld(q[0],q[1]));const ss=L.map(q=>q[0]*r[0]+q[1]*r[1]),dd=L.map(q=>q[0]*side.n[0]+q[1]*side.n[1]);
+    let s0=Math.min(...ss),s1=Math.max(...ss);const wid=s1-s0,dep=Math.max(...dd)-Math.min(...dd);const c=centroid(R);const z0=zRelAt(c[0],c[1]);const hh=+e.hauteur||3.5;
+    const lo=m0-ext,hi=m0+ext;if(s1<lo||s0>hi)continue;const a=Math.max(s0,lo),b=Math.min(s1,hi);
+    let pts;if((e.toit||'2pans')==='2pans'&&wid<dep*0.95&&a===s0&&b===s1){const ze=z0+hh-Math.min(wid/2*0.35,hh*0.35);pts=[[a,z0],[b,z0],[b,ze],[(a+b)/2,z0+hh],[a,ze]]}
+    else if(e.toit==='mono'){pts=[[a,z0],[b,z0],[b,z0+hh*0.85],[a,z0+hh]]}else pts=[[a,z0],[b,z0],[b,z0+hh],[a,z0+hh]];
+    o+=polyS(pts,`fill="none" stroke="#AE3328" stroke-width="${0.32*k}" stroke-dasharray="${1.6*k} ${0.9*k}" pointer-events="none"`);
+    const tx=[(a+b)/2,z0+hh+0.35];o+=textS(tx,`${(e.usage||'Construction')} démoli${/e$/i.test(e.usage||'')?'e':''} · h ${fmt(hh,2)} m`,1.8*k,`text-anchor="middle" fill="#AE3328" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="${0.5*k}"`)}
+  return o}
 function facadeSVG(side,Wmm,Hmm,forceSc){
   const P=S.projet,h=heights(),B=bat();const f=[-side.n[0],-side.n[1]];let R=renderBuilding(f,0,{sw:0.03});
   const r=[-side.n[1],side.n[0]];const half=side.half;const MD=model();
@@ -2189,13 +2216,14 @@ function facadeSVG(side,Wmm,Hmm,forceSc){
   R=renderBuilding(f,0,{sw:0.28*k});const gid='fg'+(++UID);
   let o=`<svg xmlns="http://www.w3.org/2000/svg" width="${Wmm}mm" height="${Hmm}mm" viewBox="${(cx-vw/2).toFixed(3)} ${(-cy-vh/2).toFixed(3)} ${vw.toFixed(3)} ${vh.toFixed(3)}" font-family="Archivo Narrow, Arial Narrow, Arial, sans-serif">`;
   o+=`<defs><pattern id="${gid}" patternUnits="userSpaceOnUse" width="${(1.4*k).toFixed(3)}" height="${(1.4*k).toFixed(3)}" patternTransform="rotate(45)"><rect width="100%" height="100%" fill="#fff"/><line x1="0" y1="0" x2="0" y2="${(1.4*k).toFixed(3)}" stroke="#8a6d4b" stroke-width="${(0.13*k).toFixed(3)}"/></pattern></defs>`;
-  o+=R.svg;o+=terrFacade(side,r,k);o+=pergFacade(side,r,k);
+  o+=R.svg;o+=terrFacade(side,r,k);o+=pergFacade(side,r,k);DEMF=demFacade(side,r,k,m0,ext,h);
   const band=prof.map(q=>[q[0],q[1]-0.45]).reverse();const zFill=cy-vh/2-1;
   o+=polyS([...prof,[m0+ext,zFill],[m0-ext,zFill]],'fill="#fff" stroke="none"');
   o+=polyS([...prof,...band],`fill="url(#${gid})" stroke="none"`)+`<polyline points="${prof.map(PT).join(' ')}" fill="none" stroke="#111" stroke-width="${0.5*k}"/>`;
   if(P.regrade&&profN.some((q,i)=>Math.abs(q[1]-prof[i][1])>0.03)){o+=`<polyline points="${profN.map(PT).join(' ')}" fill="none" stroke="#8a6d4b" stroke-width="${0.3*k}" stroke-dasharray="${1.4*k} ${0.8*k}"/>`;
     o+=textS([m0-ext+0.2,profN[0][1]+0.35],'TN existant',1.7*k,'fill="#8a6d4b"')+textS([m0+ext-0.2,prof[prof.length-1][1]+0.35],'Terrain fini',1.7*k,'fill="#555" text-anchor="end"')}
   else o+=textS([m0-ext+0.2,prof[0][1]+0.35],'TN',1.8*k,'fill="#555"');
+  o+=DEMF;DEMF='';
   const xL=m0-ext-0.4;const AG=MD.aile&&MD.aile.G;const lv=[[0,P.nature==='annexe'?'±0,00 Dalle':'±0,00 Plancher RDC'],[h.E,(P.toit==='plat'?'Acrotère ':'Égout ')],...(P.toit!=='plat'?[[h.F,'Faîtage ']]:[]),...(AG&&Math.abs(AG.Ew-h.E)>0.05?[[AG.Ew,AG.flat?'Acrotère aile ':'Égout aile ']]:[]),...(AG&&!AG.flat&&Math.abs(AG.Fw-h.F)>0.05&&Math.abs(AG.Fw-h.E)>0.3?[[AG.Fw,'Faîtage aile ']]:[])];
   lv.forEach(([z,l],i)=>{const lab=i===0?l:`${l}+${fmt(z)}`;o+=polyS([[xL,z],[xL-0.8*k,z+1.2*k],[xL+0.8*k,z+1.2*k]],'fill="#111"')+lineS([xL,z],[xL+1.2,z],`stroke="#111" stroke-width="${0.12*k}"`)+textS([xL-1.4*k,z+0.15*k],lab+(h.ok&&h.pl!=null?` · ${fmt(h.pl+z)} NGF`:''),1.8*k,'text-anchor="end" dominant-baseline="middle"')});
   // chaînes de cotes : bord de façade → ouvertures → bord de façade, une ligne par niveau
@@ -2309,7 +2337,8 @@ function epMasse(a,i,k){if(a.type==='reseau')return'';const g=epGeom(a);const co
   return`<g data-drag="am:${i}" style="cursor:move">${s}</g>`}
 function epText(){const ep=amList().filter(a=>a.k==='ep');const n=epDescentes().length;if(noBuild()&&!ep.length)return'';
   if(!ep.length)return n?`Les eaux pluviales de toiture sont collectées par ${n} descente${n>1?'s':''}.`:'';
-  return`Les eaux pluviales de toiture (environ ${fmt(roofArea(),0)} m²) sont collectées par ${n} descente${n>1?'s':''} et dirigées vers ${ep.map(a=>`${a.type==='reseau'?'le réseau public d\'eaux pluviales':{cuve:'une cuve de récupération',puits:'un puits d\'infiltration',tranchee:'une tranchée d\'infiltration'}[a.type]+` de ${fmt(+a.vol||0,1)} m³`}`).join(' puis ')}${ep.some(a=>a.type==='cuve')&&ep.length===1?', avec trop-plein vers un ouvrage d\'infiltration':''}${ep.some(a=>a.type!=='reseau'&&a.type!=='cuve')?', l\'infiltration se faisant à plus de 5 m des fondations':''}.`}
+  return`Les eaux pluviales de toiture (environ ${fmt(roofArea(),0)} m²) sont collectées par ${n} descente${n>1?'s':''} et dirigées vers ${ep.map(a=>`${a.type==='reseau'?'le réseau public d\'eaux pluviales':{cuve:'une cuve de récupération',puits:'un puits d\'infiltration',tranchee:'une tranchée d\'infiltration'}[a.type]+` de ${fmt(+a.vol||0,1)} m³`}`).join(' puis ')}${ep.some(a=>a.type==='cuve')&&ep.length===1?', avec trop-plein vers un ouvrage d\'infiltration':''}${ep.some(a=>a.type!=='reseau'&&a.type!=='cuve')?', l\'infiltration se faisant à plus de 5 m des fondations':''}.${(()=>{const V=ep.filter(a=>a.type!=='reseau').reduce((t,a)=>t+(+a.vol||0),0);const A=roofArea();if(!(V>0)||!(A>0))return'';const need=A*0.03;
+    return` Dimensionnement : pour retenir une pluie de 30 mm sur la toiture, il faut ${fmt(A,0)} m² × 0,030 m ≈ ${fmt(need,1)} m³ ; l'ouvrage prévu (${fmt(V,1)} m³) ${V>=need-0.05?'couvre ce besoin':'est à agrandir pour couvrir ce besoin'}.`})()}`}
 function epEditorHTML(a,num,sel){return`<div class="am-it"><div class="am-h"><b>💧 Eaux pluviales</b><button class="btn sm" type="button" data-amdel="${a.id}">Retirer</button></div>
   <div class="grid2"><label class="f">Ouvrage${sel(a,'type',{puits:'Puits d\'infiltration',tranchee:'Tranchée / noue',cuve:'Cuve de récupération',reseau:'Réseau public'})}</label>${a.type==='reseau'?'':num(a,'vol','Volume (m³)',0.5,0.5)}</div>
   <p class="hint">Volume conseillé : ${fmt(epVolConseil(),1)} m³ (toiture de ${fmt(roofArea(),0)} m² × 30 mm de pluie). Le PLU ou le zonage pluvial de la commune peut imposer une autre règle. ${a.type==='reseau'?'':'Faites-le glisser sur le plan de masse ; une infiltration se place à plus de 5 m des fondations et de la limite.'}</p></div>`}
@@ -3362,6 +3391,8 @@ function projetTitle(){if(typeof mode==='function'&&mode()!=='pc'&&mode()!=='dp-
   else if(P.nature==='extension')t='Extension d\'une maison existante';else t='Construction d\'une maison individuelle';
   let n=0;try{n=exDem().length}catch(e){}if(n)t+=`, après démolition ${n===1?'d\'une construction existante':`de ${['','','deux','trois','quatre','cinq'][n]||n} constructions existantes`}`;return t}
 function adresseTerrain(){const T=S.terrain;return[T.num,T.street].filter(Boolean).join(' ')+(T.cp||T.commune?`, ${[T.cp,T.commune].filter(Boolean).join(' ')}`:'')}
+function revRows(){const M=S.meta;const R=(M.revs||[]).slice();R.push({i:M.indice||'A',d:M.date,t:M.revNote||(R.length?'':'Première émission')});return R}
+function revHTML(){const R=revRows();if(R.length<2&&!S.meta.revNote)return'';return`<div class="c-revs">${R.slice(-4).map(r=>`<div><b>${esc(r.i)}</b><span>${r.d?frDate(r.d):''}</span><em>${esc(r.t||'')}</em></div>`).join('')}</div>`}
 function matList(){const P=S.projet;const L=[];const ral=c=>{const m=/RAL\s*(\d{4})/i.exec(c||'');return m?'RAL '+m[1]:''};
   L.push(['Façades',P.facade,P.facadeCouleur,(P.bardageSens==='v'&&/bardage/i.test(P.facade||'')?'lames verticales':'')]);
   if(P.toit!=='plat')L.push(['Couverture',P.couv,P.couvCouleur,'pente '+penteTxt()]);else L.push(['Toiture','Toiture-terrasse',P.couvCouleur||'#777','']);
@@ -3381,7 +3412,7 @@ function tintName(g){const RN={5011:'Bleu nuit',5008:'Bleu gris',7016:'Gris anth
   if(m)return m[0][0].toUpperCase()+m[0].slice(1).toLowerCase();return String(colorName(g.c)).replace(/\s*\(#[0-9a-f]+\)/i,'').replace(/^./,c=>c.toUpperCase())}
 function matSw(g,big){const P={v:'repeating-linear-gradient(90deg,rgba(255,255,255,.28) 0 .25mm,transparent .25mm 1.3mm)',t:'repeating-radial-gradient(circle at 50% 120%,transparent 0 .9mm,rgba(0,0,0,.28) .9mm 1.15mm)',m:'linear-gradient(135deg,rgba(255,255,255,.28),transparent 60%)'};
   return`<i class="${big?'big':''}" style="background:${P[g.pat]?P[g.pat]+',':''}${esc(g.c||'#ccc')}"></i>`}
-function matLegend(){return`<div class="mats">${matGroups().map(g=>`<div class="mat">${matSw(g)}<div><b>${esc(tintName(g))}${g.ral?` · ${esc(g.ral)}`:''}</b>${g.items.map(i=>`<em><u>${esc(i.k)}</u> — ${esc(i.n||'')}${i.x&&!/^RAL/.test(i.x)?`, ${esc(i.x)}`:''}</em>`).join('')}</div></div>`).join('')}</div>`}
+function matLegend(){return`<div class="mats">${matGroups().map(g=>`<div class="mat">${matSw(g)}<div><b>${esc(tintName(g))}${g.ral?` · ${esc(g.ral)}`:''}</b>${g.items.map(i=>`<em><u>${esc(i.k)}</u> — ${esc((i.n||'').replace(/\s*\(RAL\s*\d{4}\)/i,''))}${i.x&&!/^RAL/.test(i.x)?`, ${esc(i.x)}`:''}</em>`).join('')}</div></div>`).join('')}</div>`}
 function cart(sh,scale,extra=''){
   const T=S.terrain,D=S.dem;let pcs=[];try{pcs=exportSheets().filter(x=>!/^cerfa|^cad$|^pres$/.test(x.id))}catch(e){}const cid=sh._cid||sh.id;const idx=pcs.findIndex(x=>x.id===cid);
   const kind=mode()==='pc'?(S.projet.nature==='maison'?'Permis de construire · maison individuelle':'Permis de construire'):'Déclaration préalable';
@@ -3393,7 +3424,7 @@ function cart(sh,scale,extra=''){
   <dt>Demandeur</dt><dd>${esc((D.nom||D.prenom)?[D.civ,D.prenom,D.nom].filter(Boolean).join(' '):'—')}</dd></dl>
   <div class="c-strip"><div><span>Échelle</span><b${String(scale||'').length>9?' class="sm"':''}>${scale||'—'}</b></div><div><span>Date</span><b>${frDate(S.meta.date)}</b></div><div><span>Indice</span><b>${esc(S.meta.indice)}</b></div></div>
   <div class="c-extra">${S.demo?'<div class="demo-c">Exemple — terrain fictif</div>':''}${extra}</div>${(S.meta.auteur||S.meta.logo)?`<div class="c-auth">${S.meta.logo?`<img src="${S.meta.logo}" alt="">`:''}<span>${S.meta.auteur?'Dossier établi par<br><b>'+esc(S.meta.auteur)+'</b>':''}</span></div>`:''}
-  ${pcs.length>1?`<div class="c-pcs">${pcs.map(x=>`<i class="${x.id===cid?'on':''}">${esc(x.code)}</i>`).join('')}</div>`:''}<div class="c-foot"><span>Format A4 ${land?'paysage':'portrait'}</span><span>${T.zone?esc('Zone '+T.zone.libelle):''}</span></div></div>`;
+  ${revHTML()}${pcs.length>1?`<div class="c-pcs">${pcs.map(x=>`<i class="${x.id===cid?'on':''}">${esc(x.code)}</i>`).join('')}</div>`:''}<div class="c-foot"><span>Format A4 ${land?'paysage':'portrait'}</span><span>${T.zone?esc('Zone '+T.zone.libelle):''}</span></div></div>`;
 }
 const demoMark=(port)=>S.demo&&port?'<div class="demo-mark">EXEMPLE — TERRAIN FICTIF</div>':'';
 const lg=(sw,txt)=>`<div class="lg"><svg viewBox="0 0 36 16">${sw}</svg><span>${txt}</span></div>`;
@@ -3448,7 +3479,7 @@ function sheetHTML0(sh){
     const pair=solo?[{pcmi5a:sd[2],pcmi5b:sd[0],pcmi5c:sd[1],pcmi5d:sd[3]}[sh.id]]:(sh.id==='pcmi5a'?[sd[2],sd[0]]:[sd[1],sd[3]]);const W=212,H=solo?182:88;
     const autoSc=Math.max(...sd.map(s=>facadeSVG(s,W,H).sc));const ov=S.ui.scales&&S.ui.scales.pcmi5;const sc=ov&&ov!=='auto'?+ov:autoSc;
     const F2=pair.map(s=>facadeSVG(s,W,H,sc));SCALEINFO.pcmi5={sc,auto:autoSc,forced:!!(ov&&ov!=='auto'),fits:sd.every(s=>facadeSVG(s,W,H,sc).fits)};
-    return`${demoMark()}<div class="draw"><div class="${solo?'fac1':'fac2'}">${F2.map((f,i)=>`<div class="cell"><h4>${sideName(pair[i])}</h4>${f.svg}</div>`).join('')}</div></div>${cart(sh,'1/'+sc,`<div class="c-h">Matériaux et teintes</div>${matLegend()}<p class="xref">Toiture en plan : voir PCMI2. Coupes : voir PCMI3. Insertion : voir PCMI6.</p>`)}`}
+    return`${demoMark()}<div class="draw"><div class="${solo?'fac1':'fac2'}">${F2.map((f,i)=>`<div class="cell"><h4>${sideName(pair[i])}</h4>${f.svg}</div>`).join('')}</div></div>${cart(sh,'1/'+sc,`<div class="c-h">Matériaux et teintes</div>${matLegend()}${mode()==='pc'&&exDem().length&&S.ui.facDem!==false?lg(`<rect x="2" y="2" width="32" height="12" fill="none" stroke="#AE3328" stroke-width="1.4" stroke-dasharray="4 2"/>`,'Silhouette des constructions démolies (pour comparaison)'):''}<p class="xref">Voir PCMI2 (toiture en plan), PCMI3 (coupes), PCMI6 (insertion).</p>`)}`}
   case'pcmi6':{const ph=S.photos;
     if(ph.insMode==='image'){const one=ph.insImg?`<div class="photo-area"><img src="${sketchOf(ph.insImg)}" alt="Insertion du projet" style="${ph.insFit==='cover'?'width:100%;height:100%;object-fit:cover':''}"></div>`:'';const ab=one&&abOn();const inner=ab?abHTML(sketchOf(insBefore()),one):ph.insImg?one:`<div class="photo-area"><div class="photo-empty">Importez votre image d'insertion (étape 04, « Importer mon image »).</div></div>`;
       const pv=ph.pv6pos?' Point de vue I reporté sur le plan de masse (PCMI2).':'';
@@ -3504,7 +3535,8 @@ function noticeHTML(){
   const exTxt=S.existants.length?`Le terrain supporte ${S.existants.length===1?'une construction':S.existants.length+' constructions'} : ${S.existants.map(exItem).join(' ; ')}.`:'Le terrain est libre de toute construction.';
   const DM=exDem(),ne=nearestExisting();
   const natTxt={maison:`la construction d'une maison individuelle ${niv}${comb}`,extension:`l'extension ${niv}${comb} de la construction existante`,annexe:`la construction d'une annexe ${niv}${{garage:' à usage de garage',atelier:' à usage d\'atelier et de stockage',abri:' à usage d\'abri de jardin'}[P.usage]||''}`}[P.nature||'maison'];
-  const demTxt=DM.length?`<p>Le projet prévoit la démolition de : ${DM.map(e=>`${esc((e.usage||'construction').toLowerCase())} (${fmt(exArea(e),0)} m² d'emprise)`).join(', ')}.</p>`:'';
+  const demTxt=DM.length?`<p>Le projet prévoit la démolition de : ${DM.map(e=>`${esc((e.usage||'construction').toLowerCase())} (${fmt(exArea(e),0)} m² d'emprise${e.hauteur?`, ${fmt(+e.hauteur,1)} m de hauteur`:''})`).join(', ')}.${(()=>{const sD=DM.reduce((a,e)=>a+exArea(e),0),hD=Math.max(0,...DM.map(e=>+e.hauteur||0)),sf=surfaces(),hh=heights();
+  return sD>1?` La nouvelle construction remplace ces volumes au même emplacement : ${fmt(sf.emprise,0)} m² d'emprise contre ${fmt(sD,0)} m² démolis${hD?`, et ${fmt(hh.hF,2)} m au faîtage contre ${fmt(hD,2)} m pour la plus haute construction démolie`:''}. ${hD&&hh.hF<hD?'Le projet est plus bas que les bâtiments qu\'il remplace et ':''}${sf.emprise<=sD?'n\'augmente pas l\'emprise bâtie sur le terrain ; ':''}il regroupe dans un seul volume, d'aspect homogène, des annexes vétustes. Les silhouettes des constructions démolies figurent en pointillé rouge sur les façades (PCMI5).`:''})()}</p>`:'';
   const exDistTxt=ne?(ne.d<0.1?` Elle est accolée à la construction existante (${esc((ne.e.usage||'').toLowerCase())}).`:` Elle est implantée à ${fmt(ne.d)} m de la construction existante la plus proche (${esc((ne.e.usage||'').toLowerCase())}).`):'';
   return`<h2>1. Présentation de l'état initial du terrain et de ses abords</h2>
 <p>Le terrain est situé ${esc(adresseTerrain()||'—')}${T.commune?` sur la commune de ${esc(T.commune)}`:''}. Il est cadastré ${esc(refs)}, pour une superficie totale de ${fmt(A,0)} m². ${T.zone&&T.zone.libelle!=='?'?`Il est classé en zone ${esc(T.zone.libelle)} du ${esc(T.zone.doc)}${T.zone.libelong?` (${esc(T.zone.libelong)})`:''}.`:'<span class="todo">[Préciser la zone du document d\'urbanisme.]</span>'}${esc(gpuNotice())}${risqueNotice()}</p>
@@ -3515,7 +3547,7 @@ function noticeHTML(){
 <p>${P.regrade?`Le terrain naturel est repris au droit de la construction pour former une plateforme${h.ok?` à la cote ${fmt(h.pl-P.hPlancher)} NGF`:''}, raccordée au terrain existant par des talus en pente douce.`:'Le projet conserve le terrain naturel.'} ${h.ok?`Le plancher du rez-de-chaussée est calé à la cote ${fmt(h.pl)} NGF, soit ${fmt(P.hPlancher)} m au-dessus du terrain naturel au point le plus haut de l'emprise.`:''} Les terrassements se limitent à l'emprise de la construction et de ses accès. Les terres excavées sont régalées sur le terrain.</p>
 <h3>b) Implantation, organisation, composition et volume des constructions</h3>
 ${demTxt}<p>Le projet consiste en ${natTxt}, de ${fmt(P.L)} m × ${fmt(P.W)} m, couverte par ${toitTxt}.${openPartText()}${DM.length&&DM.some(e=>{try{return polysOverlap(bldPoly(),exRing(e))}catch(_){return false}})?' La construction prend place sur l\'emprise libérée par les bâtiments démolis.':''}${(()=>{const W=wingsGeo().filter(g=>!g.clash);if(!W.length)return'';const sh=houseShape();const one=G=>`une aile ${G.nw===1?'de plain-pied':'en R+'+(G.nw-1)} de ${fmt(G.Ww)} m × ${fmt(G.Dw)} m${Math.abs(G.off)<0.05?' au milieu de':Math.abs(Math.abs(G.off)-(G.s.len-G.Ww)/2)<0.05?' à l\'extrémité de':' contre'} la ${sideName(G.s).toLowerCase()}, couverte ${G.flat?'d\'un toit plat':(G.hip?'de quatre pans (croupe)':'de deux pans')+(G.valley?' raccordés à la toiture principale par des noues':'')}`;return ` ${W.length>1?'Deux ailes lui sont accolées : ':'Lui est accolée '}${W.map(one).join(', et ')}, formant un plan ${sh==='H'?'en H':'en '+sh}.`})()} L'emprise au sol créée est de ${fmt(sf.emprise,1)} m² et la surface de plancher créée d'environ ${fmt(sf.sdp,1)} m²${sf.gar>0.5?` (le garage, d'environ ${fmt(sf.gar,1)} m², est une surface de stationnement non comptée dans la surface de plancher)`:''}.</p>
-<p>La construction est implantée ${D.dv!=null?`à ${fmt(D.dv)} m de l'alignement de la voie et `:''}à ${fmt(D.dl)} m au minimum des limites séparatives.${exDistTxt} Sa hauteur est de ${fmt(h.hE)} m à l'égout${P.toit!=='plat'?` et de ${fmt(h.hF)} m au faîtage`:''}, mesurée depuis le terrain naturel.</p>
+<p>La construction est implantée ${D.dv!=null?`à ${fmt(D.dv)} m de l'alignement de la voie et `:''}à ${fmt(D.dl)} m au minimum des limites séparatives.${exDistTxt} Sa hauteur est de ${fmt(h.hE)} m à l'égout${P.toit!=='plat'?` et de ${fmt(h.hF)} m au faîtage`:''}, mesurée ${heights().refTxt}.</p>
 <h3>c) Traitement des constructions, clôtures, végétation ou aménagements situés en limite de terrain</h3>
 <p>${P.cloture?esc(P.cloture):'<span class="todo">[Décrire les clôtures et le traitement des limites.]</span>'}</p>
 <h3>d) Matériaux et couleurs des constructions</h3>
@@ -3585,7 +3617,10 @@ function renderSide(){renderModeUI();{const gb=$('#gpuBox');if(gb)gb.innerHTML=g
   $('#prev3d').innerHTML=`<svg viewBox="${(bb[0]-0.5).toFixed(2)} ${(-bb[3]-0.5).toFixed(2)} ${(bb[2]-bb[0]+1).toFixed(2)} ${(bb[3]-bb[1]+1).toFixed(2)}" aria-label="Aperçu 3D">${R.svg}</svg>`;
 }
 function sdpHintUpd(){const el=$('#sdpHint');if(!el)return;try{const sf=surfaces(),p=S.projet,O=openPart();const e=wallThick();el.textContent=`Calcul automatique : ${fmt(sf.sdpAuto,1)} m² — intérieur ${O?'de la partie fermée ':''}(${fmt((O?O.Lc:p.L)-2*e,2)} × ${fmt(p.W-2*e,2)} m), murs de ${Math.round(e*100)} cm déduits${sf.gar>0.5?`, stationnement de ${fmt(sf.gar,1)} m² déduit`:''}.${sf.manuel?' Votre valeur saisie est utilisée dans tout le dossier.':' Saisissez la valeur exacte si vous la connaissez (plans, constructeur).'}`;const i=$('#sdpMan');if(i)i.placeholder='auto : '+fmt(sf.sdpAuto,1)}catch(e){}}
-function renderAll(){sdpHintUpd();document.body.classList.toggle('has-dem',exDem().length>0);document.body.classList.toggle('is-annexe',S.projet.nature==='annexe');document.body.classList.toggle('has-open',!!openPart());{const pp=$('#pentePct');if(pp)pp.textContent=S.projet.toit==='plat'?'':`soit ${fmt(pentePct(),1)} %`}if(!activeSheets().some(s=>s.id===S.ui.tab)&&S.ui.tab!=='checks')S.ui.tab='pcmi2';
+function revUpd(){const el=$('#revList');if(!el)return;const R=revRows();el.textContent=R.length>1?'Historique : '+R.map(r=>`${r.i} (${r.d?frDate(r.d):'—'}) ${r.t||''}`).join(' · '):''}
+document.addEventListener('click',e=>{if(!e.target.closest('#bNewRev'))return;const M=S.meta;const note=prompt('Qu\'est-ce qui a changé dans ce nouvel indice ?','');if(note===null)return;M.revs=M.revs||[];M.revs.push({i:M.indice||'A',d:M.date,t:M.revNote||(M.revs.length?'':'Première émission')});
+  const c=String(M.indice||'A').trim();M.indice=/^[A-Y]$/i.test(c)?String.fromCharCode(c.toUpperCase().charCodeAt(0)+1):c+"'";M.date=new Date().toISOString().slice(0,10);M.revNote=note||'Modifications';save();fillInputs();renderAll();toast(`Indice ${M.indice} créé : il apparaît dans tous les cartouches.`)});
+function renderAll(){sdpHintUpd();revUpd();document.body.classList.toggle('has-dem',exDem().length>0);document.body.classList.toggle('is-annexe',S.projet.nature==='annexe');document.body.classList.toggle('has-open',!!openPart());{const pp=$('#pentePct');if(pp)pp.textContent=S.projet.toit==='plat'?'':`soit ${fmt(pentePct(),1)} %`}if(!activeSheets().some(s=>s.id===S.ui.tab)&&S.ui.tab!=='checks')S.ui.tab='pcmi2';
   {const act=new Set(activeSheets().map(s=>s.id));$$('#stage .wrap').forEach(w=>{const id=w.id.slice(2);if(id!=='checks'&&!act.has(id))w.remove()})}
   renderTabs();for(const s of activeSheets())renderSheet(s.id);renderChecks();renderSide()}
 function fit(){renderScaleBar();if(typeof declutterOn==='function')declutterOn();const st=$('#stage');const avail=st.clientWidth-48;const w=$('.wrap.on');if(!w||w.id==='w-checks')return;const sh=w.firstElementChild;if(!sh)return;const base=sh.offsetWidth;const z=S.ui.zoom||1;const s=Math.min(1.2,avail/base)*z;const zv=$('#zVal');if(zv)zv.textContent=Math.round(z*100)+' %';
@@ -4338,7 +4373,8 @@ $('#bParse').onclick=()=>{const got=parseDesc(S.projet.desc||'');const ul=$('#un
   S.notice=null;fillInputs();renderAll();save();goTab('pcmi2')};
 
 // Fichiers
-$('#bSave').onclick=()=>{const blob=new Blob([packS()],{type:'application/json'});
+$('#bSave').title='Télécharge une copie de votre dossier (fichier .json) à garder. « Ouvrir » la recharge sur n\'importe quel appareil.';$('#bOpen').title='Recharger un dossier enregistré (fichier .json)';
+$('#bSave').onclick=()=>{S.meta.backupAt=new Date().toISOString();save();const blob=new Blob([packS()],{type:'application/json'});
   saveBlob(blob,`permis-${(S.terrain.commune||'projet').toLowerCase().replace(/[^a-z0-9]+/g,'-')}-${parcelRefs().replace(/[^A-Za-z0-9]+/g,'')}.json`);if(!(IOS&&canShareFiles()))toast('Projet enregistré dans vos téléchargements.')};
 $('#bOpen').onclick=()=>$('#fOpen').click();
 $('#fOpen').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const j=unpackS(JSON.parse(await f.text()));if(!j.terrain||!j.projet)throw new Error('fichier non reconnu');S=Object.assign(demoState(),j);if(!j.existants)S.existants=[];mapCache={};fillInputs();renderExList();renderAll();save();toast('Projet ouvert.')}catch(err){toast('Impossible d\'ouvrir ce fichier : '+err.message)}e.target.value=''});
@@ -5579,10 +5615,16 @@ async function pdfDossier(){try{pdfBusy('Préparation du PDF…');await Promise.
     for(const s of L){pdfBusy(`PDF : page ${++i} sur ${L.length}…`);const c=s.id==='garde'?await gardeCanvas():await sheetCanvas(s.id);if(c)addCanvas(doc,c)}
     saveBlob(doc.output('blob'),dossierName()+'.pdf');toast('PDF du dossier enregistré.')}
   catch(e){toast('PDF impossible : '+e.message+'. Utilisez « Imprimer » à la place.',8000)}finally{pdfBusy(null)}}
+function depotReadme(L){const pc=mode()==='pc';return[`Dossier de ${pc?'permis de construire':'déclaration préalable'} — ${projetTitle()}`,`Terrain : ${adresseTerrain()} — ${parcelRefs()}`,'',
+  'Pièces (un fichier PDF par pièce) :',...L.map(x=>`  ${x.code.padEnd(13)} ${x.t}`),'',
+  'Dépôt en ligne : sur le guichet numérique de votre mairie, joignez chaque fichier à la pièce du même code. Le formulaire cerfa rempli (bouton « Cerfa rempli ») se dépose à part, daté et signé.',
+  `Dépôt papier : ${pc?'4 exemplaires du dossier complet':'2 exemplaires du dossier complet'} en mairie, plus des exemplaires supplémentaires des pièces de situation, de masse et de coupe si le terrain est en site protégé (Architecte des Bâtiments de France) — la mairie vous indiquera le nombre exact.`,
+  'Gardez une copie de tout ce que vous déposez.'].join('\n')}
 async function zipDepot(){try{pdfBusy('Préparation des fichiers…');await Promise.all([loadLib('h2c'),loadLib('pdf'),loadLib('zip')]);const zip=new JSZip();const L=exportSheets();let i=0;const used={};
     for(const s of L){pdfBusy(`Pièce ${++i} sur ${L.length} : ${s.code}…`);const c=await sheetCanvas(s.id);if(!c)continue;const d=newDoc();addCanvas(d,c);
       let nm=s.code==='Cerfa'?'Recapitulatif_cerfa':s.code==='Annexe'?'Annexe_extrait_cadastral':fileSafe(s.code);if(used[nm]){used[nm]++;nm+='_'+used[nm]}else used[nm]=1;
       zip.file(nm+'.pdf',d.output('arraybuffer'))}
+    zip.file('Lisez-moi.txt',depotReadme(L).replace(/\n/g,'\r\n'));
     if(mode()!=='dp-division')try{const cf=await cerfaBytes();zip.file(`Cerfa_${cf.num}_pre-rempli.pdf`,cf.bytes)}catch(e){}
     zip.file('LISEZ-MOI.txt',`Pièces du dossier, une par fichier, à déposer sur la plateforme de votre mairie (guichet numérique des autorisations d'urbanisme).\nChaque fichier porte le code de la pièce demandé par le formulaire cerfa.\nLe fichier Recapitulatif_cerfa.pdf n'est pas une pièce : il sert à remplir le formulaire.\n`);
     saveBlob(await zip.generateAsync({type:'blob'}),dossierName()+'_pieces.zip');toast('Fichiers du dépôt en ligne enregistrés (un PDF par pièce).')}
