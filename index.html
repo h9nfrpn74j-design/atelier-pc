@@ -2184,6 +2184,7 @@ function terrFacade(side,r,k){let o='';const P=S.projet;for(const a of amList())
 /* silhouette des constructions démolies, en pointillé rouge, projetée sur la façade */
 var DEMF='';
 function demFacade(side,r,k,m0,ext,h,gl){if(mode()!=='pc'||S.ui.facDem===false)return'';let o='';const P=S.projet;
+  {const lu=Math.abs(side.n[0])>0.5;const long=P.L>=P.W?!lu:lu;if(!long&&P.toit!=='plat')return''}
   for(const e of exDem()){const R=exRing(e);if(!R||R.length<3)continue;const L=R.map(q=>toBld(q[0],q[1]));const ss=L.map(q=>q[0]*r[0]+q[1]*r[1]),dd=L.map(q=>q[0]*side.n[0]+q[1]*side.n[1]);
     let s0=Math.min(...ss),s1=Math.max(...ss);const wid=s1-s0,dep=Math.max(...dd)-Math.min(...dd);const hh=+e.hauteur||3.5;
     const lo=m0-ext,hi=m0+ext;if(s1<lo||s0>hi)continue;const a=Math.max(s0,lo),b=Math.min(s1,hi);
@@ -2192,9 +2193,9 @@ function demFacade(side,r,k,m0,ext,h,gl){if(mode()!=='pc'||S.ui.facDem===false)r
     const za=gz(a),zbb=gz(b);const z0=Math.max(za,zbb);
     let pts;if((e.toit||'2pans')==='2pans'&&wid<dep*0.95&&a===s0&&b===s1){const ze=z0+hh-Math.min(wid/2*0.35,hh*0.35);pts=[[a,za],[b,zbb],[b,ze],[(a+b)/2,z0+hh],[a,ze]]}
     else if(e.toit==='mono'){pts=[[a,za],[b,zbb],[b,z0+hh*0.85],[a,z0+hh]]}else pts=[[a,za],[b,zbb],[b,z0+hh],[a,z0+hh]];
-    o+=polyS(pts,`fill="none" stroke="#AE3328" stroke-width="${0.32*k}" stroke-dasharray="${1.6*k} ${0.9*k}" pointer-events="none"`);
+    o+=polyS(pts,`fill="none" stroke="#AE3328" stroke-width="${0.26*k}" stroke-dasharray="${1.4*k} ${0.9*k}" stroke-opacity=".85" pointer-events="none"`);
     const tx=[(a+b)/2,z0+hh+0.35];o+=textS(tx,`${(e.usage||'Construction')} démoli${/e$/i.test(e.usage||'')?'e':''} · h ${fmt(hh,2)} m`,1.8*k,`text-anchor="middle" fill="#AE3328" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="${0.5*k}"`)}
-  return o}
+  return o?`<g data-nodc="1">${o}</g>`:''}
 function facadeSVG(side,Wmm,Hmm,forceSc){
   const P=S.projet,h=heights(),B=bat();const f=[-side.n[0],-side.n[1]];let R=renderBuilding(f,0,{sw:0.03});
   const r=[-side.n[1],side.n[0]];const half=side.half;const MD=model();
@@ -3315,7 +3316,7 @@ function facMatLabels(side,r,MD,fw,ops,h,k,x0){const P=S.projet;const X=q=>q[0]*
     o+=`<polyline points="${PT([xt-0.5*k,zc])} ${PT([xe,zc])} ${PT([tx+vx*a*0.9,tz+vz*a*0.9])}" fill="none" stroke="#111" stroke-width="${(0.14*k).toFixed(3)}" stroke-linejoin="round"/>`;
     o+=polyS([[tx,tz],[tx+vx*a-vz*b,tz+vz*a+vx*b],[tx+vx*a+vz*b,tz+vz*a-vx*b]],'fill="#111"');
     L.forEach((ln,i)=>{o+=textS([xt,z-i*lh],ln,fs,`dominant-baseline="middle" fill="#111"${i===0?' font-weight="600"':''}`)})}
-  return o}
+  return`<g data-nodc="1">${o}</g>`}
 /* ================= Cartes (tuiles Géoplateforme) ================= */
 function llPx(lon,lat,z){const n=256*2**z;const s=Math.sin(lat*D2R);return[(lon+180)/360*n,(0.5-Math.log((1+s)/(1-s))/(4*Math.PI))*n]}
 const wmts=(L,z,x,y)=>`https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=${L.l}&STYLE=${encodeURIComponent(L.st||'normal')}&FORMAT=${encodeURIComponent(L.f||'image/png')}&TILEMATRIXSET=PM&TILEMATRIX=${z}&TILEROW=${y}&TILECOL=${x}`;
@@ -3483,7 +3484,7 @@ function sheetHTML0(sh){
     const pair=solo?[{pcmi5a:sd[2],pcmi5b:sd[0],pcmi5c:sd[1],pcmi5d:sd[3]}[sh.id]]:(sh.id==='pcmi5a'?[sd[2],sd[0]]:[sd[1],sd[3]]);const W=212,H=solo?182:88;
     const autoSc=Math.max(...sd.map(s=>facadeSVG(s,W,H).sc));const ov=S.ui.scales&&S.ui.scales.pcmi5;const sc=ov&&ov!=='auto'?+ov:autoSc;
     const F2=pair.map(s=>facadeSVG(s,W,H,sc));SCALEINFO.pcmi5={sc,auto:autoSc,forced:!!(ov&&ov!=='auto'),fits:sd.every(s=>facadeSVG(s,W,H,sc).fits)};
-    return`${demoMark()}<div class="draw"><div class="${solo?'fac1':'fac2'}">${F2.map((f,i)=>`<div class="cell"><h4>${sideName(pair[i])}</h4>${f.svg}</div>`).join('')}</div></div>${cart(sh,'1/'+sc,`<div class="c-h">Matériaux et teintes</div>${matLegend()}${mode()==='pc'&&exDem().length&&S.ui.facDem!==false?lg(`<rect x="2" y="2" width="32" height="12" fill="none" stroke="#AE3328" stroke-width="1.4" stroke-dasharray="4 2"/>`,'Silhouette des constructions démolies (pour comparaison)'):''}<p class="xref">Voir PCMI2 (toiture en plan), PCMI3 (coupes), PCMI6 (insertion).</p>`)}`}
+    return`${demoMark()}<div class="draw"><div class="${solo?'fac1':'fac2'}">${F2.map((f,i)=>`<div class="cell"><h4>${sideName(pair[i])}</h4>${f.svg}</div>`).join('')}</div></div>${cart(sh,'1/'+sc,`<div class="c-h">Matériaux et teintes</div>${matLegend()}${mode()==='pc'&&exDem().length&&S.ui.facDem!==false&&sh.id==='pcmi5a'?lg(`<rect x="2" y="2" width="32" height="12" fill="none" stroke="#AE3328" stroke-width="1.4" stroke-dasharray="4 2"/>`,'Silhouette des constructions démolies (pour comparaison)'):''}<p class="xref">Voir PCMI2 (toiture en plan), PCMI3 (coupes), PCMI6 (insertion).</p>`)}`}
   case'pcmi6':{const ph=S.photos;
     if(ph.insMode==='image'){const one=ph.insImg?`<div class="photo-area"><img src="${sketchOf(ph.insImg)}" alt="Insertion du projet" style="${ph.insFit==='cover'?'width:100%;height:100%;object-fit:cover':''}"></div>`:'';const ab=one&&abOn();const inner=ab?abHTML(sketchOf(insBefore()),one):ph.insImg?one:`<div class="photo-area"><div class="photo-empty">Importez votre image d'insertion (étape 04, « Importer mon image »).</div></div>`;
       const pv=ph.pv6pos?' Point de vue I reporté sur le plan de masse (PCMI2).':'';
