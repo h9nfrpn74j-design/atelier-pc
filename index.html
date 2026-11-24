@@ -1004,6 +1004,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
         <p class="hint" style="margin-top:-4px">La rotation ne modifie que la vue d'insertion, pour essayer une orientation ; l'implantation se règle à l'étape 03.</p>
         <label class="toggle"><input type="checkbox" data-b="photos.insLines"> Contours des arêtes</label>
         <label class="f">Intensité de l'ombre (%)<input type="range" min="0" max="150" data-b="photos.insShadow"></label>
+        <label class="toggle"><input type="checkbox" data-b="photos.insGrass"> Herbe de la photo au pied des murs</label>
         <label class="toggle" id="insTreesRow"><input type="checkbox" data-b="photos.insTrees"> Arbres en arrière-plan (vue de principe)</label>
         <div class="sub">Photo de fond</div>
         <input type="file" accept="image/*,.jpg,.jpeg,.png,.webp,.heic,.heif,.tif,.tiff,.bmp,.gif,.avif,.pdf,application/pdf" data-photo="ins">
@@ -1272,7 +1273,7 @@ function demoState(){
 }
 let S=loadLocal()||demoState();
 S.dossier=S.dossier||{type:'pc',exId:null,avant:null,apres:null};S.clo=S.clo||[];if(!S.projet.toitItems)S.projet.toitItems=[];if(S.regles.hClo===undefined)S.regles.hClo=null;
-{const d={insEye:1.6,insFocal:28,insLum:100,insSat:90,insOp:100,insMode:'auto',insAB:true,insFit:'contain',insPan:0,insTilt:0,insSpin:0,insLines:true,insShadow:100,insTrees:true,insRot:0,insFlip:false,insCon:100,insImg:null,insStyle:'photo',vegeAge:'1',echelle:false};for(const k in d)if(S.photos[k]==null)S.photos[k]=d[k];if(S.photos.insOp<60)S.photos.insOp=100}
+{const d={insGrass:true,insEye:1.6,insFocal:28,insLum:100,insSat:90,insOp:100,insMode:'auto',insAB:true,insFit:'contain',insPan:0,insTilt:0,insSpin:0,insLines:true,insShadow:100,insTrees:true,insRot:0,insFlip:false,insCon:100,insImg:null,insStyle:'photo',vegeAge:'1',echelle:false};for(const k in d)if(S.photos[k]==null)S.photos[k]=d[k];if(S.photos.insOp<60)S.photos.insOp=100}
 if(!S.existants)S.existants=[];if(!S.projet.nature)S.projet.nature='maison';
 function loadLocal(){try{const s=localStorage.getItem('atelier-pc');return s?unpackS(JSON.parse(s)):null}catch(e){return null}}
 let saveT;
@@ -1588,10 +1589,11 @@ function renderBuilding(f2,pitch,opt={}){
   if(render&&opt.ground){const ra=M.walls[1].half+7,rb=M.walls[0].half+7;const G=[];for(let i=0;i<40;i++){const t=i/40*2*Math.PI;G.push([Math.cos(t)*ra,Math.sin(t)*rb,zb])}
     defs+=`<radialGradient id="${id}s"><stop offset="0" stop-color="#cfd9c4"/><stop offset=".7" stop-color="#dfe6d7"/><stop offset="1" stop-color="#dfe6d7" stop-opacity="0"/></radialGradient>`;out+=fillOnly(G,`url(#${id}s)`)}
   if(render&&opt.shadow!==false&&shK>0&&Ls[2]>0.05){const all=[...M.walls.flatMap(w=>w.pts),...M.roofs.flatMap(r=>r.pts)];
-    const sh=hull2(all.map(q=>[q[0]-Ls[0]*(q[2]-zb)/Ls[2],q[1]-Ls[1]*(q[2]-zb)/Ls[2]])).map(q=>[q[0],q[1],zb]);
+    const zT=(u,v)=>{try{return clamp(zRelAt(...fromBld(u,v)),zb,0)}catch(e){return zb}};
+    const sh=hull2(all.map(q=>[q[0]-Ls[0]*(q[2]-zb)/Ls[2],q[1]-Ls[1]*(q[2]-zb)/Ls[2]])).map(q=>[q[0],q[1],zT(q[0],q[1])]);
     defs+=`<filter id="${id}bl" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="${(opt.blur||0.18).toFixed(3)}"/></filter>`;
     out+=fillOnly(sh,`rgba(25,35,30,${(0.30*shK).toFixed(3)})`,`filter="url(#${id}bl)"`);
-    const fp=[[-p.L/2-0.25,-p.W/2-0.25,zb],[p.L/2+0.25,-p.W/2-0.25,zb],[p.L/2+0.25,p.W/2+0.25,zb],[-p.L/2-0.25,p.W/2+0.25,zb]];out+=fillOnly(fp,`rgba(20,25,22,${(0.35*shK).toFixed(3)})`,`filter="url(#${id}bl)"`);for(const A of(M.ailes||[]))out+=fillOnly(A.G.foot.map(q=>[q[0],q[1],zb]),`rgba(20,25,22,${(0.35*shK).toFixed(3)})`,`filter="url(#${id}bl)"`)}
+    const fp=[[-p.L/2-0.25,-p.W/2-0.25],[p.L/2+0.25,-p.W/2-0.25],[p.L/2+0.25,p.W/2+0.25],[-p.L/2-0.25,p.W/2+0.25]].map(q=>[q[0],q[1],zT(q[0],q[1])]);out+=fillOnly(fp,`rgba(20,25,22,${(0.35*shK).toFixed(3)})`,`filter="url(#${id}bl)"`);for(const A of(M.ailes||[]))out+=fillOnly(A.G.foot.map(q=>[q[0],q[1],zb]),`rgba(20,25,22,${(0.35*shK).toFixed(3)})`,`filter="url(#${id}bl)"`)}
   // murs visibles (du plus loin au plus proche)
   const avgD=pts=>pts.reduce((s,q)=>s+V.depth(q),0)/pts.length;
   const rcOf=r=>Math.hypot(r.nrm[0],r.nrm[1])<0.01&&p.toit!=='plat'?'#a9a8a0':roofC;
@@ -1609,7 +1611,7 @@ function renderBuilding(f2,pitch,opt={}){
       if(vert){for(let q=-L2+0.13;q<L2;q+=0.13){let lo=1e9,hi=-1e9;for(let i=0;i<P2.length;i++){const A=P2[i],B=P2[(i+1)%P2.length];if((A[0]-q)*(B[0]-q)<=0&&A[0]!==B[0]){const z=A[1]+(B[1]-A[1])*(q-A[0])/(B[0]-A[0]);lo=Math.min(lo,z);hi=Math.max(hi,z)}}if(hi>lo)out+=line(Q(q,lo,0.006),Q(q,hi,0.006),sw*0.35,shade(wallC,k*0.8))}}
       else for(let z=Math.min(...zs)+0.15;z<Math.max(...zs);z+=0.15){let lo=1e9,hi=-1e9;for(let i=0;i<P2.length;i++){const A=P2[i],B=P2[(i+1)%P2.length];if((A[1]-z)*(B[1]-z)<=0&&A[1]!==B[1]){const q=A[0]+(B[0]-A[0])*(z-A[1])/(B[1]-A[1]);lo=Math.min(lo,q);hi=Math.max(hi,q)}}if(hi>lo)out+=line(Q(lo,z,0.006),Q(hi,z,0.006),sw*0.35,shade(wallC,k*0.8))}}
     if(zb<-0.02&&!w.tri){const bc=/bardage|bois|clin/i.test(p.facade||'')?'#b3b0a8':wallC;out+=fillOnly([Q(-L2,zb,0.005),Q(L2,zb,0.005),Q(L2,0,0.005),Q(-L2,0,0.005)],shade(bc,k*(bc===wallC?0.8:1)))+line(Q(-L2,0,0.006),Q(L2,0,0.006),sw*0.45,shade(bc,k*0.62))}
-    if(render&&/bardage|bois|clin/i.test(p.facade||'')&&opt.ao!==false&&!w.tri&&TP){const lo=TP.map(t=>Q(t[0],t[1],0.007)),hi=TP.slice().reverse().map(t=>Q(t[0],t[1]+0.45,0.007));out+=gradPoly(lo.concat(hi),Q(0,TP[5][1],0.007),Q(0,TP[5][1]+0.45,0.007),0.28)}
+    if(render&&/bardage|bois|clin/i.test(p.facade||'')&&opt.ao!==false&&!w.tri&&TP){const lo=TP.map(t=>Q(t[0],t[1],0.007)),hi=TP.slice().reverse().map(t=>Q(t[0],t[1]+0.45,0.007));out+=gradPoly(lo.concat(hi),Q(0,TP[5][1],0.007),Q(0,TP[5][1]+0.45,0.007),0.4)}
     const tops=w.pts.slice(2).map(q=>q[2]);const flatTop=Math.max(...tops)-Math.min(...tops)<0.01;
     if(flatTop&&!(w.flat??p.toit==='plat')&&p.debord>0.05){const zt=tops[0];const d=Math.min(0.55,0.25+p.debord*0.5);out+=render?gradPoly([Q(-L2,zt-d*1.6,0.004),Q(L2,zt-d*1.6,0.004),Q(L2,zt,0.004),Q(-L2,zt,0.004)],Q(0,zt,0.004),Q(0,zt-d*1.6,0.004),0.3):fillOnly([Q(-L2,zt-d,0.004),Q(L2,zt-d,0.004),Q(L2,zt,0.004),Q(-L2,zt,0.004)],'rgba(0,0,0,0.08)')}
     if(flatTop&&!(w.flat??p.toit==='plat')&&p.gouttieres!==false){const R0=VR.find(r=>Math.hypot(r.nrm[0],r.nrm[1])>0.01&&(r.nrm[0]*w.n[0]+r.nrm[1]*w.n[1])/Math.hypot(r.nrm[0],r.nrm[1])>0.9);let span=null;
@@ -1658,7 +1660,7 @@ function renderBuilding(f2,pitch,opt={}){
   if(isMain)out+=drawToitItems(V,q=>{const v=V.P(q);pts2.push(v);return v[0].toFixed(3)+','+(-v[1]).toFixed(3)},sw,render,new Set(vis.filter(r=>Math.abs(r.dd)>1e-3).map(r=>r.ri)));
   // faîtage et arêtiers soulignés
   if(p.toit==='2pans'||p.toit==='4pans'){for(const r of vis){const zs=r.pts.map(q=>q[2]);const zmx=Math.max(...zs);const top=r.pts.filter(q=>q[2]>zmx-1e-6);if(top.length===2)out+=line(top[0],top[1],sw*1.6,shade(roofC,0.55))}}};
-  if(render&&opt.ao!==false)for(const w of M.walls.filter(w=>!w.x&&!w.tri&&!w.inner)){const L2=w.len/2;const G=(q,off)=>[w.c[0]+w.r[0]*q+w.n[0]*off,w.c[1]+w.r[1]*q+w.n[1]*off,zb];
+  if(render&&opt.ao!==false)for(const w of M.walls.filter(w=>!w.x&&!w.tri&&!w.inner)){const L2=w.len/2;const G=(q,off)=>{const x=w.c[0]+w.r[0]*q+w.n[0]*off,y=w.c[1]+w.r[1]*q+w.n[1]*off;let z=zb;try{z=clamp(zRelAt(...fromBld(x,y)),zb,0)}catch(e){}return[x,y,z]};
     out+=gradPoly([G(-L2,0),G(L2,0),G(L2+0.35,0.8),G(-L2-0.35,0.8)],G(0,0),G(0,0.8),opt.soft?0.5:0.4)}
   const VO=M.vols||[{walls:M.walls,roofs:M.roofs,main:true}];if(VO.length>1){const W=VO.map((v,i)=>({i,v})).slice(1).map(o=>{const c=o.v.walls.reduce((a,w)=>[a[0]+w.c[0],a[1]+w.c[1]],[0,0]).map(x=>x/o.v.walls.length);return{...o,near:V.side(o.v.att.n,o.v.att.pt)<0,dep:V.depth([c[0],c[1],1])}}).sort((a,b)=>b.dep-a.dep);
     [...W.filter(o=>!o.near).map(o=>o.i),0,...W.filter(o=>o.near).map(o=>o.i)].forEach(i=>drawVol(VO[i].walls,VO[i].roofs,i,!!VO[i].main))}else drawVol(VO[0].walls,VO[0].roofs,0,true);
@@ -4223,9 +4225,35 @@ function shotOverlay(sh,opts={}){const {G,V}=shotView(sh);const s=(sh.w/2)/V.W;c
   defs+=`<mask id="${uid}fg" maskUnits="userSpaceOnUse" x="0" y="0" width="${sh.w}" height="${sh.h}">${maskInner(sh)}</mask>`;
   return`<defs>${defs}</defs><g mask="url(#${uid}fg)"${opts.op?` opacity="${opts.op}"`:''}><g filter="url(#${uid}ph)">${geo}</g></g>`}
 
+/* ligne de contact bâtiment / sol dans l'image : pour chaque colonne de pixels, le point au sol le plus proche du périmètre */
+function shotBase(sh){if(mode()==='dp-cloture'||isAmMode()||noBuild())return[];const {G,V}=shotView(sh);const s=(sh.w/2)/V.W,cx=sh.w/2,cy=sh.h/2;const a=G.r*D2R,ca=Math.cos(a),sa=Math.sin(a);
+  const IM=q=>{const v=V.P(q);const x=v[0]*s,y=-v[1]*s;return[cx+x*ca-y*sa,cy+x*sa+y*ca]};const p=S.projet,h=heights(),zb=h.zb??-p.hPlancher;
+  const rings=[[[-p.L/2,-p.W/2],[p.L/2,-p.W/2],[p.L/2,p.W/2],[-p.L/2,p.W/2]]];try{for(const A of(model().ailes||[]))if(A.G&&A.G.foot)rings.push(A.G.foot.map(q=>[q[0],q[1]]))}catch(e){}
+  const col=new Map();
+  for(const R of rings)for(let i=0;i<R.length;i++){const A=R[i],B=R[(i+1)%R.length];let n=40;try{const a1=IM([A[0],A[1],0]),b1=IM([B[0],B[1],0]);const px=Math.hypot(b1[0]-a1[0],b1[1]-a1[1]);if(isFinite(px))n=clamp(Math.ceil(px*2),8,6000)}catch(e){}
+    for(let j=0;j<=n;j++){const u=A[0]+(B[0]-A[0])*j/n,v=A[1]+(B[1]-A[1])*j/n;const z=clamp(zRelAt(...fromBld(u,v)),zb,0);const q=[u,v,z];if(V.depth(q)<0.5)continue;
+      const P0=IM(q),P1=IM([u,v,z+1]);const ppm=Math.hypot(P1[0]-P0[0],P1[1]-P0[1]);const x=Math.round(P0[0]);if(x<0||x>=sh.w||!isFinite(P0[1]))continue;const c=col.get(x);if(!c||P0[1]>c[1])col.set(x,[x,P0[1],ppm])}}
+  return[...col.values()].sort((a,b)=>a[0]-b[0])}
+function shotRuns(B){const runs=[];let cur=[];for(const b of B){if(cur.length&&b[0]-cur[cur.length-1][0]>3){runs.push(cur);cur=[]}cur.push(b)}if(cur.length)runs.push(cur);return runs}
 async function shotComposite(sh){const im=await loadImg(sh.img);const cv=document.createElement('canvas');cv.width=sh.w;cv.height=sh.h;const g=cv.getContext('2d');g.drawImage(im,0,0,sh.w,sh.h);
+  let B=[];try{B=shotBase(sh)}catch(e){}const src=B.length?g.getImageData(0,0,sh.w,sh.h):null;
   const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${sh.w}" height="${sh.h}" viewBox="0 0 ${sh.w} ${sh.h}">${shotOverlay(sh)}</svg>`;
-  const ov=await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg));g.drawImage(ov,0,0);return cv.toDataURL('image/jpeg',0.86)}
+  const ov=await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg));g.drawImage(ov,0,0);
+  // ombre de contact sur le sol de la photo (sous le bâtiment)
+  if(B.length){const runs=shotRuns(B);g.save();g.beginPath();for(const r of runs){r.forEach((b,i)=>{i?g.lineTo(b[0],b[1]-1):g.moveTo(b[0],b[1]-1)});g.lineTo(r[r.length-1][0],sh.h);g.lineTo(r[0][0],sh.h);g.closePath()}g.clip();const pm=B.reduce((a,b)=>a+b[2],0)/B.length;const sun=sunFor(sh);const k=(S.photos.insShadow??100)/100*(sun.soft?1:0.8);
+    for(const [wk,al] of[[0.08,0.30],[0.18,0.20],[0.34,0.13],[0.6,0.08]]){g.strokeStyle=`rgba(22,24,16,${(al*k).toFixed(3)})`;g.lineWidth=Math.max(2,pm*wk);g.lineJoin=g.lineCap='round';
+      for(const r of runs){g.beginPath();r.forEach((b,i)=>{const y=b[1]+pm*wk*0.3;i?g.lineTo(b[0],y):g.moveTo(b[0],y)});g.stroke()}}g.restore()}
+  // herbe de la photo repoussée devant le pied des murs
+  if(B.length&&S.photos.insGrass!==false){const W=sh.w,H=sh.h,D=src.data;const smp=(x,y)=>{x=clamp(Math.round(x),1,W-2);y=clamp(Math.round(y),1,H-2);let r=0,gg=0,b=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const i=((y+dy)*W+x+dx)*4;r+=D[i];gg+=D[i+1];b+=D[i+2]}return[r/9,gg/9,b/9]};
+    const cols=B.map(b=>smp(b[0],b[1]+Math.max(3,b[2]*0.12)));const gr=cols.map(c=>c[1]-Math.max(c[0],c[2])).sort((a,b)=>a-b);const sat=cols.map(c=>Math.max(...c)-Math.min(...c)).sort((a,b)=>a-b);const green=sat[sat.length>>1]>14&&gr[gr.length>>1]>-25;
+    if(green){let sd=11;const rnd=()=>(sd=(sd*16807)%2147483647)/2147483647;g.lineCap='round';
+      for(const r of shotRuns(B)){g.beginPath();r.forEach((b,i)=>{const y=b[1]-b[2]*0.03;i?g.lineTo(b[0],y):g.moveTo(b[0],y)});for(let i=r.length-1;i>=0;i--)g.lineTo(r[i][0],r[i][1]+r[i][2]*0.05);g.closePath();
+        const c=smp(r[r.length>>1][0],r[r.length>>1][1]+r[r.length>>1][2]*0.15);g.fillStyle=`rgba(${c.map(v=>Math.round(v*0.7)).join(',')},.8)`;g.fill()}
+      B.forEach((b,i)=>{const ppm=b[2];if(ppm<6)return;const cl=0.5+0.5*Math.sin(b[0]*0.11+Math.sin(b[0]*0.037)*3);const n=Math.round((ppm>60?6:ppm>25?4:3)*(0.35+cl*0.9));for(let k=0;k<n;k++){const c=smp(b[0]+(rnd()-0.5)*4,b[1]+ppm*(0.06+rnd()*0.25));const f=0.5+rnd()*0.55;
+        const x0=b[0]+(rnd()-0.5)*3,y0=b[1]+ppm*(0.015+rnd()*0.07),hh=ppm*(0.025+Math.pow(rnd(),2.2)*0.13*(0.6+cl*0.6)),lean=(rnd()-0.5)*hh*1.6;
+        const gd=g.createLinearGradient(0,y0,0,y0-hh);const cc=`${Math.round(clamp(c[0]*f,0,255))},${Math.round(clamp(c[1]*f,0,255))},${Math.round(clamp(c[2]*f,0,255))}`;gd.addColorStop(0,`rgba(${cc},.95)`);gd.addColorStop(1,`rgba(${cc},.35)`);g.strokeStyle=gd;g.lineWidth=Math.max(0.8,ppm*0.008);
+        g.beginPath();g.moveTo(x0,y0);g.quadraticCurveTo(x0+lean*0.3,y0-hh*0.6,x0+lean,y0-hh);g.stroke()}})}}
+  return cv.toDataURL('image/jpeg',0.86)}
 
 /* ---------- Placement : sur place (GPS + boussole) et plan aérien ; photo = insertion ---------- */
 function isPortail(){return mode()==='dp-cloture'}
@@ -4576,10 +4604,12 @@ async function onsiteFlow2(){if(S.demo){toast('Choisissez d\'abord votre terrain
 async function onsiteApply2(){const sh=S.onsite&&S.onsite.shot2;if(!sh)return;const G=shotGeom(sh);const ph=S.photos;ph.insFromShot2=true;ph.p8=sh.img;ph.p8pos=toLL(...G.cw);ph.p8dir=Math.round(G.h);
   try{ph.insImg2=await shotComposite(sh)}catch(e){}S.onsite.composedFor2=onsiteKey();fillInputs();renderAll();save()}
 function removeFar(){const o=S.onsite;if(o)o.shot2=null;S.photos.insImg2=null;renderAll();save()}
-function onsiteKey(){return JSON.stringify([S.projet,S.clo,S.vege||[],S.photos.vegeAge,S.photos.echelle,typeof amList==='function'?amList():0])}
+function onsiteKey(){return JSON.stringify(['r3',S.photos.insGrass,S.photos.insShadow,S.projet,S.clo,S.vege||[],S.photos.vegeAge,S.photos.echelle,typeof amList==='function'?amList():0])}
 async function onsiteRefresh(){const o=S.onsite;if(o&&o.shot2&&S.photos.insImg2&&o.composedFor2!==onsiteKey()){try{S.photos.insImg2=await shotComposite(o.shot2);o.composedFor2=onsiteKey();save()}catch(e){}}
   if(!o||!o.shot||(S.photos.p7!==o.shot.img&&!S.photos.insFromShot))return;if(o.composedFor===onsiteKey())return;
   try{S.photos.insImg=await shotComposite(o.shot);S.photos.insMode='image';o.composedFor=onsiteKey();save()}catch(e){}}
+setTimeout(()=>{onsiteRefresh().then(()=>{try{fillInputs();renderAll()}catch(e){}}).catch(()=>{})},1800);
+document.addEventListener('change',e=>{if(e.target.closest&&e.target.closest('[data-b="photos.insGrass"],[data-b="photos.insShadow"]'))setTimeout(()=>onsiteRefresh().then(()=>renderAll()),80)});
 /* photo d'environnement avec position et direction automatiques */
 async function onsitePhoto(k){if(S.demo){toast('Choisissez d\'abord votre terrain.');return}
   const sh=await openCamera({title:k==='pA2'?'Bâtiments à démolir':k==='p8'?'Photo de l\'environnement lointain':'Photo de l\'environnement proche',tip:k==='p8'?'Reculez dans la rue pour montrer le terrain dans son paysage':'Depuis la rue, face au terrain'});if(!sh)return;
