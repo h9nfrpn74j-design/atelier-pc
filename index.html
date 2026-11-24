@@ -533,6 +533,7 @@ body[data-mode="dp-facade"] .pc-only,body[data-mode="dp-toiture"] .pc-only{displ
 }
 @media (max-width:420px){.wz-styles{grid-template-columns:1fr}}
 @media print{.wiz{display:none!important}}
+@media print{.al-h{display:none!important}}.wz-masse .al-h{display:none}
 /* Sur place : caméra et placement */
 .wz-ab{display:grid;gap:6px}.wz-ab>b{font-size:13px}.wz-chips{display:flex;flex-wrap:wrap;gap:6px}.wz-chips button{border:1px solid var(--line);background:var(--panel);border-radius:99px;padding:8px 12px;font:500 13px var(--f-ui);cursor:pointer}.wz-chips button.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .wz-rules{display:grid;gap:2px;border-radius:10px;padding:10px 12px;font-size:13px}.wz-rules.ok{background:#EEF7F1;color:var(--ok)}.wz-rules.bad{background:#FBF0EE;color:var(--bad)}.wz-rules .hint{color:var(--muted)}
@@ -1886,6 +1887,7 @@ function svgMasse(){
   o+=gpuMasse(k);
   if(MODE==='dp-division')o+=divMasse(k,DIVHIDE);
   // constructions existantes
+  o+=abordsMasse(k);
   S.existants.forEach((e,i)=>{if(isDPb()&&S.dossier.exId===e.id)return;const R=exR[i];const dem=e.statut==='demoli';const drag=e.src==='manuel'?`data-drag="ex:${i}" style="cursor:move"`:'';
     if(dem){o+=polyS(R,`fill="none" stroke="#AE3328" stroke-width="${0.3*k}" stroke-dasharray="${1*k} ${0.6*k}" ${drag}`);const bb2=bbox(R);
       o+=`<clipPath id="exc${i}">${polyS(R,'')}</clipPath><g clip-path="url(#exc${i})" pointer-events="none">${lineS([bb2[0],bb2[1]],[bb2[2],bb2[3]],`stroke="#AE3328" stroke-width="${0.2*k}"`)}${lineS([bb2[0],bb2[3]],[bb2[2],bb2[1]],`stroke="#AE3328" stroke-width="${0.2*k}"`)}</g>`}
@@ -1952,7 +1954,7 @@ function svgMasse(){
   { const R=implRefs(); [[R.A,'1'],[R.B,'2'],...(R.P&&R.P!==R.A&&R.P!==R.B?[[R.P,'∥']]:[])].forEach(([e,l])=>{if(!e)return;o+=lineS(e.a,e.b,`stroke="rgba(30,90,86,.35)" stroke-width="${1.6*k}" stroke-linecap="round" pointer-events="none"`);
       const m=[e.mid[0]+e.n[0]*2.4*k,e.mid[1]+e.n[1]*2.4*k];o+=`<g pointer-events="none"><circle cx="${m[0].toFixed(3)}" cy="${(-m[1]).toFixed(3)}" r="${1.5*k}" fill="#1E5A56"/>${textS(m,l,1.9*k,'text-anchor="middle" dominant-baseline="central" fill="#fff" font-weight="700"')}</g>`});
     if(S.ui.sel==='bat')o+=polyS(B.corners,`fill="none" stroke="#1E5A56" stroke-width="${0.6*k}" stroke-dasharray="${1.2*k} ${0.6*k}" pointer-events="none"`); }
-  o+=abordsMasse(k)+amMasse(k);o+=`<g pointer-events="none">${vegeMasse(k)}</g>`;if(MODE==='dp-arbres')o+=arbMasse(k);
+  o+=alMasseEdit(k)+amMasse(k);o+=`<g pointer-events="none">${vegeMasse(k)}</g>`;if(MODE==='dp-arbres')o+=arbMasse(k);
   // nord + échelle
   o+=northArrow(vx+vw-7*k,vy+vh-10*k,k)+scaleBar(vx+5*k,vy+4*k,k,vw);
   void pc;void A;
@@ -3285,16 +3287,20 @@ $('#stage').addEventListener('pointerdown',e=>{
   const nb=e.target.closest('[data-nb]');if(nb){const i=+nb.dataset.nb;const n=S.terrain.neighbors.splice(i,1)[0];S.terrain.parcels.push(n);afterParcelChange();return}
   const se=e.target.closest('[data-sel]');if(se){const i=+se.dataset.sel;if(S.terrain.parcels.length>1){S.terrain.neighbors.push(S.terrain.parcels.splice(i,1)[0]);afterParcelChange()}return}
   const ed=e.target.closest('[data-edge]');if(ed){const E=boundary().E[+ed.dataset.edge];if(E.voie){S.terrain.voie=S.terrain.voie.filter(v=>{const q=toLocal(...v);return hyp(q[0]-E.mid[0],q[1]-E.mid[1])>=0.6})}else S.terrain.voie.push(toLL(...E.mid));schedule();return}
+  const ad=e.target.closest('[data-aladd]');if(ad&&alTrace()){e.preventDefault();const T=S.projet.alTrace;const i=+ad.dataset.aladd;T.splice(i+1,0,[(T[i][0]+T[i+1][0])/2,(T[i][1]+T[i+1][1])/2]);S.ui.sel='al:'+(i+1);drag={kind:'al:'+(i+1),dx:0,dy:0};renderSheet('pcmi2');return}
+  {const ta=e.target.closest('[data-drag^="al:"]');if(ta){const kk=ta.dataset.drag,now=Date.now();if(alTap.k===kk&&now-alTap.t<400){alTap={k:null,t:0};e.preventDefault();alDel(+kk.slice(3));return}alTap={k:kk,t:now}}}
   const t=e.target.closest('[data-drag]');if(!t){if(S.ui.sel&&e.target.closest('#svg-masse')){S.ui.sel=null;renderSheet('pcmi2')}return}e.preventDefault();const kind=t.dataset.drag;if(kind!=='ins'){S.ui.sel=kind;}
   if(kind==='ins'){const area=t.parentElement.getBoundingClientRect();drag={kind,area,sx:e.clientX,sy:e.clientY,ox:S.photos.insX,oy:S.photos.insY};}
-  else{const pt=svgPt(e);const cur=kind==='bat'?[S.projet.x,S.projet.y]:kind==='park'?parkPos():kind.startsWith('am:')?(()=>{const g=amGeom(amList()[+kind.slice(3)]);return[g.x,g.y]})():kind.startsWith('ex:')?toLocal(...S.existants[+kind.slice(3)].c):toLocal(...S.photos[kind+'pos']);drag={kind,dx:cur[0]-pt[0],dy:cur[1]-pt[1]}}
+  else{const pt=svgPt(e);const cur=kind==='bat'?[S.projet.x,S.projet.y]:kind==='park'?parkPos():kind.startsWith('al:')?S.projet.alTrace[+kind.slice(3)]:kind.startsWith('am:')?(()=>{const g=amGeom(amList()[+kind.slice(3)]);return[g.x,g.y]})():kind.startsWith('ex:')?toLocal(...S.existants[+kind.slice(3)].c):toLocal(...S.photos[kind+'pos']);drag={kind,dx:cur[0]-pt[0],dy:cur[1]-pt[1]}}
 });
 window.addEventListener('pointermove',e=>{if(!drag)return;
   if(drag.kind==='ins'){S.photos.insX=drag.ox+(e.clientX-drag.sx)/drag.area.width*100;S.photos.insY=drag.oy+(e.clientY-drag.sy)/drag.area.height*100;const ov=$('#w-pcmi6 .ins-ov');if(ov){ov.style.left=S.photos.insX+'%';ov.style.top=S.photos.insY+'%'}return}
   const pt=svgPt(e);const q=[pt[0]+drag.dx,pt[1]+drag.dy];
-  if(drag.kind==='bat'){S.projet.x=q[0];S.projet.y=q[1]}else if(drag.kind==='park'){S.projet.parkX=q[0];S.projet.parkY=q[1]}else if(drag.kind.startsWith('am:')){const a=amList()[+drag.kind.slice(3)];a.x=q[0];a.y=q[1]}else if(drag.kind.startsWith('ex:'))S.existants[+drag.kind.slice(3)].c=toLL(...q);else S.photos[drag.kind+'pos']=toLL(...q);
+  if(drag.kind==='bat'){S.projet.x=q[0];S.projet.y=q[1]}else if(drag.kind==='park'){S.projet.parkX=q[0];S.projet.parkY=q[1]}else if(drag.kind.startsWith('al:')){const i=+drag.kind.slice(3);const z=alSnap(i,q);S.projet.alTrace[i]=[Math.round(z[0]*100)/100,Math.round(z[1]*100)/100];renderSheet('pcmi2');return}else if(drag.kind.startsWith('am:')){const a=amList()[+drag.kind.slice(3)];a.x=q[0];a.y=q[1]}else if(drag.kind.startsWith('ex:'))S.existants[+drag.kind.slice(3)].c=toLL(...q);else S.photos[drag.kind+'pos']=toLL(...q);
   renderSheet('pcmi2');showDragInfo()});
 window.addEventListener('pointerup',()=>{if(!drag)return;drag=null;renderAll();save()});
+function alDel(i){const T=S.projet.alTrace;if(!T||T.length<=2){toast('Il faut garder au moins deux points.');return}T.splice(i,1);S.ui.sel=null;renderAll();save()}
+let alTap={k:null,t:0};
 /* ---- Implantation précise ---- */
 /* Limites de propriété : segments du cadastre regroupés en côtés droits */
 function limits(){const {E}=boundary();const out=[];const dirOf=e=>[e.b[0]-e.a[0],e.b[1]-e.a[1]];
@@ -3348,10 +3354,11 @@ let diT;function showDragInfo(){const R=implRefs();const C=bat().corners;const e
 let kT;document.addEventListener('keydown',e=>{
   if(!S.ui.sel||S.ui.tab!=='pcmi2')return;const tg=e.target;if(tg.closest&&tg.closest('input,textarea,select,[contenteditable="true"]'))return;if(!$('#picker').hidden||!$('#pluPanel').hidden)return;
   const st=e.altKey?0.01:e.shiftKey?1:0.1;let dx=0,dy=0,dr=0;
-  if(e.key==='ArrowLeft')dx=-st;else if(e.key==='ArrowRight')dx=st;else if(e.key==='ArrowUp')dy=st;else if(e.key==='ArrowDown')dy=-st;else if(e.key==='r')dr=0.5;else if(e.key==='R')dr=-0.5;else if(e.key==='Escape'){S.ui.sel=null;renderSheet('pcmi2');return}else return;
+  if((e.key==='Delete'||e.key==='Backspace')&&S.ui.sel.startsWith('al:')){e.preventDefault();alDel(+S.ui.sel.slice(3));return}if(e.key==='ArrowLeft')dx=-st;else if(e.key==='ArrowRight')dx=st;else if(e.key==='ArrowUp')dy=st;else if(e.key==='ArrowDown')dy=-st;else if(e.key==='r')dr=0.5;else if(e.key==='R')dr=-0.5;else if(e.key==='Escape'){S.ui.sel=null;renderSheet('pcmi2');return}else return;
   e.preventDefault();const k=S.ui.sel;
   if(k==='bat'){S.projet.x+=dx;S.projet.y+=dy;if(dr){S.projet.rot=Math.round((S.projet.rot+dr)*100)/100;if(S.projet.rot>90)S.projet.rot-=180;if(S.projet.rot<-90)S.projet.rot+=180}}
   else if(k==='park'){const pp=parkPos();S.projet.parkX=pp[0]+dx;S.projet.parkY=pp[1]+dy}
+  else if(k.startsWith('al:')){const T=S.projet.alTrace;const i=+k.slice(3);if(T&&T[i]){T[i]=[T[i][0]+dx,T[i][1]+dy]}}
   else if(k.startsWith('ex:')){const x=S.existants[+k.slice(3)];if(x&&x.src==='manuel'){const c=toLocal(...x.c);x.c=toLL(c[0]+dx,c[1]+dy);if(dr)x.rot=(x.rot||0)+dr}}
   else if(S.photos[k+'pos']){const c=toLocal(...S.photos[k+'pos']);S.photos[k+'pos']=toLL(c[0]+dx,c[1]+dy)}
   renderSheet('pcmi2');if(k==='bat')showDragInfo();clearTimeout(kT);kT=setTimeout(()=>{fillInputs();renderAll();save()},350)});
@@ -4837,10 +4844,48 @@ function abordsOn(){const m=mode();return(m==='pc'||m==='dp-constr')&&S.projet.a
 function parkPoly(){const P=S.projet;if(!(P.park>0))return null;const pp=parkPos(),ra=parkRot();const u=[Math.cos(ra),Math.sin(ra)],v=[-Math.sin(ra),Math.cos(ra)];const W=2.5*P.park,H=5;
   return[[-W/2,-H/2],[W/2,-H/2],[W/2,H/2],[-W/2,H/2]].map(([a,b])=>[pp[0]+a*u[0]+b*v[0],pp[1]+a*u[1]+b*v[1]])}
 function segPoly(a,b,w){const d=[b[0]-a[0],b[1]-a[1]];const L=Math.hypot(...d)||1;const n=[-d[1]/L*w/2,d[0]/L*w/2];return[[a[0]+n[0],a[1]+n[1]],[b[0]+n[0],b[1]+n[1]],[b[0]-n[0],b[1]-n[1]],[a[0]-n[0],a[1]-n[1]]]}
-function alleePoly(){if(!abordsOn())return null;const ve=voieMain();if(!ve)return null;const door=frontPt();const n=frontNormal();const end=[door[0]+n[0]*0.05,door[1]+n[1]*0.05];
+/* tracé libre de l'allée / cour (points en mètres, repère local) */
+function alTrace(){const P=S.projet;const t=P.alTrace;return P.alMode==='libre'&&Array.isArray(t)&&t.length>=2?t:null}
+function alW(){const P=S.projet;const w0=+P.alW0>0?+P.alW0:3.5;const w1=+P.alW1>0?+P.alW1:w0;return[w0,w1]}
+function alSmooth(P){const n=P.length;if(n<3)return P.map(q=>q.slice());const out=[];
+  for(let i=0;i<n-1;i++){const p0=P[Math.max(0,i-1)],p1=P[i],p2=P[i+1],p3=P[Math.min(n-1,i+2)];const N=12;
+    for(let j=0;j<N;j++){const t=j/N,t2=t*t,t3=t2*t;out.push([0,1].map(c=>0.5*(2*p1[c]+(-p0[c]+p2[c])*t+(2*p0[c]-5*p1[c]+4*p2[c]-p3[c])*t2+(-p0[c]+3*p1[c]-3*p2[c]+p3[c])*t3)))}}
+  out.push(P[n-1].slice());return out}
+function alCenter(){const T=alTrace();if(!T)return null;return S.projet.alCourbe===false?T.map(q=>q.slice()):alSmooth(T)}
+function alLen(C){let l=0;for(let i=1;i<C.length;i++)l+=hyp(C[i][0]-C[i-1][0],C[i][1]-C[i-1][1]);return l}
+function alEdgeAt(p,tol){let best=null;for(const e of boundary().E){const r=pSeg(p,e.a,e.b);if(!best||r.d<best.d)best={...r,e}}return best&&best.d<=tol?best:null}
+function alTracePoly(){const C=alCenter();if(!C)return null;const [w0,w1]=alW();const n=C.length;const cum=[0];for(let i=1;i<n;i++)cum.push(cum[i-1]+hyp(C[i][0]-C[i-1][0],C[i][1]-C[i-1][1]));const Lt=cum[n-1];if(Lt<0.5)return null;
+  const un=(a,b)=>{const d=[b[0]-a[0],b[1]-a[1]];const l=hyp(...d)||1;return[d[0]/l,d[1]/l]};const Lf=[],Rt=[];
+  for(let i=0;i<n;i++){const d=un(C[Math.max(0,i-1)],C[Math.min(n-1,i+1)]);let nx=-d[1],ny=d[0],s=1;
+    if(i>0&&i<n-1){const d1=un(C[i-1],C[i]);s=1/Math.max(0.4,nx*-d1[1]+ny*d1[0])}
+    const w=(w0+(w1-w0)*cum[i]/Lt)/2*s;let l=[C[i][0]+nx*w,C[i][1]+ny*w],r=[C[i][0]-nx*w,C[i][1]-ny*w];
+    if(i===0||i===n-1){const E=alEdgeAt(C[i],0.6);if(E){const ed=un(E.e.a,E.e.b);const cr=d[0]*ed[1]-d[1]*ed[0];if(Math.abs(cr)>0.25){const cut=p=>{const t=((E.e.a[0]-p[0])*ed[1]-(E.e.a[1]-p[1])*ed[0])/cr;return Math.abs(t)<w*2?[p[0]+d[0]*t,p[1]+d[1]*t]:p};l=cut(l);r=cut(r)}}}
+    Lf.push(l);Rt.push(r)}
+  return alUnloop(Lf).concat(alUnloop(Rt).reverse())}
+/* retire les boucles d'un bord décalé (virage plus serré que la demi-largeur) */
+function alUnloop(P){const X=(a,b,c,d)=>{const r=[b[0]-a[0],b[1]-a[1]],q=[d[0]-c[0],d[1]-c[1]];const den=r[0]*q[1]-r[1]*q[0];if(Math.abs(den)<1e-12)return null;const t=((c[0]-a[0])*q[1]-(c[1]-a[1])*q[0])/den,u=((c[0]-a[0])*r[1]-(c[1]-a[1])*r[0])/den;return t>0&&t<1&&u>0&&u<1?[a[0]+r[0]*t,a[1]+r[1]*t]:null};
+  const out=P.slice();for(let i=0;i<out.length-3;i++){for(let j=out.length-2;j>i+1;j--){const x=X(out[i],out[i+1],out[j],out[j+1]);if(x){out.splice(i+1,j-i,x);break}}}return out}
+function alDefault(){const ve=voieMain();const P=S.projet;const door=frontPt();const n=frontNormal();const end=[door[0]+n[0]*1.5,door[1]+n[1]*1.5];
+  let start=ve?pSeg(end,ve.a,ve.b).q:[end[0]+n[0]*10,end[1]+n[1]*10];const g=S.clo&&S.clo.find(c=>c.kind==='portail');const gs=g&&cloSeg(g);if(gs)start=[(gs.p0[0]+gs.p1[0])/2,(gs.p0[1]+gs.p1[1])/2];
+  const mid=[(start[0]+end[0])/2,(start[1]+end[1])/2];P.alTrace=[start,mid,end].map(q=>[Math.round(q[0]*100)/100,Math.round(q[1]*100)/100]);if(!(+P.alW0>0))P.alW0=3.5;if(!(+P.alW1>0))P.alW1=+P.alW0}
+function alSnap(i,q){const T=S.projet.alTrace;if(i!==0&&i!==T.length-1)return q;const g=S.clo&&S.clo.find(c=>c.kind==='portail'||c.kind==='portillon');const gs=g&&cloSeg(g);
+  if(gs){const m=[(gs.p0[0]+gs.p1[0])/2,(gs.p0[1]+gs.p1[1])/2];if(hyp(m[0]-q[0],m[1]-q[1])<2)return m}const E=alEdgeAt(q,1.2);return E?E.q.slice():q}
+function alMasseEdit(k){if(!S.ui.alEdit||A1MODE||!alTrace())return'';const T=S.projet.alTrace;let o='';const C=alCenter();
+  o+=`<polyline class="al-h" points="${C.map(q=>q[0].toFixed(3)+','+(-q[1]).toFixed(3)).join(' ')}" fill="none" stroke="#1E5A56" stroke-width="${0.25*k}" stroke-dasharray="${0.8*k} ${0.5*k}" pointer-events="none"/>`;
+  for(let i=0;i<T.length-1;i++){const m=[(T[i][0]+T[i+1][0])/2,(T[i][1]+T[i+1][1])/2];o+=`<g class="al-h" data-aladd="${i}" style="cursor:copy"><circle cx="${m[0].toFixed(3)}" cy="${(-m[1]).toFixed(3)}" r="${1.6*k}" fill="#fff" fill-opacity=".9" stroke="#1E5A56" stroke-width="${0.2*k}"/>${textS(m,'+',2.6*k,'text-anchor="middle" dominant-baseline="central" fill="#1E5A56" font-weight="700" pointer-events="none"')}</g>`}
+  T.forEach((q,i)=>{const on=S.ui.sel==='al:'+i;const end=i===0||i===T.length-1;o+=`<circle class="al-h" data-drag="al:${i}" style="cursor:move" cx="${q[0].toFixed(3)}" cy="${(-q[1]).toFixed(3)}" r="${(end?2.4:2.1)*k}" fill="${on?'#1E5A56':'#fff'}" stroke="#1E5A56" stroke-width="${0.35*k}"/>`});
+  return o}
+function alleePoly(){if(!abordsOn())return null;{const tp=alTracePoly();if(tp)return tp;if(alTrace())return null}const ve=voieMain();if(!ve)return null;const door=frontPt();const n=frontNormal();const end=[door[0]+n[0]*0.05,door[1]+n[1]*0.05];
   const pk=parkPoly();let start;if(pk){let best=null;for(let i=0;i<4;i++){const r=pSeg(end,pk[i],pk[(i+1)%4]);if(!best||r.d<best.d)best=r}start=best.q;if(best.d<0.6)return null}
   else{start=pSeg(end,ve.a,ve.b).q}if(Math.hypot(end[0]-start[0],end[1]-start[1])<1)return null;return segPoly(start,end,+S.projet.alleeW||1.4)}
 function abordsMasse(k){if(A1MODE||!abordsOn())return'';const A=alleePoly();if(!A)return'';const c=ABORD_REV[S.projet.abordRev||'gravier'][1];
+  if(alTrace()){const P=S.projet;const C=alCenter();const Lt=alLen(C);let acc=0,mi=C[0],ang=0;for(let i=1;i<C.length;i++){const l=hyp(C[i][0]-C[i-1][0],C[i][1]-C[i-1][1]);if(acc+l>=Lt/2){const t=(Lt/2-acc)/(l||1);mi=[C[i-1][0]+(C[i][0]-C[i-1][0])*t,C[i-1][1]+(C[i][1]-C[i-1][1])*t];ang=Math.atan2(C[i][1]-C[i-1][1],C[i][0]-C[i-1][0]);break}acc+=l}
+    let deg=-ang/D2R;if(deg>90)deg-=180;if(deg<-90)deg+=180;const nm=(P.alNom||'Cour')+' en '+ABORD_REV[P.abordRev||'gravier'][0].toLowerCase();
+    let o=polyS(A,`fill="${c}" fill-opacity=".5" stroke="#555" stroke-width="${0.15*k}" stroke-dasharray="${0.6*k} ${0.4*k}" pointer-events="none"`)+`<text x="${mi[0].toFixed(3)}" y="${(-mi[1]).toFixed(3)}" font-size="${(1.7*k).toFixed(3)}" transform="rotate(${deg.toFixed(1)} ${mi[0].toFixed(3)} ${(-mi[1]).toFixed(3)})" text-anchor="middle" dominant-baseline="middle" fill="#333" paint-order="stroke" stroke="${c}" stroke-width="${0.3*k}" pointer-events="none">${esc(nm)} · ${fmt(polyArea(A),0)} m²</text>`;
+    const E=P.alPortail!==false&&alEdgeAt(C[0],0.6);if(E){const ed=[E.e.b[0]-E.e.a[0],E.e.b[1]-E.e.a[1]];const el=hyp(...ed)||1;const u=[ed[0]/el,ed[1]/el];const hw=alW()[0]/2;const g1=[E.q[0]-u[0]*hw,E.q[1]-u[1]*hw],g2=[E.q[0]+u[0]*hw,E.q[1]+u[1]*hw];
+      const hasP=S.clo&&S.clo.some(cl=>{const g=(cl.kind==='portail'||cl.kind==='portillon')&&cloSeg(cl);return g&&hyp((g.p0[0]+g.p1[0])/2-E.q[0],(g.p0[1]+g.p1[1])/2-E.q[1])<3});
+      if(!hasP){o+=lineS(g1,g2,`stroke="#3a3f44" stroke-width="${0.55*k}" pointer-events="none"`);const nn=E.e.n||[0,0];const tp=[E.q[0]+nn[0]*2.2*k,E.q[1]+nn[1]*2.2*k];o+=textS(tp,'Portail existant',1.5*k,`text-anchor="middle" dominant-baseline="middle" fill="#333" font-style="italic" paint-order="stroke" stroke="#fff" stroke-width="${0.4*k}" pointer-events="none"`)}}
+    return o}
   return polyS(A,`fill="${c}" fill-opacity=".45" stroke="#555" stroke-width="${0.15*k}" stroke-dasharray="${0.6*k} ${0.4*k}" pointer-events="none"`)+textS(centroid(A),'Allée',1.4*k,'text-anchor="middle" dominant-baseline="middle" fill="#333" pointer-events="none"')}
 function abordsRender(V){if(!abordsOn()||S.projet.abordsIns===false)return[];const out=[];const P2=q=>q.map(v=>v[0].toFixed(3)+','+(-v[1]).toFixed(3)).join(' ');const B3=(P,dz)=>P.map(q=>{const b=toBld(...q);return[b[0],b[1],zRelAt(...q)+dz]});
   const col=ABORD_REV[S.projet.abordRev||'gravier'][1];const pk=parkPoly();
@@ -4850,12 +4895,24 @@ function abordsRender(V){if(!abordsOn()||S.projet.abordsIns===false)return[];con
   const A=alleePoly();if(A){const q=V.clip(B3(A,0.018));if(q.length>2)out.push({d:1e6,svg:`<polygon points="${P2(q)}" fill="${col}" fill-opacity=".9"/>`+groundFill(V,B3(A,0.018),S.projet.abordRev||'gravier')})}
   return out}
 function abordsText(){if(!abordsOn())return'';const P=S.projet;const r=ABORD_REV[P.abordRev||'gravier'][0].toLowerCase();const A=alleePoly();
-  return(P.park>0?`L'aire de stationnement de ${P.park} place${P.park>1?'s':''} (${fmt(2.5*P.park,1)} × 5 m) est réalisée en ${r}, accessible directement depuis la voie. `:'')+(A?`Une allée piétonne de ${fmt(+P.alleeW||1.4,1)} m de large, en ${r}, relie ${P.park>0?'le stationnement':'la voie'} à l'entrée de la maison.`:'')}
+  if(A&&alTrace()){const [w0,w1]=alW();const C=alCenter();const E=alEdgeAt(C[0],0.6);const nm=(P.alNom||'Cour').toLowerCase();const fem=nm!=='chemin d\'accès';
+    var al=`${fem?'Une':'Un'} ${nm} en ${r} d'environ ${fmt(polyArea(A),0)} m² (${fmt(alLen(C),0)} m de long, ${Math.abs(w1-w0)<0.05?`${fmt(w0,1)} m de large`:`de ${fmt(w0,1)} à ${fmt(w1,1)} m de large`}) relie ${E?(P.alPortail!==false?'le portail existant':'l\'accès sur la voie'):'l\'accès au terrain'} à la construction ; ${ABORD_REV[P.abordRev||'gravier'][0]==='Gravier'||P.abordRev==='dalles'?'ce revêtement reste perméable aux eaux de pluie':'les eaux de ruissellement sont gérées sur la parcelle'}.`}
+  return(P.park>0?`L'aire de stationnement de ${P.park} place${P.park>1?'s':''} (${fmt(2.5*P.park,1)} × 5 m) est réalisée en ${r}, accessible directement depuis la voie. `:'')+(A&&alTrace()?al:A?`Une allée piétonne de ${fmt(+P.alleeW||1.4,1)} m de large, en ${r}, relie ${P.park>0?'le stationnement':'la voie'} à l'entrée de la maison.`:'')}
 function abordsEditorHTML(){if(!(mode()==='pc'||mode()==='dp-constr')||S.projet.nature==='extension')return'';const P=S.projet;
   return`<div class="am-it"><div class="am-h"><b>🚗 Stationnement et allée</b></div>
     <div class="grid3"><label class="f">Places<input type="number" min="0" max="6" step="1" data-ab="park" value="${P.park??2}"></label><label class="f">Revêtement<select data-ab="abordRev">${Object.entries(ABORD_REV).map(([v,[l]])=>`<option value="${v}"${(P.abordRev||'gravier')===v?' selected':''}>${l}</option>`).join('')}</select></label><label class="f">Largeur allée (m)<input type="number" min="0.9" max="4" step="0.1" data-ab="alleeW" value="${P.alleeW||1.4}"></label></div>
     <div class="grid2"><label class="toggle"><input type="checkbox" data-ab="abords"${P.abords!==false?' checked':''}> Dessiner l'allée</label><label class="toggle"><input type="checkbox" data-ab="abordsIns"${P.abordsIns!==false?' checked':''}> Visible sur l'insertion</label></div>
+    <div class="al-ed"><label class="f">Tracé de l'allée / de la cour<select data-al="mode"><option value="auto"${P.alMode!=='libre'?' selected':''}>Automatique (droit, de la voie à la porte)</option><option value="libre"${P.alMode==='libre'?' selected':''}>Tracé libre (je le dessine sur le plan)</option></select></label>
+    ${P.alMode==='libre'?`<label class="f">Nom<select data-ab="alNom">${['Cour','Allée','Chemin d\'accès'].map(v=>`<option${(P.alNom||'Cour')===v?' selected':''}>${v}</option>`).join('')}</select></label><div class="grid2"><label class="f">Largeur au départ (m)<input type="number" min="1" max="15" step="0.1" data-ab="alW0" value="${alW()[0]}"></label><label class="f">Largeur à l'arrivée (m)<input type="number" min="1" max="30" step="0.1" data-ab="alW1" value="${alW()[1]}"></label></div>
+    <div class="grid2"><label class="toggle"><input type="checkbox" data-ab="alCourbe"${P.alCourbe!==false?' checked':''}> Courbes adoucies</label><label class="toggle"><input type="checkbox" data-ab="alPortail"${P.alPortail!==false?' checked':''}> Portail existant au départ</label></div>
+    <div class="btns"><button class="btn sm${S.ui.alEdit?' primary':''}" type="button" data-al="edit">${S.ui.alEdit?'✓ Terminer le tracé':'✏️ Modifier le tracé sur le plan'}</button><button class="btn sm" type="button" data-al="reset">Repartir d'un tracé simple</button></div>
+    <p class="hint">Sur le plan de masse : faites glisser les ronds ; touchez un « + » pour ajouter un point ; double-cliquez sur un rond (ou touche Suppr.) pour l'enlever. Le premier rond s'accroche à la limite du terrain, à l'endroit du portail.</p>`:''}</div>
     <p class="hint">Faites glisser le stationnement sur le plan de masse pour le placer.</p></div>`}
+function alRefresh(){save();renderAll();if(!$('#wiz').hidden)wzRender()}
+document.addEventListener('change',e=>{const el=e.target.closest('[data-al="mode"]');if(!el)return;const P=S.projet;P.alMode=el.value;if(P.alMode==='libre'){if(!Array.isArray(P.alTrace)||P.alTrace.length<2)alDefault();alEditOn()}else S.ui.alEdit=false;alRefresh()});
+function alEditOn(){S.ui.alEdit=true;if(!$('#wiz').hidden)wzClose();goTab('pcmi2');if(isMobile())setView('sheet');toast('Faites glisser les ronds pour tracer la cour. « + » ajoute un point.')}
+document.addEventListener('click',e=>{const b=e.target.closest('button[data-al]');if(!b)return;const k=b.dataset.al;if(k==='edit'){if(S.ui.alEdit){S.ui.alEdit=false;S.ui.sel=null}else alEditOn()}else if(k==='reset'){alDefault();alEditOn()}alRefresh()});
+window.addEventListener('beforeprint',()=>{if(S.ui.alEdit){S.ui.alEdit=false;renderAll()}});
 document.addEventListener('change',e=>{const el=e.target.closest('[data-ab]');if(!el)return;const k=el.dataset.ab;S.projet[k]=el.type==='checkbox'?el.checked:el.type==='number'?+el.value:el.value;save();schedule();if(!$('#wiz').hidden)wzRender()});
 document.addEventListener('click',async e=>{if(e.target.closest('[data-far]')){await onsiteFlow2();if(!$('#wiz').hidden)wzRender()}else if(e.target.closest('[data-farx]')){removeFar();if(!$('#wiz').hidden)wzRender()}});
 /* comparaison avant / après */
