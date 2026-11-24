@@ -220,17 +220,32 @@ nav.tabs button .d{width:7px;height:7px;border-radius:50%}
 .ck a{color:var(--accent)}
 /* ===== Planches ===== */
 .sheet{background:#fff;color:#111;position:relative;font-family:var(--f-tech);overflow:hidden}
-.sheet.land{width:297mm;height:210mm;padding:8mm;display:grid;grid-template-columns:1fr 62mm;gap:5mm;page:land}
+.sheet.land{width:297mm;height:210mm;padding:7mm;display:grid;grid-template-columns:minmax(0,1fr) 60mm;grid-template-rows:minmax(0,1fr);gap:0;page:land}
+.sheet.land::after{content:"";position:absolute;inset:4.6mm;border:.15mm solid #111;pointer-events:none}
 .sheet.port{width:210mm;min-height:297mm;padding:12mm 14mm;page:port}
-.draw{border:.3mm solid #111;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;min-width:0}
-.cart{border:.3mm solid #111;display:flex;flex-direction:column;font-size:8.5pt;min-width:0}
-.cart .c-code{font:700 26pt/1 var(--f-tech);padding:4mm 4mm 1mm;letter-spacing:.02em}
-.cart .c-title{font:600 10.5pt/1.2 var(--f-tech);padding:0 4mm 3mm;border-bottom:.3mm solid #111;text-wrap:balance}
-.cart dl{margin:0;padding:2mm 4mm;display:grid;gap:1.6mm;border-bottom:.3mm solid #111}
-.cart dt{font:600 6.5pt var(--f-tech);text-transform:uppercase;letter-spacing:.08em;color:#555}
-.cart dd{margin:0;font-size:8.5pt;line-height:1.25}
-.cart .c-extra{padding:3mm 4mm;flex:1;display:grid;align-content:start;gap:1.6mm;font-size:8pt}
-.cart .c-foot{padding:2mm 4mm;border-top:.3mm solid #111;font-size:6.5pt;color:#555;display:flex;justify-content:space-between}
+.draw{border:.35mm solid #111;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;min-width:0}
+.cart{border:.35mm solid #111;border-left:0;display:flex;flex-direction:column;font-size:8.5pt;min-width:0;min-height:0;overflow:hidden;--acc:#1E5A56}
+.cart .c-top{display:flex;justify-content:space-between;align-items:center;padding:2.2mm 4mm;background:#18211F;color:#fff;font:600 6.4pt var(--f-tech);letter-spacing:.14em;text-transform:uppercase}
+.cart .c-top b{font-weight:700;letter-spacing:.06em}
+.cart .c-code{font:700 28pt/1 var(--f-tech);padding:4mm 4mm 0;letter-spacing:-.01em}
+.cart .c-code::after{content:"";display:block;width:12mm;height:1.1mm;background:var(--acc);margin-top:2mm}
+.cart .c-title{font:600 10pt/1.2 var(--f-tech);padding:2.2mm 4mm 3.2mm;border-bottom:.35mm solid #111;text-wrap:balance}
+.cart dl{margin:0;padding:0 4mm;display:grid;grid-template-columns:17mm 1fr;border-bottom:.35mm solid #111}
+.cart dt,.cart dd{padding:1.25mm 0;border-top:.15mm solid #c9cfcc}
+.cart dt:first-of-type,.cart dt:first-of-type+dd{border-top:0}
+.cart dt{font:600 5.8pt/1.6 var(--f-tech);text-transform:uppercase;letter-spacing:.11em;color:#5A6863}
+.cart dd{margin:0;font-size:7.9pt;line-height:1.25}
+.cart .c-strip{display:grid;grid-template-columns:1.15fr 1fr .6fr;border-bottom:.35mm solid #111}
+.cart .c-strip>div{padding:1.8mm 2.2mm 2mm 4mm;border-left:.15mm solid #c9cfcc}
+.cart .c-strip>div:first-child{border-left:0}
+.cart .c-strip span{display:block;font:600 5.6pt var(--f-tech);text-transform:uppercase;letter-spacing:.11em;color:#5A6863;margin-bottom:.6mm}
+.cart .c-strip b{font:700 10.5pt/1.1 var(--f-tech)}
+.cart .c-strip b.sm{font-size:7.4pt;line-height:1.2;display:block}
+.cart .c-extra{padding:2.8mm 4mm;flex:1 1 auto;min-height:0;overflow:hidden;display:grid;align-content:start;gap:1.3mm;font-size:7.4pt;line-height:1.25}
+.cart .c-pcs{display:flex;flex-wrap:wrap;gap:.8mm;padding:1.8mm 4mm;flex:none;border-top:.35mm solid #111}
+.cart .c-pcs i{font:600 5.6pt/1 var(--f-tech);font-style:normal;padding:.9mm 1.1mm;border:.15mm solid #b9c1bd;color:#5A6863;letter-spacing:.03em}
+.cart .c-pcs i.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.cart .c-foot{flex:none;padding:1.5mm 4mm;border-top:.15mm solid #c9cfcc;font:500 6pt var(--f-tech);color:#5A6863;display:flex;justify-content:space-between;letter-spacing:.04em}
 .lg{display:grid;grid-template-columns:9mm 1fr;align-items:center;gap:2mm}
 .lg svg{width:9mm;height:4mm}
 .demo-c{font:700 8pt var(--f-tech);color:#AE3328;border:.4mm solid #AE3328;padding:1mm 2mm;letter-spacing:.1em;text-transform:uppercase;justify-self:start}
@@ -238,10 +253,10 @@ nav.tabs button .d{width:7px;height:7px;border-radius:50%}
 .mosaic{position:relative;overflow:hidden;background:#e9ebe8}
 .mosaic img{position:absolute;width:256px;height:256px;max-width:none;user-select:none;pointer-events:none}
 .mosaic svg.ov{position:absolute;inset:0;pointer-events:none}
-.mapcap{position:absolute;left:2mm;bottom:2mm;background:#fff;border:.25mm solid #111;padding:1mm 2mm;font-size:7.5pt;z-index:3}
+.mapcap{position:absolute;left:2.5mm;bottom:2.5mm;background:#fff;border-left:.9mm solid #1E5A56;padding:1mm 2.4mm;font-size:7.2pt;z-index:3;box-shadow:0 0 0 .15mm #111}
 .situ{display:grid;grid-template-columns:1fr 1fr;gap:4mm;width:100%;height:100%;padding:3mm}
 .situ>div{position:relative;border:.25mm solid #111;overflow:hidden}
-.situ h4,.cell h4{position:absolute;top:2mm;left:2mm;margin:0;background:#fff;border:.25mm solid #111;padding:.8mm 2mm;font:600 8pt var(--f-tech);z-index:3}
+.situ h4,.cell h4{position:absolute;top:2.5mm;left:3mm;margin:0;background:#fff;padding:.6mm 1.6mm .8mm 0;font:700 7.6pt var(--f-tech);text-transform:uppercase;letter-spacing:.09em;z-index:3;border-bottom:.45mm solid #111}
 .fac2{display:grid;grid-template-rows:1fr 1fr;width:100%;height:100%}
 .fac2 .cell{position:relative;display:flex;align-items:center;justify-content:center;border-bottom:.25mm solid #999}
 .fac2 .cell:last-child{border-bottom:0}
@@ -258,11 +273,13 @@ nav.tabs button .d{width:7px;height:7px;border-radius:50%}
 .ins-env{position:absolute;inset:0}.ins-env svg{width:100%;height:100%;display:block}
 .ins-note{position:absolute;left:3mm;bottom:3mm;background:rgba(255,255,255,.88);border:.25mm solid #999;padding:1mm 2.5mm;font:500 7.5pt var(--f-ui);color:#333;max-width:120mm}
 .notice h1,.cerfa h1{font:700 15pt var(--f-tech);margin:0}
-.notice .hd,.cerfa .hd{display:flex;justify-content:space-between;align-items:end;border-bottom:.4mm solid #111;padding-bottom:3mm;margin-bottom:5mm;gap:6mm}
-.notice .hd .code,.cerfa .hd .code{font:700 22pt/1 var(--f-tech)}
+.notice .hd,.cerfa .hd{display:flex;justify-content:space-between;align-items:end;border-bottom:.4mm solid #111;padding-bottom:3.5mm;margin-bottom:6mm;gap:6mm}
+.notice .hd .code,.cerfa .hd .code{font:700 26pt/1 var(--f-tech)}
+.notice .hd .code::after,.cerfa .hd .code::after{content:"";display:block;width:12mm;height:1.1mm;background:#1E5A56;margin:2mm 0 2.5mm}
 .notice .meta,.cerfa .meta{font-size:8.5pt;color:#444;text-align:right}
 .notice-body{font:10.5pt/1.5 var(--f-ui);outline:none}
-.notice-body h2{font:700 11pt var(--f-tech);text-transform:uppercase;letter-spacing:.05em;margin:6mm 0 2mm;border-bottom:.2mm solid #999;padding-bottom:1mm}
+.notice-body h2{font:700 10.5pt var(--f-tech);text-transform:uppercase;letter-spacing:.08em;margin:7mm 0 2.5mm;border-bottom:.2mm solid #c9cfcc;padding-bottom:1.2mm;display:flex;gap:2mm;align-items:baseline}
+.notice-body h2::before{content:"";width:2.2mm;height:2.2mm;background:#1E5A56;flex:none;align-self:center}
 .notice-body h3{font:600 10.5pt var(--f-tech);margin:4mm 0 1mm}
 .notice-body p{margin:0 0 2mm;max-width:none}
 .notice-body .todo{background:var(--panel)3C4}
@@ -1898,7 +1915,7 @@ function svgMasse(){
   const T=S.terrain,P=S.projet;const {rings,E}=boundary();if(!rings.length)return'<div class="photo-empty">Chargez une parcelle.</div>';
   const B=bat(),h=heights(),D=distances();const MODE=mode();const BLD=(MODE==='pc'||MODE==='dp-constr')&&!A1MODE;
   const exR=S.existants.map(exRing);amFix();const bb=bbox(rings.flat().concat(noBuild()?[]:bldPoly()).concat(arbList().filter(t=>t.p).map(t=>toLocal(...t.p))).concat(amList().flatMap(a=>a.k==='piscine'?poolPoly(a,(+a.marg||0)+(+a.plage||0)):a.k==='pergola'?pergPoly(a):a.k==='ep'?(a.type==='reseau'?[]:rectAt(epGeom(a))):a.k==='pv'?rectAt(pvGeom(a)):(terrPoly(a)||[]))),7);const wm=bb[2]-bb[0],hm=bb[3]-bb[1];
-  const Wmm=203,Hmm=186;const sc=chooseScale('pcmi2',s=>wm*1000/s<=Wmm&&hm*1000/s<=Hmm);masseMeta.scale=sc;const k=sc/1000;
+  const Wmm=212,Hmm=186;const sc=chooseScale('pcmi2',s=>wm*1000/s<=Wmm&&hm*1000/s<=Hmm);masseMeta.scale=sc;const k=sc/1000;
   const vw=Wmm*k,vh=Hmm*k,cx=(bb[0]+bb[2])/2,cy=(bb[1]+bb[3])/2;const vx=cx-vw/2,vy=cy-vh/2;
   const id='m';let o=`<svg id="svg-masse" xmlns="http://www.w3.org/2000/svg" width="${Wmm}mm" height="${Hmm}mm" viewBox="${vx.toFixed(3)} ${(-cy-vh/2).toFixed(3)} ${vw.toFixed(3)} ${vh.toFixed(3)}" font-family="Archivo Narrow, Arial Narrow, Arial, sans-serif" style="touch-action:pan-x pan-y pinch-zoom">`;
   o+=`<defs><pattern id="${id}h" patternUnits="userSpaceOnUse" width="${(1.4*k).toFixed(3)}" height="${(1.4*k).toFixed(3)}" patternTransform="rotate(45)"><rect width="100%" height="100%" fill="#fff"/><line x1="0" y1="0" x2="0" y2="${(1.4*k).toFixed(3)}" stroke="#111" stroke-width="${(0.22*k).toFixed(3)}"/></pattern>
@@ -2010,13 +2027,13 @@ function coupeExtent(){const {E}=boundary();if(!E.length)return null;const B=bat
 function svgCoupe(){
   const P=S.projet,h=heights(),B=bat();const cs0=coupeExtent();if(!cs0)return'';const m=2;const CA=coupeAxis(),CO=CA.O,u0=CA.u0,WG=CA.G;const wsg=WG?WG.n[1]:0,wD=WG?WG.Dw:0;
   // au-delà de 6 m de la construction, la coupe est interrompue (la distance réelle reste cotée)
-  const lim=P.W/2+P.debord+6+wD;const cut0=cs0.t0<-lim,cut1=cs0.t1>lim;const cs={t0:cut0?-lim:cs0.t0,t1:cut1?lim:cs0.t1};
+  const lim=P.W/2+P.debord+4.5+wD;const cut0=cs0.t0<-lim,cut1=cs0.t1>lim;const cs={t0:cut0?-lim:cs0.t0,t1:cut1?lim:cs0.t1};
   const T0=cs.t0-(cut0?0:m),T1=cs.t1+(cut1?0:m);
   const prof=[];const N=Math.max(20,Math.ceil((T1-T0)*2));for(let i=0;i<=N;i++){const t=T0+(T1-T0)*i/N;const z=alt(CO[0]+B.V[0]*t,CO[1]+B.V[1]*t);prof.push([t,z])}
   const ok=h.ok&&prof.every(q=>q[1]!=null);const base=ok?h.pl:0;const rel=z=>z-base;
   const prN=ok?prof.map(([t,z])=>[t,rel(z)]):prof.map(([t])=>[t,-P.hPlancher]);const pr=prN.map(([t,z])=>[t,finishedRel(0,t,z)]);
   const zLow=Math.min(...pr.map(q=>q[1]),h.zb)-1.6,zTop=h.F+(P.toit==='mono'?P.debord*h.t:0)+1.5;
-  const hm=zTop-zLow+2;const Wmm=203,Hmm=170;const LBL=34;const rightM=Math.max(T1,P.W/2+P.debord+6+(wsg>0?wD:0))+0.5;
+  const hm=zTop-zLow+2;const Wmm=212,Hmm=182;const LBL=34;const rightM=Math.max(T1,P.W/2+P.debord+4.5+(wsg>0?wD:0))+0.5;
   const fitC=s=>(rightM-T0+2)*1000/s+LBL<=Wmm&&hm*1000/s<=Hmm;const sc=chooseScale('pcmi3',fitC);const k=sc/1000;
   const vw=Wmm*k,vh=Hmm*k;const left=T0-1.5-LBL*k;const cx=(left+rightM)/2,cy=(zLow+zTop)/2;
   let o=`<svg xmlns="http://www.w3.org/2000/svg" width="${Wmm}mm" height="${Hmm}mm" viewBox="${(cx-vw/2).toFixed(3)} ${(-cy-vh/2).toFixed(3)} ${vw.toFixed(3)} ${vh.toFixed(3)}" font-family="Archivo Narrow, Arial Narrow, Arial, sans-serif">`;
@@ -3262,15 +3279,17 @@ const NATURE={maison:'Construction d\'une maison individuelle',extension:'Extens
 function projetTitle(){if(typeof mode==='function'&&mode()!=='pc'&&mode()!=='dp-constr')return DPTITLE[mode()];return NATURE[S.projet.nature]||NATURE.maison}
 function adresseTerrain(){const T=S.terrain;return[T.num,T.street].filter(Boolean).join(' ')+(T.cp||T.commune?`, ${[T.cp,T.commune].filter(Boolean).join(' ')}`:'')}
 function cart(sh,scale,extra=''){
-  const T=S.terrain,D=S.dem;
-  return`<div class="cart"><div class="c-code">${sh.code}</div><div class="c-title">${esc(sh.t)}</div><dl>
+  const T=S.terrain,D=S.dem;let pcs=[];try{pcs=exportSheets().filter(x=>!/^cerfa|^cad$/.test(x.id))}catch(e){}const idx=pcs.findIndex(x=>x.id===sh.id);
+  const kind=mode()==='pc'?(S.projet.nature==='maison'?'Permis de construire · maison individuelle':'Permis de construire'):'Déclaration préalable';
+  const land=/land/.test(sh.o||'land');
+  return`<div class="cart"><div class="c-top"><span>${kind}</span>${idx>=0?`<b>${idx+1} / ${pcs.length}</b>`:''}</div><div class="c-code">${sh.code}</div><div class="c-title">${esc(sh.t)}</div><dl>
   <dt>Projet</dt><dd>${projetTitle()}</dd>
   <dt>Terrain</dt><dd>${esc(adresseTerrain()||T.label)}</dd>
   <dt>Cadastre</dt><dd>Section${S.terrain.parcels.length>1?'s':''} ${esc(parcelRefs())} — ${fmt(parcelArea(),0)} m²</dd>
-  <dt>Demandeur</dt><dd>${esc((D.nom||D.prenom)?[D.civ,D.prenom,D.nom].filter(Boolean).join(' '):'—')}</dd>
-  <dt>Échelle</dt><dd>${scale||'—'}</dd>
-  <dt>Date · indice</dt><dd>${frDate(S.meta.date)} · ${esc(S.meta.indice)}</dd></dl>
-  <div class="c-extra">${S.demo?'<div class="demo-c">Exemple — terrain fictif</div>':''}${extra}</div>${(S.meta.auteur||S.meta.logo)?`<div class="c-auth">${S.meta.logo?`<img src="${S.meta.logo}" alt="">`:''}<span>${S.meta.auteur?'Dossier établi par<br><b>'+esc(S.meta.auteur)+'</b>':''}</span></div>`:''}<div class="c-foot"><span>Format A4</span><span>${T.zone?esc('Zone '+T.zone.libelle):''}</span></div></div>`;
+  <dt>Demandeur</dt><dd>${esc((D.nom||D.prenom)?[D.civ,D.prenom,D.nom].filter(Boolean).join(' '):'—')}</dd></dl>
+  <div class="c-strip"><div><span>Échelle</span><b${String(scale||'').length>9?' class="sm"':''}>${scale||'—'}</b></div><div><span>Date</span><b>${frDate(S.meta.date)}</b></div><div><span>Indice</span><b>${esc(S.meta.indice)}</b></div></div>
+  <div class="c-extra">${S.demo?'<div class="demo-c">Exemple — terrain fictif</div>':''}${extra}</div>${(S.meta.auteur||S.meta.logo)?`<div class="c-auth">${S.meta.logo?`<img src="${S.meta.logo}" alt="">`:''}<span>${S.meta.auteur?'Dossier établi par<br><b>'+esc(S.meta.auteur)+'</b>':''}</span></div>`:''}
+  ${pcs.length>1?`<div class="c-pcs">${pcs.map(x=>`<i class="${x.id===sh.id?'on':''}">${esc(x.code)}</i>`).join('')}</div>`:''}<div class="c-foot"><span>Format A4 ${land?'paysage':'portrait'}</span><span>${T.zone?esc('Zone '+T.zone.libelle):''}</span></div></div>`;
 }
 const demoMark=(port)=>S.demo&&port?'<div class="demo-mark">EXEMPLE — TERRAIN FICTIF</div>':'';
 const lg=(sw,txt)=>`<div class="lg"><svg viewBox="0 0 36 16">${sw}</svg><span>${txt}</span></div>`;
@@ -3306,7 +3325,7 @@ function sheetHTML(sh){
     return`${demoMark()}<div class="draw" data-sheet="masse">${svg}</div>${cart(sh,'1/'+masseMeta.scale,leg)}`}
   case'pcmi3':{const svg=svgCoupe();return`${demoMark()}<div class="draw">${svg}</div>${cart(sh,'1/'+masseMeta.coupe,`<p style="margin:0">Coupe AA transversale, repérée sur le plan de masse. ${S.projet.regrade?'Le terrain naturel (pointillé) est repris au droit de la construction pour former une plateforme ; le terrain fini est en trait plein.'+((t=>t?` Déblai ≈ ${fmt(t.de,0)} m³, remblai ≈ ${fmt(t.re,0)} m³.`:'')(terrassements())):'Le terrain naturel est conservé ; seul le décaissement de l\'emprise est réalisé.'}</p><p style="margin:0">Cotes de niveau rapportées au plancher du RDC (±0,00) et au NGF.</p>`)}`}
   case'pcmi5a':case'pcmi5b':case'pcmi5c':case'pcmi5d':{const sd=sidesDef();const solo=facSolo();
-    const pair=solo?[{pcmi5a:sd[2],pcmi5b:sd[0],pcmi5c:sd[1],pcmi5d:sd[3]}[sh.id]]:(sh.id==='pcmi5a'?[sd[2],sd[0]]:[sd[1],sd[3]]);const W=203,H=solo?182:88;
+    const pair=solo?[{pcmi5a:sd[2],pcmi5b:sd[0],pcmi5c:sd[1],pcmi5d:sd[3]}[sh.id]]:(sh.id==='pcmi5a'?[sd[2],sd[0]]:[sd[1],sd[3]]);const W=212,H=solo?182:88;
     const autoSc=Math.max(...sd.map(s=>facadeSVG(s,W,H).sc));const ov=S.ui.scales&&S.ui.scales.pcmi5;const sc=ov&&ov!=='auto'?+ov:autoSc;
     const F2=pair.map(s=>facadeSVG(s,W,H,sc));SCALEINFO.pcmi5={sc,auto:autoSc,forced:!!(ov&&ov!=='auto'),fits:sd.every(s=>facadeSVG(s,W,H,sc).fits)};
     return`${demoMark()}<div class="draw"><div class="${solo?'fac1':'fac2'}">${F2.map((f,i)=>`<div class="cell"><h4>${sideName(pair[i])}</h4>${f.svg}</div>`).join('')}</div></div>${cart(sh,'1/'+sc,`<div><b>Façades</b> : ${esc(P.facade)}</div><div><b>Couverture</b> : ${esc(P.toit==='plat'?'Toiture-terrasse':P.couv)}${P.toit!=='plat'?`, pente ${penteTxt()}`:''}</div><div><b>Menuiseries</b> : ${esc(P.menuis)}</div><p style="margin:2mm 0 0">La toiture est représentée sur le plan de masse (PCMI2).</p>`)}`}
@@ -3887,7 +3906,7 @@ function cloElevSVG(c,Wmm,Hmm,sc){const g=cloSeg(c);if(!g)return'';const isP=c.k
   const xh=x0+totW+0.5;o+=dimLine([xh,0],[xh,Math.max(h,ph)],k,'H '+fmt(Math.max(h,ph),2)+' m',{side:1});
   o+=textS([x0,Math.max(h,ph)+0.35],`${KLBL[c.kind]} — ${isP?(PORT_OUV[c.ouv]||'')+', '+(PORT_STYLES[c.style]||'').toLowerCase():(CLO_STYLES[c.style]||'')} · ${c.mat||''}`,2*k,'font-weight="600"');
   o+='</svg>';return o}
-function cloSheet(sh){const n=Math.max(1,S.clo.length);const Wmm=203,Hmm=Math.min(88,Math.floor(182/n)-2);
+function cloSheet(sh){const n=Math.max(1,S.clo.length);const Wmm=212,Hmm=Math.min(88,Math.floor(182/n)-2);
   const need=S.clo.map(c=>{const g=cloSeg(c);if(!g)return 20;const isP=c.kind==='portail'||c.kind==='portillon';const w=(isP?g.len+(c.pil?0.8:0):Math.min(g.len,6))+3;const hh=Math.max(+c.h||1.5,(c.pil?+c.h+0.15:0))+2.6;
     return STD_SC.find(s=>w*1000/s<=Wmm&&hh*1000/s<=Hmm)||200});const auto=Math.max(20,...need);const ov=S.ui.scales&&S.ui.scales.dpclo;const sc=ov&&ov!=='auto'?+ov:auto;SCALEINFO.dpclo={sc,auto,forced:!!(ov&&ov!=='auto'),fits:sc>=auto};
   const cells=S.clo.map(c=>`<div class="cell" style="position:relative;display:flex;align-items:center;justify-content:center;border-bottom:.25mm solid #999;height:${Hmm+2}mm"><h4>${esc(KLBL[c.kind])}${cloLimit(c)?' · '+esc(cloLimit(c).name):''}</h4>${cloElevSVG(c,Wmm,Hmm,sc)}</div>`).join('')||'<div class="photo-empty">Ajoutez un portail ou une clôture (étape 03).</div>';
@@ -3908,7 +3927,7 @@ function cloInsertion(V){const objs=[];for(const c of S.clo){const g=cloSeg(c);i
 function cloCenter(){const pts=[];for(const c of S.clo){const g=cloSeg(c);if(g)pts.push(g.p0,g.p1)}if(!pts.length)return null;return[pts.reduce((s,p)=>s+p[0],0)/pts.length,pts.reduce((s,p)=>s+p[1],0)/pts.length]}
 
 /* ---- Planches DP ---- */
-function dpFacadeSheet(sh){const sd=sidesDef();const side={dpf1:sd[2],dpf2:sd[0],dpf3:sd[1],dpf4:sd[3]}[sh.id];const W=203,H=86;
+function dpFacadeSheet(sh){const sd=sidesDef();const side={dpf1:sd[2],dpf2:sd[0],dpf3:sd[1],dpf4:sd[3]}[sh.id];const W=212,H=86;
   const autoSc=Math.max(...['avant','apres'].flatMap(v=>withVariant(v,()=>sidesDef().map(s=>facadeSVG(s,W,H).sc))));const ov=S.ui.scales&&S.ui.scales.pcmi5;const sc=ov&&ov!=='auto'?+ov:autoSc;
   const cells=['avant','apres'].map(v=>withVariant(v,()=>{const s2=sidesDef().find(x=>x.id===side.id);return`<div class="cell"><h4>${v==='avant'?'État existant':'État projeté'} — ${sideName(s2)}</h4>${facadeSVG(s2,W,H,sc).svg}</div>`})).join('');
   SCALEINFO.pcmi5={sc,auto:autoSc,forced:!!(ov&&ov!=='auto'),fits:sc>=autoSc};
@@ -3935,7 +3954,7 @@ function roofPlanSVG(Wmm,Hmm,sc){const p=S.projet,h=heights();const k=sc/1000;co
   o+=dimLine([-a-d,-b-d-1.6],[a+d,-b-d-1.6],k,fmt(p.L+2*d,2)+' m')+dimLine([a+d+1.6,-b-d],[a+d+1.6,b+d],k,fmt(p.W+2*d,2)+' m',{side:-1});
   o+=textS([0,-b-d-3.2],`${p.toit==='plat'?'Toiture-terrasse':esc(p.couv)}`,2*k,'text-anchor="middle" font-weight="600"');
   o+='</svg>';return o}
-function dpRoofSheet(sh){const W=203,H=86;const fit=s=>withVariant('apres',()=>{const p=S.projet;return(p.L+2*p.debord+5)*1000/s<=W&&(p.W+2*p.debord+6)*1000/s<=H});
+function dpRoofSheet(sh){const W=212,H=86;const fit=s=>withVariant('apres',()=>{const p=S.projet;return(p.L+2*p.debord+5)*1000/s<=W&&(p.W+2*p.debord+6)*1000/s<=H});
   const sc=chooseScale('dpt',fit);const cells=['avant','apres'].map(v=>withVariant(v,()=>`<div class="cell"><h4>${v==='avant'?'Toiture existante':'Toiture projetée'}</h4>${roofPlanSVG(W,H,sc)}</div>`)).join('');
   const A=variant('avant'),B=variant('apres');const cnt=(x,t)=>(x.toitItems||[]).filter(i=>i.t===t).reduce((s,i)=>s+(+i.n||0),0);
   return`${demoMark()}<div class="draw"><div class="fac2">${cells}</div></div>${cart(sh,'1/'+sc,`<div><b>Couverture</b> : ${esc(A.couv)} → <b>${esc(B.couv)}</b></div><div><b>Fenêtres de toit</b> : ${cnt(A,'velux')} → <b>${cnt(B,'velux')}</b></div><div><b>Panneaux solaires</b> : ${cnt(A,'pv')} → <b>${cnt(B,'pv')}</b></div><p style="margin:2mm 0 0">Vue de dessus, orientée selon le faîtage.</p>`)}`}
@@ -5084,7 +5103,7 @@ function pergCoupe(u0,k){let o='';const P=S.projet;for(const a of amList()){if(a
   return o}
 /* DPC3 : plan, façade et coupe de la pergola */
 function pergSheet(sh){const a=pergItem();if(!a)return`<div class="draw"><div class="photo-empty">Ajoutez une pergola (étape 03).</div></div>${cart(sh,'—')}`;
-  const g=pergGeom(a);const L=g.L,W=g.W,H=+a.H||2.5;const col=a.col||'#3A3F44';const Wmm=203,Hmm=182;const wTot=Math.max(L+4,L+W+6),hTot=W+H+9;
+  const g=pergGeom(a);const L=g.L,W=g.W,H=+a.H||2.5;const col=a.col||'#3A3F44';const Wmm=212,Hmm=182;const wTot=Math.max(L+4,L+W+6),hTot=W+H+9;
   const auto=STD_SC.find(sc=>wTot*1000/sc<=Wmm&&hTot*1000/sc<=Hmm)||200;const ov=S.ui.scales&&S.ui.scales.dpperg;const sc=ov&&ov!=='auto'?+ov:auto;SCALEINFO.dpperg={sc,auto,forced:!!(ov&&ov!=='auto'),fits:sc>=auto};
   const k=sc/1000;const vw=Wmm*k,vh=Hmm*k;let o='';const R=(x0,y0,w,h,attr)=>`<rect x="${x0.toFixed(3)}" y="${(-(y0+h)).toFixed(3)}" width="${w.toFixed(3)}" height="${h.toFixed(3)}" ${attr}/>`;
   const n=Math.max(2,Math.ceil(L/(pgTy(a)==='veranda'?1.25:pgTy(a)==='carport'?3.2:4.2))+1);const us=[...Array(n)].map((_,i)=>-L/2+0.08+(L-0.16)*i/(n-1));const sw=x=>`stroke="#111" stroke-width="${x*k}"`;const hatch=`fill="#d6d2c8" ${sw(0.3)}`;
@@ -5205,7 +5224,7 @@ document.addEventListener('input',e=>{const r=e.target.closest('[data-cmp]');if(
 /* DP3 : plan et coupe de la piscine */
 function poolSheet(sh){const a=poolItem();if(!a)return`<div class="draw"><div class="photo-empty">Ajoutez une piscine (étape 03).</div></div>${cart(sh,'—')}`;
   const L=+a.L,W=+a.W,mg=+a.marg||0,pl=+a.plage||0,pr=+a.prof||1.5,e=mg+pl;const lt=a.local?2.6:0;
-  const wTot=L+2*e+lt+4,hPlan=W+2*e+3,hCoupe=pr+3.2;const Wmm=203,Hmm=182;
+  const wTot=L+2*e+lt+4,hPlan=W+2*e+3,hCoupe=pr+3.2;const Wmm=212,Hmm=182;
   const auto=STD_SC.find(sc=>wTot*1000/sc<=Wmm&&(hPlan+hCoupe+2)*1000/sc<=Hmm)||200;const ov=S.ui.scales&&S.ui.scales.dppisc;const sc=ov&&ov!=='auto'?+ov:auto;SCALEINFO.dppisc={sc,auto,forced:!!(ov&&ov!=='auto'),fits:sc>=auto};
   const k=sc/1000;const vw=Wmm*k,vh=Hmm*k;const cx=lt/2;let o='';
   const yP=vh/2-hPlan/2-0.6;const yC=-vh/2+hCoupe-0.4;
