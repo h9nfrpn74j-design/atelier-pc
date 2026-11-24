@@ -854,6 +854,8 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
         <label class="f">Longueur L (m)<input type="number" step="0.1" min="3" data-b="projet.L"></label>
         <label class="f">Largeur l (m)<input type="number" step="0.1" min="3" data-b="projet.W"></label>
       </div>
+      <label class="f pc-only">Surface de plancher réelle (m², facultatif)<input type="number" step="0.1" min="0" data-b="projet.sdpManuel" id="sdpMan" placeholder="calcul automatique"></label>
+      <p class="hint pc-only" id="sdpHint" style="margin-top:-4px"></p>
       <div class="aile-box pc-only" id="aileBox">
         <label class="toggle"><input type="checkbox" data-b="projet.aile.on"> <b>Maison en L ou en T</b> : ajouter une aile</label>
         <div class="aile-f">
@@ -1390,8 +1392,15 @@ function roofZ(u,v,h){const p=S.projet,{a,b,t,E,F}=h;
   switch(p.toit){case '2pans':return F-Math.abs(v)*t;
     case '4pans':return a>=b?F-Math.max(Math.abs(v),Math.abs(u)-(a-b))*t:F-Math.max(Math.abs(u),Math.abs(v)-(b-a))*t;
     case 'mono':return p.monoInv?F-(b-v)*t:F-(v+b)*t;default:return E}}
+/* épaisseur des murs déduite pour la surface de plancher (nu intérieur) : bardage sur ossature d'annexe plus mince qu'un mur de maison */
+function wallThick(){const p=S.projet;return p.nature!=='maison'&&p.nature!=='extension'&&/bardage|clin|t[ôo]le|bac/i.test(p.facade||'')?0.15:0.3}
+/* seuil de l'architecte (R431-2) : surface de plancher ET emprise au sol de la partie qui crée de la surface de plancher, de la construction concernée */
+function archInfo(){const p=S.projet,sf=surfaces(),TT=totals();
+  if(p.nature==='annexe'){const v=Math.max(sf.sdp,sf.empClos||sf.emprise);return{v,need:v>150,txt:`Annexe indépendante : seuls comptent sa surface de plancher (${fmt(sf.sdp,1)} m²) et l'emprise au sol de sa partie fermée (${fmt(sf.empClos||sf.emprise,1)} m²), pas la maison existante.`}}
+  if(p.nature==='extension')return{v:TT.sdpTot,need:TT.sdpTot>150,txt:`Extension : on additionne la surface existante et la surface créée (${fmt(TT.sdpTot,1)} m² après travaux).`};
+  const v=Math.max(sf.sdp,sf.emprise);return{v,need:v>150,txt:`Maison : surface de plancher ${fmt(sf.sdp,1)} m², emprise au sol ${fmt(sf.emprise,1)} m².`}}
 function surfaces(){
-  const p=S.projet,h=heights();const e=0.3;const OPs=openPart();const Li=(OPs?OPs.Lc:p.L)-2*e,Wi=p.W-2*e;let sdp=Li*Wi*p.niveaux;let comb=0;
+  const p=S.projet,h=heights();const e=wallThick();const OPs=openPart();const Li=(OPs?OPs.Lc:p.L)-2*e,Wi=p.W-2*e;let sdp=Li*Wi*p.niveaux;let comb=0;
   if(p.combles&&p.toit!=='plat'&&h.t>0){const off=Math.max(0,(1.8-p.jambette)/h.t);
     if(p.toit==='mono')comb=Math.max(0,Wi-off)*Li;
     else if(p.toit==='2pans')comb=Math.max(0,Wi-2*off)*Li;
@@ -1400,7 +1409,8 @@ function surfaces(){
   // les surfaces de stationnement (garage) ne comptent pas dans la surface de plancher (art. R111-22 du code de l'urbanisme)
   let gar=0;if(p.nature==='annexe'&&(p.usage||'garage')==='garage')gar=sdp;else if(p.nature==='annexe'&&!(p.garageSurf!=null&&p.garageSurf!==''))gar=0;else if(p.garageSurf!=null&&p.garageSurf!=='')gar=Math.max(0,+p.garageSurf);else if(/(^|[\s/])G(@|x|\s|\/|$)/i.test(Object.values(p.ouv||{}).join(' ')))gar=Math.min(Li*Wi,3.3*Math.min(Wi,6.5));
   const AS=aileSurf();sdp+=AS.sdp;
-  gar=Math.min(gar,sdp);return{emprise:p.L*p.W+AS.emp,sdp:sdp-gar,comb,gar,taxable:sdp,aile:AS};
+  gar=Math.min(gar,sdp);const man=+p.sdpManuel>0?+p.sdpManuel:null;const auto=sdp-gar;
+  return{emprise:p.L*p.W+AS.emp,sdp:man??auto,sdpAuto:auto,manuel:man!=null,comb,gar,taxable:man!=null?man+gar:sdp,aile:AS,empClos:(OPs?OPs.Lc:p.L)*p.W+AS.emp};
 }
 
 /* ================= Modèle 3D (repère local u,v,z ; z=0 au plancher RDC) ================= */
@@ -1810,7 +1820,7 @@ function checks(){if(mode()!=='pc'&&mode()!=='dp-constr')return dpChecks();
   const D=distances(),h=heights(),sf=surfaces(),A=parcelArea();
   add(D.inside?'ok':'bad',D.inside?'La construction est entièrement sur le terrain':'La construction dépasse les limites du terrain',D.inside?'':'Déplacez-la sur le plan de masse.');
   if(!boundary().E.some(e=>e.voie))add('warn','Voie non désignée','Activez « Désigner la voie » et cliquez sur la limite bordant la rue.');
-  else if(R.reculVoie!=null&&D.dv!=null)add(D.dv+1e-6>=R.reculVoie?'ok':'bad',`Recul par rapport à la voie : ${fmt(D.dv)} m`,`Minimum exigé : ${fmt(R.reculVoie)} m.`);
+  else if(R.reculVoie!=null&&D.dv!=null)add(D.dv+0.005>=R.reculVoie?'ok':'bad',`Recul par rapport à la voie : ${fmt(D.dv)} m`,`Minimum exigé : ${fmt(R.reculVoie)} m.`);
   if(D.dl!=null&&R.reculLim!=null){const enLim=D.dl<0.05;const ok=enLim?R.limiteOk:D.dl+1e-6>=R.reculLim;
     add(ok?'ok':'bad',`Recul minimal aux limites séparatives : ${fmt(D.dl)} m`,enLim?(R.limiteOk?'Implantation en limite autorisée.':'Implantation en limite non autorisée par vos règles.'):`Minimum exigé : ${fmt(R.reculLim)} m${R.limiteOk?' (ou en limite)':''}.`)}
   if(R.hMax){const v=R.hRef==='egout'?h.hE:h.hF;add(v<=R.hMax+1e-6?'ok':'bad',`Hauteur ${R.hRef==='egout'?'à l\'égout':'au faîtage'} : ${fmt(v)} m`,`Maximum autorisé : ${fmt(R.hMax)} m, mesuré depuis le terrain naturel au point le plus bas de l'emprise.`)}
@@ -1823,10 +1833,10 @@ function checks(){if(mode()!=='pc'&&mode()!=='dp-constr')return dpChecks();
   for(const a of amList().filter(a=>a.k==='piscine')){const d=poolDists(a)[0];const ins=poolPoly(a,+a.marg||0).every(q=>inParcel(q,boundary().rings));add(ins?'info':'bad',`Piscine : bassin de ${fmt(polyArea(poolPoly(a)),1)} m²`,`${ins?'':'Elle dépasse du terrain. '}${poolSeuil()} Distance à la limite la plus proche : ${d?fmt(d.d,2):'—'} m. Vérifiez le recul imposé aux piscines par le PLU.`)}
   if(R.ces!=null&&R.ces!==''&&A){const c=TT.empTot/A*100;add(c<=R.ces+1e-6?'ok':'bad',`Emprise au sol totale : ${fmt(TT.empTot,1)} m², soit ${fmt(c,1)} % du terrain`,`Projet ${fmt(sf.emprise,1)} m²${TT.empAm>0.05?` + aménagements (piscine, terrasse, pergola) ${fmt(TT.empAm,1)} m²`:''} + existant conservé ${fmt(TT.empEx,1)} m². Maximum autorisé : ${fmt(+R.ces,0)} %.`)}
   const sdpTxt=S.existants.length?`Projet ${fmt(sf.sdp,1)} m² + existant ${fmt(TT.sdpEx-TT.sdpDem,1)} m² conservé.`:'';
-  if(TT.sdpTot>150)add('warn',`Surface de plancher totale après travaux : ${fmt(TT.sdpTot,1)} m²`,`${sdpTxt} Au-delà de 150 m², le recours à un architecte est obligatoire.`);
-  else add('ok',`Surface de plancher totale après travaux : ${fmt(TT.sdpTot,1)} m²`,`${sdpTxt} En dessous du seuil de 150 m² imposant un architecte. Faites vérifier le calcul exact.`);
+  {const AI=archInfo();if(AI.need)add('warn',`Architecte obligatoire (plus de 150 m²)`,`${sdpTxt} ${AI.txt}`);
+  else add('ok',`Pas d'architecte obligatoire (moins de 150 m²)`,`${sdpTxt} ${AI.txt} Surface de plancher totale sur le terrain après travaux : ${fmt(TT.sdpTot,1)} m².`)}
   if(DM.length&&mode()==='pc')add(S.photos.pA2?'ok':'warn','Photographie des bâtiments à démolir (A2)',S.photos.pA2?'Photo ajoutée.':'À ajouter : écran « Photos » de l\'assistant ou étape 04.');
-  if(DM.length)add('info','Démolition prévue',`${esc(DM.map(e=>e.usage).join(', '))}. Renseignez la partie « démolition » du formulaire si votre commune soumet les démolitions à autorisation.`);
+  if(DM.length)add('info','Démolition prévue',`${esc(DM.map(e=>`${e.usage||e.nom||'construction'} de ${fmt(exArea(e),0)} m² d'emprise`).join(', '))} (pièces A1 et A2 du dossier). Renseignez la partie « démolition » du formulaire si votre commune soumet les démolitions à autorisation.`);
   if(h.plBad)add('bad','Cote NGF du plancher incohérente',`Vous avez saisi ${fmt(+S.projet.plancherNGF)} alors que le terrain est entre ${fmt(h.TNmin)} et ${fmt(h.TNmax)} NGF sous la construction. La valeur est ignorée : videz le champ ou saisissez une altitude NGF (et non une hauteur).`);
   if(S.projet.regrade&&h.ok){const plat=h.pl-S.projet.hPlancher;const dz=h.tn.map(z=>z-plat);add('info','Terrain repris au droit de la construction',`Plateforme à ${fmt(plat)} NGF : déblai jusqu'à ${fmt(Math.max(0,...dz))} m et remblai jusqu'à ${fmt(Math.max(0,...dz.map(x=>-x)))} m aux angles. Les hauteurs du PLU restent mesurées depuis le terrain naturel avant travaux.`)}
   gpuChecks(add);
@@ -1840,7 +1850,9 @@ function checks(){if(mode()!=='pc'&&mode()!=='dp-constr')return dpChecks();
   if(ph.insMode==='image')add(ph.insImg?'ok':'warn','Document d\'insertion (PCMI6)',ph.insImg?'Votre image d\'insertion est importée.':'Importez votre image d\'insertion (étape 04).');
   else add(ph.ins?'ok':'warn','Document d\'insertion (PCMI6)',ph.ins?'Photo de fond présente.':'Vue de principe générée : ajoutez une photo du terrain ou importez votre propre insertion.');
   add(S.dem.nom?'ok':'warn','Identité du demandeur',S.dem.nom?'Renseignée.':'À compléter (étape 05).');
-  if(mode()==='pc')add('info','Attestation RE2020 (PCMI14-1)','À faire établir par un bureau d\'études thermiques et à joindre au dossier.');
+  if(mode()==='pc'){const P0=S.projet;if(P0.nature==='annexe')add('ok','RE2020 : non concernée','Annexe non chauffée (garage, atelier, stockage) : pas d\'attestation PCMI14-1. Si vous prévoyez de la chauffer pour y vivre ou travailler, elle devient nécessaire.');
+    else if(P0.nature==='extension'&&surfaces().sdp<50)add('ok','RE2020 : non concernée','Extension de moins de 50 m² : pas d\'attestation PCMI14-1.');
+    else add('info','Attestation RE2020 (PCMI14-1)','À faire établir par un bureau d\'études thermiques et à joindre au dossier.')}
   if(P.assain==='individuel')add('info','Assainissement individuel','Joignez l\'attestation de conformité du SPANC sur le projet d\'installation (PCMI12-2).');
   return out;
 }
@@ -2146,7 +2158,7 @@ function travauxEst(){const m=mode(),P=S.projet,L=[];const add=(t,q,u,pr)=>{if(q
 function prosList(){const m=mode(),P=S.projet,TT=totals(),out=[];const build=m==='pc'||m==='dp-constr';const rg=typeof rgaLevel==='function'?rgaLevel():null;
   const prot=!!(S.terrain.protect&&S.terrain.protect.ok&&S.terrain.protect.sup&&S.terrain.protect.sup.length);
   const add=(t,why,req,q,dir)=>out.push({t,why,req,q,dir});
-  if(m==='pc'&&TT.sdpTot>150)add('Architecte','Surface de plancher totale au-delà de 150 m² : le recours à un architecte est obligatoire.','obligatoire','architecte',['Ordre des architectes','https://www.architectes.org/']);
+  if(m==='pc'&&archInfo().need)add('Architecte','Surface de plancher totale au-delà de 150 m² : le recours à un architecte est obligatoire.','obligatoire','architecte',['Ordre des architectes','https://www.architectes.org/']);
   if(build&&(rg==='forte'||rg==='moyenne')&&(P.nature==='maison'||P.nature==='extension'))add('Bureau d\'études géotechniques (étude G2)',`Terrain en zone d'argiles ${rg} : l'étude de sol adapte les fondations et évite les fissures.`,P.nature==='maison'?'obligatoire':'conseillé','bureau d\'études géotechniques',['Union syndicale géotechnique','https://www.u-s-g.org/']);
   if(m==='pc'&&P.nature==='maison')add('Bureau d\'études thermiques (RE2020)','Attestation PCMI14-1 à joindre au permis, puis attestation de fin de travaux.','obligatoire','bureau d\'études thermiques RE2020',['Qualification OPQIBI','https://www.opqibi.com/']);
   if(build&&P.assain==='individuel')add('Bureau d\'études assainissement + SPANC','Pas de tout-à-l\'égout : étude de filière, puis attestation du SPANC (PCMI12-2).','obligatoire','étude assainissement non collectif',null);
@@ -3376,7 +3388,7 @@ ${demTxt}<p>Le projet consiste en ${natTxt}, de ${fmt(P.L)} m × ${fmt(P.W)} m, 
 function cerfaHTML(){
   const T=S.terrain,P=S.projet,D=S.dem,h=heights(),sf=surfaces(),TT=totals();const r=(a,b)=>`<tr><td>${a}</td><td class="v">${b===''||b==null?'<span class="pc-no">à compléter</span>':esc(b)}</td></tr>`;const sec=t=>`<tr class="sec"><td colspan="2">${t}</td></tr>`;
   const ve=voieMain();const desc=`${projetTitle()} ${P.niveaux===1?'de plain-pied':'R+'+(P.niveaux-1)}${P.combles&&P.toit!=='plat'?' avec combles aménagés':''} de ${fmt(sf.sdp,0)} m² de surface de plancher, ${P.toit==='plat'?'toiture-terrasse':'toiture '+(P.toit==='4pans'?'4 pans':P.toit==='mono'?'monopente':'2 pans')+' en '+P.couv.toLowerCase()}, façades ${P.facade.toLowerCase()}${P.park?`, ${P.park} place${P.park>1?'s':''} de stationnement`:''}${openPart()?`, dont ${fmt(openPart().L*P.W,0)} m² ouverts sur poteaux`:''}${exDem().length?`, après démolition de ${exDem().length} construction${exDem().length>1?'s':''} (${fmt(exDem().reduce((s2,e)=>s2+exArea(e),0),0)} m²)`:''}.`;void ve;
-  const pcs=[['PCMI1','Plan de situation du terrain',true],['PCMI2','Plan de masse des constructions',T.parcels.length>0],['PCMI3','Plan en coupe du terrain et de la construction',true],['PCMI4','Notice décrivant le terrain et le projet',true],['PCMI5','Plans des façades et des toitures',true],['PCMI6','Document graphique d\'insertion',!!S.photos.ins],['PCMI7','Photographie environnement proche',!!S.photos.p7],['PCMI8','Photographie environnement lointain',!!S.photos.p8],['PCMI14-1','Attestation de prise en compte de la RE2020',false],...(P.assain==='individuel'?[['PCMI12-2','Attestation de conformité de l\'assainissement non collectif (SPANC)',false]]:[])];
+  const pcs=[['PCMI1','Plan de situation du terrain',true],['PCMI2','Plan de masse des constructions',T.parcels.length>0],['PCMI3','Plan en coupe du terrain et de la construction',true],['PCMI4','Notice décrivant le terrain et le projet',true],['PCMI5','Plans des façades et des toitures',true],['PCMI6','Document graphique d\'insertion',!!S.photos.ins],['PCMI7','Photographie environnement proche',!!S.photos.p7],['PCMI8','Photographie environnement lointain',!!S.photos.p8],...(S.projet.nature==='annexe'||(S.projet.nature==='extension'&&surfaces().sdp<50)?[]:[['PCMI14-1','Attestation de prise en compte de la RE2020',false]]),...(P.assain==='individuel'?[['PCMI12-2','Attestation de conformité de l\'assainissement non collectif (SPANC)',false]]:[])];
   return`${demoMark(1)}<div class="cerfa"><div class="hd"><div><div class="code">Cerfa 13406</div><h1>Données à reporter dans la demande de permis de construire</h1></div><div class="meta">Maison individuelle et ses annexes<br>${frDate(S.meta.date)}</div></div>
   <table><tbody>
   ${sec('Identité du demandeur')}${r('Civilité',D.civ)}${r('Nom',D.nom)}${r('Prénom',D.prenom)}${r('Date de naissance',frDate(D.naissance))}
@@ -3430,7 +3442,8 @@ function renderSide(){renderModeUI();{const gb=$('#gpuBox');if(gb)gb.innerHTML=g
   const yaw=(S.ui.yaw3d||215)*D2R;const R=renderBuilding([Math.cos(yaw),Math.sin(yaw)],26,{mode:'render',sw:0.045,ground:true});const bb=R.bb;
   $('#prev3d').innerHTML=`<svg viewBox="${(bb[0]-0.5).toFixed(2)} ${(-bb[3]-0.5).toFixed(2)} ${(bb[2]-bb[0]+1).toFixed(2)} ${(bb[3]-bb[1]+1).toFixed(2)}" aria-label="Aperçu 3D">${R.svg}</svg>`;
 }
-function renderAll(){document.body.classList.toggle('has-dem',exDem().length>0);document.body.classList.toggle('is-annexe',S.projet.nature==='annexe');document.body.classList.toggle('has-open',!!openPart());{const pp=$('#pentePct');if(pp)pp.textContent=S.projet.toit==='plat'?'':`soit ${fmt(pentePct(),1)} %`}if(!activeSheets().some(s=>s.id===S.ui.tab)&&S.ui.tab!=='checks')S.ui.tab='pcmi2';
+function sdpHintUpd(){const el=$('#sdpHint');if(!el)return;try{const sf=surfaces(),p=S.projet,O=openPart();const e=wallThick();el.textContent=`Calcul automatique : ${fmt(sf.sdpAuto,1)} m² — intérieur ${O?'de la partie fermée ':''}(${fmt((O?O.Lc:p.L)-2*e,2)} × ${fmt(p.W-2*e,2)} m), murs de ${Math.round(e*100)} cm déduits${sf.gar>0.5?`, stationnement de ${fmt(sf.gar,1)} m² déduit`:''}.${sf.manuel?' Votre valeur saisie est utilisée dans tout le dossier.':' Saisissez la valeur exacte si vous la connaissez (plans, constructeur).'}`;const i=$('#sdpMan');if(i)i.placeholder='auto : '+fmt(sf.sdpAuto,1)}catch(e){}}
+function renderAll(){sdpHintUpd();document.body.classList.toggle('has-dem',exDem().length>0);document.body.classList.toggle('is-annexe',S.projet.nature==='annexe');document.body.classList.toggle('has-open',!!openPart());{const pp=$('#pentePct');if(pp)pp.textContent=S.projet.toit==='plat'?'':`soit ${fmt(pentePct(),1)} %`}if(!activeSheets().some(s=>s.id===S.ui.tab)&&S.ui.tab!=='checks')S.ui.tab='pcmi2';
   {const act=new Set(activeSheets().map(s=>s.id));$$('#stage .wrap').forEach(w=>{const id=w.id.slice(2);if(id!=='checks'&&!act.has(id))w.remove()})}
   renderTabs();for(const s of activeSheets())renderSheet(s.id);renderChecks();renderSide()}
 function fit(){renderScaleBar();if(typeof declutterOn==='function')declutterOn();const st=$('#stage');const avail=st.clientWidth-48;const w=$('.wrap.on');if(!w||w.id==='w-checks')return;const sh=w.firstElementChild;if(!sh)return;const base=sh.offsetWidth;const z=S.ui.zoom||1;const s=Math.min(1.2,avail/base)*z;const zv=$('#zVal');if(zv)zv.textContent=Math.round(z*100)+' %';
@@ -5273,9 +5286,9 @@ function couts(){const m=mode(),P=S.projet,sf=surfaces(),TT=totals(),U=suivi();c
   const base=(tax-abat)*vf+abat*vf*0.5;const pis=poolBassin?(poolBassin()||0):0;const park=build&&P.nature==='maison'?(+P.park||0):0;
   const bTot=base+pis*VF.pisc+park*VF.park;const ta=bTot*taux/100,rap=bTot*VF.rap/100;
   const et=[];const rg=rgaLevel();if(build&&(rg==='forte'||rg==='moyenne'))et.push(['Étude de sol G2 (obligatoire)',1200,3000]);else if(build&&P.nature==='maison')et.push(['Étude de sol (conseillée)',800,2000]);
-  if(m==='pc'&&(P.nature==='maison'||P.nature==='extension'))et.push(['Étude thermique RE2020 (attestation PCMI14-1)',400,1200]);
+  if(m==='pc'&&(P.nature==='maison'||(P.nature==='extension'&&surfaces().sdp>=50)))et.push(['Étude thermique RE2020 (attestation PCMI14-1)',400,1200]);
   if(build&&P.assain==='individuel')et.push(['Étude de filière d\'assainissement + contrôle SPANC',500,1000]);
-  if(m==='pc'&&TT.sdpTot>150)et.push(['Architecte (obligatoire au-delà de 150 m²)',null,null]);
+  if(m==='pc'&&archInfo().need)et.push(['Architecte (obligatoire au-delà de 150 m²)',null,null]);
   if(build&&P.nature==='maison')et.push(['Assurance dommages-ouvrage (obligatoire)',2500,6000]);
   return{vf,taux,tax,abat,pis,park,bTot,ta,rap,et}}
 function addMonths(iso,n){if(!iso)return null;const d=new Date(iso+'T12:00:00');const day=d.getDate();d.setMonth(d.getMonth()+n);if(d.getDate()<day)d.setDate(0);return d.toISOString().slice(0,10)}
@@ -5438,7 +5451,7 @@ function cerfaData(){const m=mode(),T=S.terrain,D=S.dem,P=S.projet,TT=totals(),s
     const r1=x=>String(Math.round(x*10)/10).replace('.',',');
     {const eD=exDem().reduce((s2,e)=>s2+exArea(e),0);Object.assign(v,{W3ES1_avanttravaux:r1(TT.empEx+eD),W3ES2_creee:r1(sf.emprise+TT.empAm),W3ES3_supprimee:r1(eD)});if(num==='13406'&&eD>0)c.push('K1S_totale')}
     Object.assign(v,{W2LA1:r1(TT.sdpEx),W2LB1:r1(sf.sdp),W2LD1:r1(TT.sdpDem),W2LF1:r1(TT.sdpTot),W2SA1:r1(TT.sdpEx),W2SB1:r1(sf.sdp),W2SD1:r1(TT.sdpDem),W2SF1:r1(TT.sdpTot)});
-    if(num==='13406'&&TT.sdpTot<=150)c.push('H1H_honneur')}
+    if(num==='13406'&&!archInfo().need)c.push('H1H_honneur')}
   else if(m==='dp-cloture')c.push('C2ZC3_cloture');
   else if(m==='dp-piscine'){c.push('C2ZA1_nouvelle','C5ZE1_piscine')}
   else if(m==='dp-pergola'){const pa=pergItem();const ty=pgTy(pa);if(ty==='veranda'){c.push('C2ZB1_existante','C5ZE3_veranda');const r2=x=>String(Math.round(x*100)/100).replace('.',',');const ex=TT.sdpEx||0,cr=verSdp();Object.assign(v,{W2LA1:r2(ex),W2LB1:r2(cr),W2LF1:r2(ex+cr),W2SA1:r2(ex),W2SB1:r2(cr),W2SF1:r2(ex+cr)})}else c.push(pa&&pa.adoss?'C2ZB1_existante':'C2ZA1_nouvelle','C5ZE5_annexes');const r1=x=>String(Math.round(x*10)/10).replace('.',',');Object.assign(v,{W3ES1_avanttravaux:r1(TT.empEx),W3ES2_creee:r1(pergEmprise()),W3ES3_supprimee:'0'})}
@@ -5667,7 +5680,7 @@ function wzRender(){const el=$('#wiz');if(!el||el.hidden)return;const keys=wzKey
       ${nb.concat(nw).slice(0,6).map(c=>`<div class="ck ${c.lvl}"><div class="ic">${c.lvl==='bad'?'×':'!'}</div><div><b>${c.t}</b><span>${c.s}</span></div></div>`).join('')}
       <div class="wz-pieces">${sh.map(s=>`<span class="${sheetReady(s.id)?'ok':'warn'}" title="${esc(s.code)}">${esc(sheetShort(s))}</span>`).join('')}</div>
       
-      ${mode()==='dp-arbres'?verdictCard():''}<p class="hint">${mode()!=='pc'?'Le formulaire cerfa '+cerfaNum()+' se remplit avec les données du récapitulatif.':`Restent à joindre par vous : l'attestation RE2020 (PCMI14-1)${w.kind==='garage'?' si le garage est chauffé':''}${S.projet.assain==='individuel'?' et l\'attestation du SPANC':''}. Le formulaire cerfa se remplit avec les données du récapitulatif.`}</p>`}
+      ${mode()==='dp-arbres'?verdictCard():''}<p class="hint">${mode()!=='pc'?'Le formulaire cerfa '+cerfaNum()+' se remplit avec les données du récapitulatif.':`${S.projet.nature==='annexe'?(S.projet.assain==='individuel'?'Reste à joindre par vous : l\'attestation du SPANC.':''):`Restent à joindre par vous : l'attestation RE2020 (PCMI14-1)${S.projet.assain==='individuel'?' et l\'attestation du SPANC':''}.`} Le formulaire cerfa se remplit avec les données du récapitulatif.`}</p>`}
   $('#wzBody').innerHTML=h;
   $('#wzPrev').hidden=st===0;$('#wzNext').hidden=st===keys.length-1;$('#wzNext').textContent=st===0?'Commencer':'Continuer';$('#wzNext').disabled=!wzCanNext();
   wzBind()}
