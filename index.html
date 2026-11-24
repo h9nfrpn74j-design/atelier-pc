@@ -249,8 +249,9 @@ nav.tabs button .d{width:7px;height:7px;border-radius:50%}
 .lg{display:grid;grid-template-columns:8mm 1fr;align-items:center;gap:1.8mm;line-height:1.15}
 .cart .c-h{font:700 6.2pt var(--f-tech);text-transform:uppercase;letter-spacing:.12em;color:#18211F;margin-bottom:.4mm}
 .mats{display:grid;gap:1.6mm}.mat{display:grid;grid-template-columns:7mm 1fr;gap:2mm;align-items:center}
-.mat i{width:7mm;height:7mm;border:.15mm solid #18211F;box-shadow:inset 0 0 0 .5mm rgba(255,255,255,.18)}
-.mat span{display:block;font:600 5.6pt var(--f-tech);text-transform:uppercase;letter-spacing:.1em;color:#5A6863}.mat b{display:block;font:600 7.6pt/1.2 var(--f-tech)}.mat em{display:block;font:400 6.6pt var(--f-tech);color:#5A6863;font-style:normal}
+.mat{align-items:start}.mat i{width:7mm;height:7mm;border:.15mm solid #18211F;box-shadow:inset 0 0 0 .5mm rgba(255,255,255,.18)}
+.mat em u{text-decoration:none;font-weight:600;color:#18211F}.mat>div>b{margin-bottom:.4mm}
+.mat span{display:block;font:600 5.6pt var(--f-tech);text-transform:uppercase;letter-spacing:.1em;color:#5A6863}.mat b{display:block;font:600 7.6pt/1.2 var(--f-tech)}.mat em{display:block;font:400 6.7pt/1.3 var(--f-tech);color:#3d4a46;font-style:normal}
 .xref{margin:1.6mm 0 0;padding-top:1.6mm;border-top:.15mm solid #c9cfcc;font-size:6.8pt;color:#5A6863}
 /* page de présentation */
 .pres-hero{display:grid;grid-template-rows:minmax(0,1fr) auto;width:100%;height:100%}
@@ -3369,7 +3370,18 @@ function matList(){const P=S.projet;const L=[];const ral=c=>{const m=/RAL\s*(\d{
   if(P.habCouleur)L.push(['Habillages','Rives et bandeaux',P.habCouleur,'']);
   if(P.toit!=='plat'&&P.gouttieres!==false)L.push(['Eaux pluviales','Gouttières et descentes',P.gouttCouleur||'#8d9599','']);
   return L.filter(x=>x[1]||x[2])}
-function matLegend(){return`<div class="mats">${matList().map(([k,n,c,x])=>`<div class="mat"><i style="background:${esc(c||'#ccc')}"></i><div><span>${esc(k)}</span><b>${esc(n||colorName(c))}</b>${x?`<em>${esc(x)}</em>`:''}</div></div>`).join('')}</div>`}
+/* matériaux regroupés par teinte : une pastille par couleur, avec les éléments concernés */
+function matGroups(){const G=[];for(const [k,n,c,x] of matList()){const key=String(c||'').toLowerCase();let g=G.find(q=>q.key===key);if(!g){g={key,c,items:[]};G.push(g)}g.items.push({k,n,x})}
+  for(const g of G){const r=g.items.map(i=>/RAL\s*\d{4}/i.exec((i.n||'')+' '+(i.x||''))).find(Boolean);g.ral=r?r[0].toUpperCase().replace(/\s+/,' '):(S.projet.charpenteRAL&&g.items.some(i=>i.k==='Charpente')?'RAL '+S.projet.charpenteRAL:'');
+    const f=g.items[0];g.pat=/bardage|clin/i.test(f.n||'')?'v':/tuile/i.test(f.n||'')?'t':/métal|acier|poteau/i.test(f.n||'')?'m':''}return G}
+function tintName(g){const RN={5011:'Bleu nuit',5008:'Bleu gris',7016:'Gris anthracite',7024:'Gris graphite',7035:'Gris clair',7039:'Gris quartz',9016:'Blanc',9010:'Blanc pur',9005:'Noir',6005:'Vert mousse',8019:'Brun gris',8014:'Brun sépia',1015:'Ivoire clair',3004:'Rouge pourpre'};
+  const r=g.ral&&/\d{4}/.exec(g.ral);if(r&&RN[r[0]])return RN[r[0]];const txt=g.items.map(i=>i.n||'').join(' ');
+  const m=/(bleu nuit|bleu ardoise|bleu|gris anthracite|gris graphite|gris clair|gris|noir|blanc cassé|blanc|rouge|terre cuite|vert|brun|beige|sable|ton pierre|naturel)/i.exec(txt);
+  if(/tuile/i.test(txt)&&(!m||/tuile/i.test(txt.slice(0,m.index+1))))return'Terre cuite'+(m&&!/terre cuite/i.test(m[0])?' '+m[0].toLowerCase():'');
+  if(m)return m[0][0].toUpperCase()+m[0].slice(1).toLowerCase();return String(colorName(g.c)).replace(/\s*\(#[0-9a-f]+\)/i,'').replace(/^./,c=>c.toUpperCase())}
+function matSw(g,big){const P={v:'repeating-linear-gradient(90deg,rgba(255,255,255,.28) 0 .25mm,transparent .25mm 1.3mm)',t:'repeating-radial-gradient(circle at 50% 120%,transparent 0 .9mm,rgba(0,0,0,.28) .9mm 1.15mm)',m:'linear-gradient(135deg,rgba(255,255,255,.28),transparent 60%)'};
+  return`<i class="${big?'big':''}" style="background:${P[g.pat]?P[g.pat]+',':''}${esc(g.c||'#ccc')}"></i>`}
+function matLegend(){return`<div class="mats">${matGroups().map(g=>`<div class="mat">${matSw(g)}<div><b>${esc(tintName(g))}${g.ral?` · ${esc(g.ral)}`:''}</b>${g.items.map(i=>`<em><u>${esc(i.k)}</u> — ${esc(i.n||'')}${i.x&&!/^RAL/.test(i.x)?`, ${esc(i.x)}`:''}</em>`).join('')}</div></div>`).join('')}</div>`}
 function cart(sh,scale,extra=''){
   const T=S.terrain,D=S.dem;let pcs=[];try{pcs=exportSheets().filter(x=>!/^cerfa|^cad$|^pres$/.test(x.id))}catch(e){}const cid=sh._cid||sh.id;const idx=pcs.findIndex(x=>x.id===cid);
   const kind=mode()==='pc'?(S.projet.nature==='maison'?'Permis de construire · maison individuelle':'Permis de construire'):'Déclaration préalable';
@@ -3396,7 +3408,7 @@ function sheetHTML0(sh){
     const L=exportSheets().filter(x=>x.id!=='pres');const D=S.dem,T=S.terrain;
     return`${demoMark()}<div class="draw"><div class="pres-hero"><figure class="pres-img" style="margin:0">${hero}<figcaption>${cap}</figcaption></figure>
       <div class="pres-kpi" style="--n:${K.length}">${K.map(([l,v,u])=>`<div><span>${esc(l)}</span><b>${v}</b><small>${u}</small></div>`).join('')}</div>
-      <div class="pres-mats">${matList().map(([k,n,c])=>`<div class="mat"><i style="background:${esc(c||'#ccc')}"></i><div><span>${esc(k)}</span><b>${esc(n||'')}</b></div></div>`).join('')}</div></div></div>
+      <div class="pres-mats">${matGroups().map(g=>`<div class="mat">${matSw(g)}<div><span>${esc(g.items.map(i=>i.k).join(' · '))}</span><b>${esc(tintName(g))}${g.ral?` · ${esc(g.ral)}`:''}</b></div></div>`).join('')}</div></div></div>
       <div class="cart"><div class="c-top"><span>Dossier de demande</span><b>${frDate(S.meta.date)}</b></div><div class="p-kind">${mode()==='pc'?'Permis de construire':'Déclaration préalable'}</div><div class="p-title">${esc(projetTitle())}</div>
       <dl><dt>Terrain</dt><dd>${esc(adresseTerrain()||T.label)}</dd><dt>Cadastre</dt><dd>${esc(parcelRefs())} — ${fmt(parcelArea(),0)} m²</dd>${T.zone?`<dt>Urbanisme</dt><dd>Zone ${esc(T.zone.libelle)}</dd>`:''}<dt>Demandeur</dt><dd>${esc((D.nom||D.prenom)?[D.civ,D.prenom,D.nom].filter(Boolean).join(' '):'—')}</dd></dl>
       <div class="c-strip" style="grid-template-columns:1fr"><div><span>Pièces du dossier</span></div></div>
