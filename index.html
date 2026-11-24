@@ -1004,6 +1004,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
         <p class="hint" style="margin-top:-4px">La rotation ne modifie que la vue d'insertion, pour essayer une orientation ; l'implantation se règle à l'étape 03.</p>
         <label class="toggle"><input type="checkbox" data-b="photos.insLines"> Contours des arêtes</label>
         <label class="f">Intensité de l'ombre (%)<input type="range" min="0" max="150" data-b="photos.insShadow"></label>
+        <label class="toggle"><input type="checkbox" data-b="photos.ins3d"> Rendu réaliste (moteur 3D)</label>
         <label class="toggle"><input type="checkbox" data-b="photos.insGrass"> Herbe de la photo au pied des murs</label>
         <label class="toggle" id="insTreesRow"><input type="checkbox" data-b="photos.insTrees"> Arbres en arrière-plan (vue de principe)</label>
         <div class="sub">Photo de fond</div>
@@ -1273,7 +1274,7 @@ function demoState(){
 }
 let S=loadLocal()||demoState();
 S.dossier=S.dossier||{type:'pc',exId:null,avant:null,apres:null};S.clo=S.clo||[];if(!S.projet.toitItems)S.projet.toitItems=[];if(S.regles.hClo===undefined)S.regles.hClo=null;
-{const d={insGrass:true,insEye:1.6,insFocal:28,insLum:100,insSat:90,insOp:100,insMode:'auto',insAB:true,insFit:'contain',insPan:0,insTilt:0,insSpin:0,insLines:true,insShadow:100,insTrees:true,insRot:0,insFlip:false,insCon:100,insImg:null,insStyle:'photo',vegeAge:'1',echelle:false};for(const k in d)if(S.photos[k]==null)S.photos[k]=d[k];if(S.photos.insOp<60)S.photos.insOp=100}
+{const d={ins3d:true,insGrass:true,insEye:1.6,insFocal:28,insLum:100,insSat:90,insOp:100,insMode:'auto',insAB:true,insFit:'contain',insPan:0,insTilt:0,insSpin:0,insLines:true,insShadow:100,insTrees:true,insRot:0,insFlip:false,insCon:100,insImg:null,insStyle:'photo',vegeAge:'1',echelle:false};for(const k in d)if(S.photos[k]==null)S.photos[k]=d[k];if(S.photos.insOp<60)S.photos.insOp=100}
 if(!S.existants)S.existants=[];if(!S.projet.nature)S.projet.nature='maison';
 function loadLocal(){try{const s=localStorage.getItem('atelier-pc');return s?unpackS(JSON.parse(s)):null}catch(e){return null}}
 let saveT;
@@ -2939,6 +2940,133 @@ function wzExBind(){$$('[data-wzex]').forEach(s=>s.onchange=()=>{S.existants[+s.
   const b=$('#wzExAdd');if(b)b.onclick=()=>{const {rings}=boundary();if(!rings.length){toast('Choisissez d\'abord votre terrain.');return}const p=S.projet;const c=noBuild()?parcelCentroid(rings):[p.x,p.y];
     S.existants.push({id:'m'+Date.now(),src:'manuel',c:toLL(...c),L:6,W:4,rot:Math.round(p.rot||0),hauteur:3,etages:1,usage:'Bâtiment',statut:'demoli',toit:'2pans',sdp:null});renderExList();save();wzRender()}}
 
+/* ================= Rendu réaliste (moteur 3D three.js) pour l'insertion photo ================= */
+const R3URL='https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+let R3LIB=null;
+async function r3Lib(){if(R3LIB)return R3LIB;R3LIB=await import(R3URL);return R3LIB}
+function r3Ok(){try{const c=document.createElement('canvas');return!!(c.getContext('webgl2')||c.getContext('webgl'))}catch(e){return false}}
+/* texture couleur = teinte + motif de l'appli (calque clair/sombre), et carte de relief tirée du même motif */
+async function r3Tex(T,kind,hex,opt={}){const t=texGet(kind);const W=opt.px||256;const c=document.createElement('canvas');const asp=t?t.h/t.w:1;c.width=W;c.height=Math.max(8,Math.round(W*asp));const g=c.getContext('2d');
+  g.fillStyle=hex;g.fillRect(0,0,c.width,c.height);let bump=null;
+  if(t){const im=await loadImg(t.url);g.drawImage(im,0,0,c.width,c.height);const b=document.createElement('canvas');b.width=c.width;b.height=c.height;const gb=b.getContext('2d');gb.fillStyle='#808080';gb.fillRect(0,0,b.width,b.height);gb.drawImage(im,0,0,b.width,b.height);bump=b}
+  const mk=(cv,srgb)=>{const x=new T.CanvasTexture(cv);x.wrapS=x.wrapT=T.RepeatWrapping;x.anisotropy=8;if(srgb)x.colorSpace=T.SRGBColorSpace;const sw=t?t.w:1,sh=t?t.h:1;x.repeat.set(1/sw,1/sh);return x};
+  return{map:mk(c,true),bump:bump?mk(bump,false):null}}
+function r3Plane(T,pts){/* polygone plan quelconque -> géométrie, UV en mètres dans son plan */
+  let n=[0,0,0];for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length];n[0]+=(a[1]-b[1])*(a[2]+b[2]);n[1]+=(a[2]-b[2])*(a[0]+b[0]);n[2]+=(a[0]-b[0])*(a[1]+b[1])}
+  const nl=Math.hypot(...n)||1;n=n.map(x=>x/nl);let e1=Math.abs(n[2])>0.9?[1,0,0]:[-n[1],n[0],0];const l1=Math.hypot(...e1)||1;e1=e1.map(x=>x/l1);const e2=[n[1]*e1[2]-n[2]*e1[1],n[2]*e1[0]-n[0]*e1[2],n[0]*e1[1]-n[1]*e1[0]];
+  const o=pts[0];const p2=pts.map(p=>{const d=[p[0]-o[0],p[1]-o[1],p[2]-o[2]];return new T.Vector2(d[0]*e1[0]+d[1]*e1[1]+d[2]*e1[2],d[0]*e2[0]+d[1]*e2[1]+d[2]*e2[2])});
+  const tri=T.ShapeUtils.triangulateShape(p2,[]);const pos=[],uv=[];for(const t of tri)for(const i of t){pos.push(...pts[i]);uv.push(p2[i].x,p2[i].y)}
+  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.computeVertexNormals();return g}
+function r3Tube(T,a,b,r,mat,seg=10){const A=new T.Vector3(...a),B=new T.Vector3(...b);const L=A.distanceTo(B);if(L<1e-3)return null;const g=new T.CylinderGeometry(r,r,L,seg,1,false);const m=new T.Mesh(g,mat);
+  m.position.copy(A.clone().add(B).multiplyScalar(0.5));m.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),B.clone().sub(A).normalize());m.castShadow=m.receiveShadow=true;return m}
+/* scène du bâtiment, dans le repère du bâtiment (u, v, z vers le haut) */
+async function r3Building(T){const p=S.projet,M=model(),h=M.h,zb=h.zb;const grp=new T.Group();const P=p;
+  const wallC=p.facadeCouleur||'#e8e2d6',roofC=p.couvCouleur||'#a65a3f',menu=p.menuisCouleur||'#3a3f44',hab=p.habCouleur||wallC,gutC=p.gouttCouleur||'#8d9599';
+  const fk=wallTexKind(p.facade);const peint=bardPeint(p),vert=p.bardageSens==='v'||/vertical/i.test(p.facade||'');
+  const wk=fk==='bois'?(peint?(vert?'bardp':'bardph'):(p.bardageSens==='v'?'boisv':'bois')):fk;
+  const tW=await r3Tex(T,wk,wallC,{px:256}),tR=await r3Tex(T,COUV_PAT[p.couv]||'tile',roofC,{px:512}),tB=await r3Tex(T,'beton','#9c9a95',{px:128});
+  const metal=/acier|m[ée]tal|bac/i.test(p.facade||'')||peint;
+  const mWall=new T.MeshStandardMaterial({map:tW.map,bumpMap:tW.bump,bumpScale:wk==='bardp'||wk==='bardph'?1.6:1.0,roughness:metal?0.55:0.85,metalness:metal?0.15:0});
+  const mBase=new T.MeshStandardMaterial({map:tB.map,bumpMap:tB.bump,bumpScale:0.6,roughness:0.95,side:T.DoubleSide});
+  const mRoof=new T.MeshStandardMaterial({map:tR.map,bumpMap:tR.bump,bumpScale:3,roughness:0.8,side:T.DoubleSide});
+  const mHab=new T.MeshStandardMaterial({color:hab,roughness:0.6,metalness:0.1,side:T.DoubleSide});const mSof=new T.MeshStandardMaterial({color:new T.Color(hab).multiplyScalar(0.85),roughness:0.8,side:T.DoubleSide});
+  const mMenu=new T.MeshStandardMaterial({color:menu,roughness:0.45,metalness:0.2,side:T.DoubleSide});const mGlass=new T.MeshStandardMaterial({color:'#20282c',roughness:0.04,metalness:0.9,envMapIntensity:1.4,side:T.DoubleSide});
+  const mGut=new T.MeshStandardMaterial({color:gutC,roughness:0.4,metalness:0.35,side:T.DoubleSide});
+  const slat=document.createElement('canvas');slat.width=16;slat.height=128;{const g=slat.getContext('2d');for(let y=0;y<128;y++){const t=(y%16)/16;const v=t<0.12?70:t<0.2?150:128-t*30;g.fillStyle=`rgb(${v|0},${v|0},${v|0})`;g.fillRect(0,y,16,1)}}
+  const tSl=new T.CanvasTexture(slat);tSl.wrapS=tSl.wrapT=T.RepeatWrapping;tSl.repeat.set(1,1/0.8);tSl.anisotropy=8;const mGar=new T.MeshStandardMaterial({color:menu,roughness:0.5,metalness:0.25,bumpMap:tSl,bumpScale:1.2,side:T.DoubleSide});
+  const add=(g,m,cast=true)=>{const x=new T.Mesh(g,m);x.castShadow=cast;x.receiveShadow=true;grp.add(x);return x};
+  const aoC=document.createElement('canvas');aoC.width=4;aoC.height=64;{const g=aoC.getContext('2d');const gr=g.createLinearGradient(0,64,0,0);gr.addColorStop(0,'rgba(0,0,0,.55)');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,4,64)}
+  const mAO=new T.MeshBasicMaterial({map:new T.CanvasTexture(aoC),transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,side:T.DoubleSide});
+  const vols=M.vols||[{walls:M.walls,roofs:M.roofs,main:true}];const TH=p.toit==='plat'?0.3:0.2;
+  for(const VO of vols){
+    for(const w of VO.walls){
+      if(w.x){const mm=w.floor?mBase:new T.MeshStandardMaterial({color:w.col||'#999',roughness:0.7,metalness:/474A51|3a3f44/i.test(w.col||'')?0.3:0,side:T.DoubleSide});add(r3Plane(T,w.pts),mm);continue}
+      const n=[w.n[0],w.n[1]],r=[w.r[0],w.r[1]],L2=w.len/2,t=w.inner?0.12:0.2;
+      const loc=w.pts.map(q=>new T.Vector2((q[0]-w.c[0])*r[0]+(q[1]-w.c[1])*r[1],q[2]));const sh=new T.Shape(loc);
+      for(const o of w.ops){const q0=o.q-o.o.w/2,q1=o.q+o.o.w/2;const hp=new T.Path();hp.moveTo(q0,o.z0);hp.lineTo(q1,o.z0);hp.lineTo(q1,o.z1);hp.lineTo(q0,o.z1);hp.closePath();sh.holes.push(hp)}
+      const g=new T.ExtrudeGeometry(sh,{depth:t,bevelEnabled:false});g.translate(0,0,-t);
+      const mx=new T.Matrix4().makeBasis(new T.Vector3(r[0],r[1],0),new T.Vector3(0,0,1),new T.Vector3(n[0],n[1],0)).setPosition(w.c[0],w.c[1],0);g.applyMatrix4(mx);add(g,mWall);
+      const Q=(q,z,off=0)=>[w.c[0]+r[0]*q+n[0]*off,w.c[1]+r[1]*q+n[1]*off,z];
+      if(zb<-0.02&&!w.tri&&!w.inner){add(r3Plane(T,[Q(-L2-0.005,zb,0.012),Q(L2+0.005,zb,0.012),Q(L2+0.005,0,0.012),Q(-L2-0.005,0,0.012)]),mBase)}
+      if(!w.tri&&!w.inner){const zs=[];for(let i=0;i<=8;i++){const qq=-L2+w.len*i/8;const b=Q(qq,0,0.02);zs.push(clamp(zRelAt(...fromBld(b[0],b[1])),zb,0))}const z0=Math.min(...zs);
+        const gq=r3Plane(T,[Q(-L2,z0,0.016),Q(L2,z0,0.016),Q(L2,Math.max(...zs)+0.55,0.016),Q(-L2,Math.max(...zs)+0.55,0.016)]);const uv=gq.attributes.uv;const pz=gq.attributes.position;const z1=Math.max(...zs)+0.55;
+        for(let i=0;i<uv.count;i++)uv.setXY(i,0,(pz.getZ(i)-z0)/(z1-z0));const ao=new T.Mesh(gq,mAO);ao.renderOrder=2;grp.add(ao)}
+      for(const o of w.ops){const q0=o.q-o.o.w/2,q1=o.q+o.o.w/2,rec=o.o.k==='win'?0.1:0.06,fw=0.06;const k=o.o.k;
+        // embrasure
+        for(const [a,b] of[[Q(q0,o.z0,0),Q(q0,o.z1,0)],[Q(q1,o.z1,0),Q(q1,o.z0,0)],[Q(q0,o.z1,0),Q(q1,o.z1,0)]]){const a2=[a[0]-n[0]*rec,a[1]-n[1]*rec,a[2]],b2=[b[0]-n[0]*rec,b[1]-n[1]*rec,b[2]];add(r3Plane(T,[a,b,b2,a2]),mHab,false)}
+        if(k==='win'){if(o.z0>0.05)add(r3Plane(T,[Q(q0-0.05,o.z0,0.04),Q(q1+0.05,o.z0,0.04),Q(q1+0.05,o.z0,-rec),Q(q0-0.05,o.z0,-rec)]),mBase,false);
+          const leaves=o.o.w>=2?3:o.o.w>=1?2:1;add(r3Plane(T,[Q(q0,o.z0,-rec),Q(q1,o.z0,-rec),Q(q1,o.z1,-rec),Q(q0,o.z1,-rec)]),mGlass,false);
+          const fr=(a,b,c,d)=>add(r3Plane(T,[a,b,c,d]),mMenu,false);const off=-rec+0.01;fr(Q(q0,o.z0,off),Q(q1,o.z0,off),Q(q1,o.z0+fw,off),Q(q0,o.z0+fw,off));fr(Q(q0,o.z1-fw,off),Q(q1,o.z1-fw,off),Q(q1,o.z1,off),Q(q0,o.z1,off));
+          for(let i=0;i<=leaves;i++){const x=q0+(o.o.w-fw)*i/leaves;fr(Q(x,o.z0,off),Q(x+fw,o.z0,off),Q(x+fw,o.z1,off),Q(x,o.z1,off))}}
+        else if(k==='door'){add(r3Plane(T,[Q(q0,o.z0,-rec),Q(q1,o.z0,-rec),Q(q1,o.z1,-rec),Q(q0,o.z1,-rec)]),mMenu,false);const hb=r3Tube(T,Q(q1-0.12,o.z0+0.95,-rec+0.04),Q(q1-0.12,o.z0+1.15,-rec+0.04),0.012,mGut);if(hb)grp.add(hb)}
+        else{const gg=r3Plane(T,[Q(q0,o.z0,-rec),Q(q1,o.z0,-rec),Q(q1,o.z1,-rec),Q(q0,o.z1,-rec)]);add(gg,mGar,false)}}}
+    // toitures : dessus en couverture, sous-face, rives, gouttières
+    for(const rf of VO.roofs){const nr=rf.nrm;const flat=Math.hypot(nr[0],nr[1])<0.01;const c=rf.pts.reduce((a,q)=>[a[0]+q[0]/rf.pts.length,a[1]+q[1]/rf.pts.length,a[2]+q[2]/rf.pts.length],[0,0,0]);
+      let d=flat?[0,-1,0]:[nr[0]*nr[2],nr[1]*nr[2],-1+nr[2]*nr[2]];const dl=Math.hypot(...d);d=d.map(x=>x/dl);const e1=[d[1]*nr[2]-d[2]*nr[1],d[2]*nr[0]-d[0]*nr[2],d[0]*nr[1]-d[1]*nr[0]];
+      const top=new T.BufferGeometry();{const p2=rf.pts.map(q=>{const v=[q[0]-c[0],q[1]-c[1],q[2]-c[2]];return new T.Vector2(v[0]*e1[0]+v[1]*e1[1]+v[2]*e1[2],v[0]*d[0]+v[1]*d[1]+v[2]*d[2])});
+        const tri=T.ShapeUtils.triangulateShape(p2,[]);const pos=[],uv=[],low=[];for(const t of tri)for(const i of t){pos.push(...rf.pts[i]);uv.push(p2[i].x,-p2[i].y)}
+        top.setAttribute('position',new T.Float32BufferAttribute(pos,3));top.setAttribute('uv',new T.Float32BufferAttribute(uv,2));top.computeVertexNormals()}
+      add(top,flat?mBase:mRoof);const lowP=rf.pts.map(q=>[q[0]-nr[0]*TH,q[1]-nr[1]*TH,q[2]-nr[2]*TH]);add(r3Plane(T,lowP),mSof,false);
+      for(let i=0;i<rf.pts.length;i++){const j=(i+1)%rf.pts.length;add(r3Plane(T,[rf.pts[i],rf.pts[j],lowP[j],lowP[i]]),mHab)}
+      if(flat||p.gouttieres===false)continue;const zmn=Math.min(...rf.pts.map(q=>q[2]));const ev=rf.pts.filter(q=>q[2]<zmn+0.01);if(ev.length<2)continue;
+      const hn=[nr[0],nr[1]];const hl=Math.hypot(...hn);const ho=[hn[0]/hl*0.07,hn[1]/hl*0.07];const A=[ev[0][0]+ho[0],ev[0][1]+ho[1],zmn-0.1],B=[ev[1][0]+ho[0],ev[1][1]+ho[1],zmn-0.1];
+      // gouttière demi-ronde
+      {const m=r3Tube(T,A,B,0.065,mGut,14);if(m)grp.add(m);const lip=r3Tube(T,[A[0]+ho[0]*0.9,A[1]+ho[1]*0.9,A[2]+0.055],[B[0]+ho[0]*0.9,B[1]+ho[1]*0.9,B[2]+0.055],0.014,mGut,6);if(lip)grp.add(lip)}
+      // descente au bout de la partie fermée
+      const wl=VO.walls.find(w=>!w.x&&!w.tri&&!w.inner&&(w.n[0]*hn[0]+w.n[1]*hn[1])/hl>0.9);if(wl){const L2=wl.len/2;const q=L2-0.22;const X=[wl.c[0]+wl.r[0]*q+wl.n[0]*0.08,wl.c[1]+wl.r[1]*q+wl.n[1]*0.08];
+        const zg=clamp(zRelAt(...fromBld(X[0],X[1])),zb,0);const zt=zmn-0.45;const s1=r3Tube(T,[X[0],X[1],zg],[X[0],X[1],zt],0.04,mGut);const dd=(+p.debord||0.3)+0.07;const G0=[wl.c[0]+wl.r[0]*q+hn[0]/hl*dd,wl.c[1]+wl.r[1]*q+hn[1]/hl*dd];
+        const s2=r3Tube(T,[X[0],X[1],zt],[G0[0],G0[1],zmn-0.12],0.04,mGut);[s1,s2].forEach(x=>x&&grp.add(x));for(const zz of[zg+0.6,(zg+zt)/2,zt-0.3]){const cl=r3Tube(T,[X[0],X[1],zz],[X[0],X[1],zz+0.04],0.048,mGut);if(cl)grp.add(cl)}}}
+    // faîtage
+    if(p.toit==='2pans'||p.toit==='4pans'){const tp=/tile|canal|tileS/.test(COUV_PAT[p.couv]||'tile');for(const rf of VO.roofs){const zmx=Math.max(...rf.pts.map(q=>q[2]));const t2=rf.pts.filter(q=>q[2]>zmx-1e-3);
+      if(t2.length===2){const m=r3Tube(T,[t2[0][0],t2[0][1],t2[0][2]+0.02],[t2[1][0],t2[1][1],t2[1][2]+0.02],tp?0.12:0.06,new T.MeshStandardMaterial({color:new T.Color(roofC).multiplyScalar(0.92),roughness:0.8}),16);if(m)grp.add(m)}}}}
+  return grp}
+/* sol : capteur d'ombre transparent qui suit le terrain, et ombre d'ambiance sous le bâtiment */
+function r3Ground(T,soft){const p=S.projet,h=heights();const zb=h.zb??-p.hPlancher;const R=Math.max(p.L,p.W)/2+22;const N=72;const g=new T.PlaneGeometry(2*R,2*R,N,N);const pos=g.attributes.position;
+  const fin=(u,v)=>{let z=zRelAt(...fromBld(u,v));try{if(typeof finishedRel==='function')z=finishedRel(u,v,z)}catch(e){}return z};
+  const inFoot=(u,v)=>Math.abs(u)<p.L/2&&Math.abs(v)<p.W/2;
+  for(let i=0;i<pos.count;i++){const u=pos.getX(i),v=pos.getY(i);let z=fin(u,v);if(inFoot(u,v))z=Math.min(z,0)-0.01;pos.setZ(i,z-0.005)}g.computeVertexNormals();
+  const catcher=new T.Mesh(g,new T.ShadowMaterial({opacity:soft?0.38:0.5,color:0x14180f}));catcher.receiveShadow=true;
+  const c=document.createElement('canvas');c.width=c.height=512;const x=c.getContext('2d');const sc=512/(2*R);const blur=Math.max(3,(soft?1.4:0.8)*sc);
+  x.translate(256,256);x.scale(sc,-sc);const O=openPart&&openPart();
+  for(let k=6;k>=1;k--){const e=k*blur/sc*0.5;x.fillStyle=`rgba(0,0,0,${(soft?0.11:0.07).toFixed(3)})`;
+    if(O){const uc=O.uc;x.fillRect(Math.min(uc-O.sgn*O.Lc/2,uc+O.sgn*O.Lc/2)-e,-p.W/2-e,O.Lc+2*e,p.W+2*e);x.fillStyle=`rgba(0,0,0,${(soft?0.05:0.03).toFixed(3)})`;x.fillRect(-p.L/2-e,-p.W/2-e,p.L+2*e,p.W+2*e)}
+    else x.fillRect(-p.L/2-e,-p.W/2-e,p.L+2*e,p.W+2*e)}
+  const tx=new T.CanvasTexture(c);const ao=new T.Mesh(g.clone(),new T.MeshBasicMaterial({map:tx,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}));ao.renderOrder=1;
+  const dep=new T.Mesh(g,new T.MeshBasicMaterial({colorWrite:false}));dep.renderOrder=-1;
+  return{catcher,ao,dep,R}}
+/* environnement lumineux : ciel de la photo en dégradé, pour les reflets */
+function r3Env(T,renderer,sky,grd){const s=new T.Scene();const geo=new T.SphereGeometry(50,32,16);const col=[];const pos=geo.attributes.position;const cs=new T.Color(sky),cg=new T.Color(grd),ch=new T.Color('#f2f2ee');
+  for(let i=0;i<pos.count;i++){const y=pos.getY(i)/50;const c=y>0?ch.clone().lerp(cs,Math.min(1,y*1.6)):cg.clone().multiplyScalar(0.7);col.push(c.r,c.g,c.b)}geo.setAttribute('color',new T.Float32BufferAttribute(col,3));
+  s.add(new T.Mesh(geo,new T.MeshBasicMaterial({vertexColors:true,side:T.BackSide})));const pm=new T.PMREMGenerator(renderer);const rt=pm.fromScene(s,0.04);pm.dispose();return rt.texture}
+/* rendu du bâtiment pour une photo calée : calque RGBA de la taille de la photo, ou null */
+async function r3Layer(sh){if(!r3Ok())return null;const T=await r3Lib();const {G,V}=shotView(sh);const sun=sunFor(sh);const soft=sun.soft;
+  const a=Math.abs(G.r*D2R),m=Math.cos(a)+Math.sin(a)*Math.max(sh.w/sh.h,sh.h/sh.w);const lim=4096/Math.max(sh.w,sh.h)/m;const ss=Math.min(1.5,Math.max(0.5,lim));
+  const W2=Math.ceil(sh.w*m*ss),H2=Math.ceil(sh.h*m*ss);
+  const cv=document.createElement('canvas');cv.width=W2;cv.height=H2;const renderer=new T.WebGLRenderer({canvas:cv,alpha:true,antialias:true,preserveDrawingBuffer:true});
+  try{renderer.setPixelRatio(1);renderer.setSize(W2,H2,false);renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=soft?0.92:0.95;
+    renderer.shadowMap.enabled=true;renderer.shadowMap.type=soft?T.VSMShadowMap:T.PCFSoftShadowMap;renderer.setClearColor(0x000000,0);
+    const scene=new T.Scene();const sky=sh.sky||'#c8d4de';const st=sh.stats;const grd=(st?new T.Color().setRGB(st.r,st.g,st.b,T.SRGBColorSpace):new T.Color('#7d8a5c')).lerp(new T.Color('#8a8a86'),0.6).getStyle();scene.environment=r3Env(T,renderer,sky,grd);
+    const bld=await r3Building(T);scene.add(bld);const GR=r3Ground(T,soft);scene.add(GR.dep,GR.catcher,GR.ao);
+    scene.add(new T.HemisphereLight(new T.Color(sky),new T.Color(grd),soft?1.15:0.95));
+    const L=sun.bld;const dl=new T.DirectionalLight(soft?0xf4f2ee:0xfff4e2,soft?0.75:2.4);dl.position.set(L[0]*60,L[1]*60,L[2]*60);dl.target.position.set(0,0,0);scene.add(dl,dl.target);
+    dl.castShadow=true;dl.shadow.mapSize.set(2048,2048);const sc=dl.shadow.camera;sc.left=sc.bottom=-GR.R;sc.right=sc.top=GR.R;sc.near=1;sc.far=140;dl.shadow.bias=-0.0004;dl.shadow.normalBias=0.03;if(soft){dl.shadow.radius=14;dl.shadow.blurSamples=20}
+    const cam=new T.PerspectiveCamera(1,W2/H2,0.3,600);const C=V.C,f=V.f;const hf=2*Math.atan(Math.tan(G.hfovW/2)*m);const vf=2*Math.atan(Math.tan(hf/2)*H2/W2);cam.fov=vf/D2R;cam.up.set(0,0,1);
+    cam.position.set(C[0],C[1],C[2]);cam.lookAt(C[0]+f[0],C[1]+f[1],C[2]+f[2]);cam.updateProjectionMatrix();
+    renderer.render(scene,cam);
+    const out=document.createElement('canvas');out.width=sh.w;out.height=sh.h;const g=out.getContext('2d');g.translate(sh.w/2,sh.h/2);g.rotate(G.r*D2R);g.drawImage(cv,-W2/(2*ss),-H2/(2*ss),W2/ss,H2/ss);
+    scene.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){(Array.isArray(o.material)?o.material:[o.material]).forEach(mm=>{for(const k of['map','bumpMap','alphaMap'])mm[k]&&mm[k].dispose();mm.dispose()})}});
+    return out}finally{renderer.dispose();try{renderer.forceContextLoss()}catch(e){}}}
+/* accorde le calque 3D à la photo : teinte moyenne, voile lointain, léger flou et grain */
+function r3Match(layer,sh){const g=layer.getContext('2d');const W=layer.width,H=layer.height;const id=g.getImageData(0,0,W,H),D=id.data;
+  const {V}=shotView(sh);const mm=matchMatrix(sh)||[1,1,1];const hz=sh.haze===false?0:hazeAmt(V);const skc=(sh.sky||'#c8d4de').replace('#','');const sk=[0,2,4].map(i=>parseInt(skc.substr(i,2),16));
+  let sd=5;const rnd=()=>(sd=(sd*16807)%2147483647)/2147483647;
+  for(let i=0;i<D.length;i+=4){if(!D[i+3])continue;const nz=(rnd()-0.5)*7;for(let c=0;c<3;c++)D[i+c]=clamp(D[i+c]*mm[c]*(1-hz)+sk[c]*hz+nz,0,255)}
+  g.putImageData(id,0,0);
+  if(sh.mask&&sh.mask.length)return loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${sh.w} ${sh.h}">${maskInner(sh)}</svg>`)).then(im=>{
+    const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');x.drawImage(im,0,0,W,H);const md=x.getImageData(0,0,W,H).data;const id2=g.getImageData(0,0,W,H),E=id2.data;
+    for(let i=0;i<E.length;i+=4)E[i+3]=E[i+3]*md[i]/255;g.putImageData(id2,0,0);return layer}).catch(()=>layer);
+  return Promise.resolve(layer)}
+
 /* insertion : avant / après sur la même planche */
 function insBefore(far){const ph=S.photos,o=S.onsite||{};if(far)return ph.insFromShot2&&o.shot2?o.shot2.img:null;
   if(ph.insMode==='image')return ph.insFromShot&&o.shot&&o.shot.img?o.shot.img:(ph.ins||null);return ph.ins||null}
@@ -4216,9 +4344,10 @@ function shotOverlay(sh,opts={}){const {G,V}=shotView(sh);const s=(sh.w/2)/V.W;c
   let defs=`<filter id="${uid}vb" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="0.25"/></filter><filter id="${uid}lf" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="3.2" numOctaves="2" seed="4" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 1.15" result="a"/><feComposite in="SourceGraphic" in2="a" operator="in" result="c"/><feComponentTransfer in="n" result="sh"><feFuncA type="table" tableValues="0 .45"/></feComponentTransfer><feComposite in="sh" in2="c" operator="in" result="d"/><feBlend in="c" in2="d" mode="multiply"/></filter>`;
   skyStats(sh);let inner='';
   if(mode()==='dp-cloture'){inner=cloInsertion(V).sort((a,b)=>b.d-a.d).map(o=>o.svg).join('')}
-  else{const R=renderBuilding([V.f[0],V.f[1]],0,{V,mode:'render',sw:0.02,shadow:true,blur:sun.soft?0.7:0.14,lines:sh.lines===true,shadowK:sun.soft?0.4:0.85,sun:sun.bld,soft:sun.soft,sky:sh.sky});
+  else{const R=opts.layer?{svg:''}:renderBuilding([V.f[0],V.f[1]],0,{V,mode:'render',sw:0.02,shadow:true,blur:sun.soft?0.7:0.14,lines:sh.lines===true,shadowK:sun.soft?0.4:0.85,sun:sun.bld,soft:sun.soft,sky:sh.sky});
     const bd=V.depth([0,0,1.5]);const ve=vegeList().map(vegeLocal).map(v=>({v,d:V.depth([...toBld(...v.p),1])}));
-    const L=[...(isAmMode()?[]:[{d:bd,svg:R.svg}]),...abordsRender(V),...amRender(V,sun),...ve.map(x=>({d:x.d,svg:vegeRender(x.v,V,sun,uid)})),...scaleRefs(V)];inner=L.sort((x,y)=>y.d-x.d).map(o=>o.svg).join('')}
+    const L=[...(isAmMode()||opts.layer?[]:[{d:bd,svg:R.svg}]),...abordsRender(V),...amRender(V,sun),...ve.map(x=>({d:x.d,svg:vegeRender(x.v,V,sun,uid)})),...scaleRefs(V)].filter(o=>!opts.layer||(opts.layer==='back'?o.d>=bd:o.d<bd));inner=L.sort((x,y)=>y.d-x.d).map(o=>o.svg).join('')}
+  if(opts.layer&&!inner)return'';
   const geo=`<g transform="rotate(${G.r.toFixed(2)} ${cx} ${cy}) translate(${cx} ${cy}) scale(${s.toFixed(4)})">${inner}</g>`;
   const mm0=matchMatrix(sh);const hz=sh.haze===false?0:hazeAmt(V);const skc=(sh.sky||'#c8d4de').replace('#','');const sk=[0,2,4].map(i=>parseInt(skc.substr(i,2),16)/255);const mm=mm0||hz?[0,1,2].map(i=>(mm0?mm0[i]:1)):null;const blur=Math.max(0.25,sh.w/2600)*(1+hz*2);
   defs+=`<filter id="${uid}ph" x="0" y="0" width="100%" height="100%" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">${mm?`<feColorMatrix type="matrix" values="${(mm[0]*(1-hz)).toFixed(3)} 0 0 0 ${(hz*sk[0]).toFixed(3)}  0 ${(mm[1]*(1-hz)).toFixed(3)} 0 0 ${(hz*sk[1]).toFixed(3)}  0 0 ${(mm[2]*(1-hz)).toFixed(3)} 0 ${(hz*sk[2]).toFixed(3)}  0 0 0 1 0" result="m"/>`:'<feOffset result="m"/>'}<feGaussianBlur in="m" stdDeviation="${blur.toFixed(2)}" result="b"/><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="1" seed="7" result="n"/><feColorMatrix in="n" type="saturate" values="0" result="ng"/><feComposite in="ng" in2="b" operator="in" result="gi"/><feComponentTransfer in="gi" result="gs"><feFuncA type="linear" slope="0.07"/></feComponentTransfer><feBlend in="gs" in2="b" mode="overlay"/></filter>`;
@@ -4237,10 +4366,11 @@ function shotBase(sh){if(mode()==='dp-cloture'||isAmMode()||noBuild())return[];c
 function shotRuns(B){const runs=[];let cur=[];for(const b of B){if(cur.length&&b[0]-cur[cur.length-1][0]>3){runs.push(cur);cur=[]}cur.push(b)}if(cur.length)runs.push(cur);return runs}
 async function shotComposite(sh){const im=await loadImg(sh.img);const cv=document.createElement('canvas');cv.width=sh.w;cv.height=sh.h;const g=cv.getContext('2d');g.drawImage(im,0,0,sh.w,sh.h);
   let B=[];try{B=shotBase(sh)}catch(e){}const src=B.length?g.getImageData(0,0,sh.w,sh.h):null;
-  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${sh.w}" height="${sh.h}" viewBox="0 0 ${sh.w} ${sh.h}">${shotOverlay(sh)}</svg>`;
-  const ov=await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg));g.drawImage(ov,0,0);
+  const svgL=async o=>{const x=shotOverlay(sh,o);if(!x)return;const im2=await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${sh.w}" height="${sh.h}" viewBox="0 0 ${sh.w} ${sh.h}">${x}</svg>`));g.drawImage(im2,0,0)};
+  let L3=null;if(S.photos.ins3d!==false&&mode()!=='dp-cloture'&&!isAmMode()&&!noBuild()){try{if(!sh.stats)await new Promise(r=>{photoStats(sh);setTimeout(r,250)});L3=await r3Layer(sh);if(L3)await r3Match(L3,sh)}catch(e){console.warn('rendu 3D indisponible',e);L3=null}}
+  if(L3){await svgL({layer:'back'});g.drawImage(L3,0,0);await svgL({layer:'front'})}else await svgL({});
   // ombre de contact sur le sol de la photo (sous le bâtiment)
-  if(B.length){const runs=shotRuns(B);g.save();g.beginPath();for(const r of runs){r.forEach((b,i)=>{i?g.lineTo(b[0],b[1]-1):g.moveTo(b[0],b[1]-1)});g.lineTo(r[r.length-1][0],sh.h);g.lineTo(r[0][0],sh.h);g.closePath()}g.clip();const pm=B.reduce((a,b)=>a+b[2],0)/B.length;const sun=sunFor(sh);const k=(S.photos.insShadow??100)/100*(sun.soft?1:0.8);
+  if(B.length){const runs=shotRuns(B);g.save();g.beginPath();for(const r of runs){r.forEach((b,i)=>{i?g.lineTo(b[0],b[1]-1):g.moveTo(b[0],b[1]-1)});g.lineTo(r[r.length-1][0],sh.h);g.lineTo(r[0][0],sh.h);g.closePath()}g.clip();const pm=B.reduce((a,b)=>a+b[2],0)/B.length;const sun=sunFor(sh);const k=(S.photos.insShadow??100)/100*(sun.soft?1:0.8)*(L3?0.45:1);
     for(const [wk,al] of[[0.08,0.30],[0.18,0.20],[0.34,0.13],[0.6,0.08]]){g.strokeStyle=`rgba(22,24,16,${(al*k).toFixed(3)})`;g.lineWidth=Math.max(2,pm*wk);g.lineJoin=g.lineCap='round';
       for(const r of runs){g.beginPath();r.forEach((b,i)=>{const y=b[1]+pm*wk*0.3;i?g.lineTo(b[0],y):g.moveTo(b[0],y)});g.stroke()}}g.restore()}
   // herbe de la photo repoussée devant le pied des murs
@@ -4604,12 +4734,12 @@ async function onsiteFlow2(){if(S.demo){toast('Choisissez d\'abord votre terrain
 async function onsiteApply2(){const sh=S.onsite&&S.onsite.shot2;if(!sh)return;const G=shotGeom(sh);const ph=S.photos;ph.insFromShot2=true;ph.p8=sh.img;ph.p8pos=toLL(...G.cw);ph.p8dir=Math.round(G.h);
   try{ph.insImg2=await shotComposite(sh)}catch(e){}S.onsite.composedFor2=onsiteKey();fillInputs();renderAll();save()}
 function removeFar(){const o=S.onsite;if(o)o.shot2=null;S.photos.insImg2=null;renderAll();save()}
-function onsiteKey(){return JSON.stringify(['r3',S.photos.insGrass,S.photos.insShadow,S.projet,S.clo,S.vege||[],S.photos.vegeAge,S.photos.echelle,typeof amList==='function'?amList():0])}
+function onsiteKey(){return JSON.stringify(['r4',S.photos.ins3d,S.photos.insGrass,S.photos.insShadow,S.projet,S.clo,S.vege||[],S.photos.vegeAge,S.photos.echelle,typeof amList==='function'?amList():0])}
 async function onsiteRefresh(){const o=S.onsite;if(o&&o.shot2&&S.photos.insImg2&&o.composedFor2!==onsiteKey()){try{S.photos.insImg2=await shotComposite(o.shot2);o.composedFor2=onsiteKey();save()}catch(e){}}
   if(!o||!o.shot||(S.photos.p7!==o.shot.img&&!S.photos.insFromShot))return;if(o.composedFor===onsiteKey())return;
   try{S.photos.insImg=await shotComposite(o.shot);S.photos.insMode='image';o.composedFor=onsiteKey();save()}catch(e){}}
 setTimeout(()=>{onsiteRefresh().then(()=>{try{fillInputs();renderAll()}catch(e){}}).catch(()=>{})},1800);
-document.addEventListener('change',e=>{if(e.target.closest&&e.target.closest('[data-b="photos.insGrass"],[data-b="photos.insShadow"]'))setTimeout(()=>onsiteRefresh().then(()=>renderAll()),80)});
+document.addEventListener('change',e=>{if(e.target.closest&&e.target.closest('[data-b="photos.insGrass"],[data-b="photos.insShadow"],[data-b="photos.ins3d"]'))setTimeout(()=>onsiteRefresh().then(()=>renderAll()),80)});
 /* photo d'environnement avec position et direction automatiques */
 async function onsitePhoto(k){if(S.demo){toast('Choisissez d\'abord votre terrain.');return}
   const sh=await openCamera({title:k==='pA2'?'Bâtiments à démolir':k==='p8'?'Photo de l\'environnement lointain':'Photo de l\'environnement proche',tip:k==='p8'?'Reculez dans la rue pour montrer le terrain dans son paysage':'Depuis la rue, face au terrain'});if(!sh)return;
