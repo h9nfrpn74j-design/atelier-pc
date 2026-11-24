@@ -1006,6 +1006,8 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
         <label class="f">Intensité de l'ombre (%)<input type="range" min="0" max="150" data-b="photos.insShadow"></label>
         <label class="toggle"><input type="checkbox" data-b="photos.ins3d"> Rendu réaliste (moteur 3D)</label>
         <label class="toggle"><input type="checkbox" data-b="photos.insGrass"> Herbe de la photo au pied des murs</label>
+        <label class="toggle"><input type="checkbox" data-b="photos.insErase"> Effacer de la photo les constructions démolies</label>
+        <label class="toggle"><input type="checkbox" data-b="photos.insFgAuto"> Garder devant le projet ce qui est au premier plan (détection automatique)</label>
         <label class="toggle" id="insTreesRow"><input type="checkbox" data-b="photos.insTrees"> Arbres en arrière-plan (vue de principe)</label>
         <div class="sub">Photo de fond</div>
         <input type="file" accept="image/*,.jpg,.jpeg,.png,.webp,.heic,.heif,.tif,.tiff,.bmp,.gif,.avif,.pdf,application/pdf" data-photo="ins">
@@ -1118,7 +1120,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
 <div class="place" id="place" hidden role="dialog" aria-modal="true" aria-label="Placer le projet">
   <div class="pl-top"><div class="pl-seg pl-seg3" id="plSeg"><button type="button" id="plVPhoto">Photo</button><button type="button" id="plVSplit">Photo + plan</button><button type="button" id="plVPlan" class="on">Plan</button></div><span id="plMsg"></span></div>
   <div class="pl-photo"><svg id="plSvg" preserveAspectRatio="xMidYMid meet" hidden></svg><svg id="plMap" preserveAspectRatio="xMidYMid meet"></svg><div class="pl-pz" id="plPz"><button type="button" id="plPzIn" aria-label="Zoomer la photo">+</button><button type="button" id="plPzOut" aria-label="Dézoomer la photo">−</button><button type="button" id="plPzFit" aria-label="Photo entière">⤢</button></div><div class="pl-loupe" id="plLoupe" hidden><svg preserveAspectRatio="xMidYMid slice"><image x="0" y="0" preserveAspectRatio="none"/><g id="plLoupeOv"></g></svg></div>
-    <div class="pl-tools" id="plTools" hidden><button type="button" id="plTAnchor" class="on">🎯 Recaler</button><button type="button" data-adv id="plCMode">2 coins</button><button type="button" data-adv id="plPFine">Précis</button><button type="button" id="plTAuto">✨ Détourer</button><button type="button" data-adv id="plTWand">🪄 Baguette</button><select data-adv id="plWTol" aria-label="Tolérance de la baguette"><option value="22">Serrée</option><option value="34" selected>Normale</option><option value="50">Large</option></select><button type="button" data-adv id="plTBrush">🖌 Pinceau</button><button type="button" data-adv id="plTErase">Gomme</button><select data-adv id="plBSize" aria-label="Taille du pinceau"><option value="12">Fin</option><option value="28" selected>Moyen</option><option value="60">Large</option></select><button type="button" id="plTUndo" aria-label="Annuler">↶</button><button type="button" id="plTClear">Effacer</button><button type="button" data-adv id="plTGuide" class="on">Limites</button><button type="button" id="plTSee">👁 Photo seule</button></div>
+    <div class="pl-tools" id="plTools" hidden><button type="button" id="plTAnchor" class="on">🎯 Recaler</button><button type="button" data-adv id="plCMode">2 coins</button><button type="button" data-adv id="plPFine">Précis</button><button type="button" id="plTAuto">✨ Détourer</button><button type="button" id="plTDel" title="Peindre ce qui doit disparaître de la photo (construction démolie, objet)">🧽 À effacer</button><button type="button" data-adv id="plTWand">🪄 Baguette</button><select data-adv id="plWTol" aria-label="Tolérance de la baguette"><option value="22">Serrée</option><option value="34" selected>Normale</option><option value="50">Large</option></select><button type="button" data-adv id="plTBrush">🖌 Pinceau</button><button type="button" data-adv id="plTErase">Gomme</button><select data-adv id="plBSize" aria-label="Taille du pinceau"><option value="12">Fin</option><option value="28" selected>Moyen</option><option value="60">Large</option></select><button type="button" id="plTUndo" aria-label="Annuler">↶</button><button type="button" id="plTClear">Effacer</button><button type="button" data-adv id="plTGuide" class="on">Limites</button><button type="button" id="plTSee">👁 Photo seule</button></div>
     <div class="pl-mtools" id="plMapTools"><button type="button" id="plZin" aria-label="Zoom avant">+</button><button type="button" id="plZout" aria-label="Zoom arrière">−</button><button type="button" id="plZhouse" aria-label="Zoomer sur le projet">🎯</button><button type="button" id="plZfit" aria-label="Tout le terrain">⤢</button><button type="button" id="plTOrtho" class="on wide">Aérien</button><button type="button" id="plTVeg" class="wide">🌳<span> Végétation</span></button></div>
     <div class="pl-edit" id="plEdit" hidden><span id="plEditLbl"></span><input type="text" inputmode="decimal" id="plEditV"><span>m</span><button class="btn primary sm" type="button" id="plEditOk">OK</button><button class="btn sm" type="button" id="plEditX" aria-label="Fermer">×</button></div></div>
   <div class="pl-ctl">
@@ -1274,7 +1276,7 @@ function demoState(){
 }
 let S=loadLocal()||demoState();
 S.dossier=S.dossier||{type:'pc',exId:null,avant:null,apres:null};S.clo=S.clo||[];if(!S.projet.toitItems)S.projet.toitItems=[];if(S.regles.hClo===undefined)S.regles.hClo=null;
-{const d={ins3d:true,insGrass:true,insEye:1.6,insFocal:28,insLum:100,insSat:90,insOp:100,insMode:'auto',insAB:true,insFit:'contain',insPan:0,insTilt:0,insSpin:0,insLines:true,insShadow:100,insTrees:true,insRot:0,insFlip:false,insCon:100,insImg:null,insStyle:'photo',vegeAge:'1',echelle:false};for(const k in d)if(S.photos[k]==null)S.photos[k]=d[k];if(S.photos.insOp<60)S.photos.insOp=100}
+{const d={insErase:true,insFgAuto:true,ins3d:true,insGrass:true,insEye:1.6,insFocal:28,insLum:100,insSat:90,insOp:100,insMode:'auto',insAB:true,insFit:'contain',insPan:0,insTilt:0,insSpin:0,insLines:true,insShadow:100,insTrees:true,insRot:0,insFlip:false,insCon:100,insImg:null,insStyle:'photo',vegeAge:'1',echelle:false};for(const k in d)if(S.photos[k]==null)S.photos[k]=d[k];if(S.photos.insOp<60)S.photos.insOp=100}
 if(!S.existants)S.existants=[];if(!S.projet.nature)S.projet.nature='maison';
 function loadLocal(){try{const s=localStorage.getItem('atelier-pc');return s?unpackS(JSON.parse(s)):null}catch(e){return null}}
 let saveT;
@@ -3067,6 +3069,83 @@ function r3Match(layer,sh){const g=layer.getContext('2d');const W=layer.width,H=
     for(let i=0;i<E.length;i+=4)E[i+3]=E[i+3]*md[i]/255;g.putImageData(id2,0,0);return layer}).catch(()=>layer);
   return Promise.resolve(layer)}
 
+/* ================= Effacement des constructions démolies dans la photo (remplissage par le décor voisin) ================= */
+/* silhouettes des constructions démolies, en pixels de la photo */
+function demHulls(sh){const pr=shotPx(sh);const out=[];
+  for(const e of exDem()){const R=exRing(e);if(!R||R.length<3)continue;const c=centroid(R);const hh=(+e.hauteur||3.5)+0.35;const pts=[];
+    for(const q of R){const d=[q[0]-c[0],q[1]-c[1]];const l=Math.hypot(...d)||1;const x=q[0]+d[0]/l*0.35,y=q[1]+d[1]/l*0.35;const z0=zRelAt(x,y)-0.15;const b=toBld(x,y);for(const z of[z0,z0+hh]){const p=pr([b[0],b[1],z]);if(p)pts.push(p)}}
+    if(pts.length>2)out.push(hull2(pts))}
+  return out}
+function demMaskURL(sh){const H=S.photos.insErase===false?[]:demHulls(sh);if(!H.length&&!(sh.del&&sh.del.length))return null;const pad=Math.max(5,sh.w/180);
+  return`<svg xmlns="http://www.w3.org/2000/svg" width="${sh.w}" height="${sh.h}" viewBox="0 0 ${sh.w} ${sh.h}"><rect width="100%" height="100%" fill="#000"/>${H.map(h=>`<polygon points="${h.map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ')}" fill="#fff" stroke="#fff" stroke-width="${(2*pad).toFixed(1)}" stroke-linejoin="round"/>`).join('')}${(sh.del||[]).map(s=>s.pts.length?`<path d="M${s.pts.map(p=>p.join(' ')).join('L')}" fill="none" stroke="${s.e?'#000':'#fff'}" stroke-width="${2*s.r}" stroke-linecap="round" stroke-linejoin="round"/>`:'').join('')}</svg>`}
+async function rasterSVG(svg,W,H){const im=await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg));const c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(im,0,0,W,H);return g.getImageData(0,0,W,H).data}
+/* remplissage par correspondance de motifs (PatchMatch multi-échelle) */
+function pmInpaint(img,W,H,hole,bad){/* img Float32 RGB, hole: à remplir, bad: interdit comme source (trou + zones indifférentes) */
+  const levels=[];let cur={img,W,H,hole,bad};levels.push(cur);
+  while(Math.min(cur.W,cur.H)>48&&levels.length<5){const w2=cur.W>>1,h2=cur.H>>1;const im2=new Float32Array(w2*h2*3),ho2=new Uint8Array(w2*h2),ba2=new Uint8Array(w2*h2);
+    for(let y=0;y<h2;y++)for(let x=0;x<w2;x++){let r=0,g=0,b=0,n=0,hh=0,bb=0;for(let dy=0;dy<2;dy++)for(let dx=0;dx<2;dx++){const i=(2*y+dy)*cur.W+2*x+dx;if(cur.hole[i])hh=1;if(cur.bad[i])bb=1;if(!cur.bad[i]){r+=cur.img[i*3];g+=cur.img[i*3+1];b+=cur.img[i*3+2];n++}}
+      const j=y*w2+x;ho2[j]=hh;ba2[j]=bb;if(n){im2[j*3]=r/n;im2[j*3+1]=g/n;im2[j*3+2]=b/n}}
+    cur={img:im2,W:w2,H:h2,hole:ho2,bad:ba2};levels.push(cur)}
+  let sd=12345;const rnd=()=>(sd=(sd*16807)%2147483647)/2147483647;let nnf=null;
+  for(let L=levels.length-1;L>=0;L--){const {img:I,W:w,H:h,hole:Ho,bad:Ba}=levels[L];const R=L===levels.length-1?2:3;
+    // sources valides : patch entier hors zone interdite
+    const ok=new Uint8Array(w*h);for(let y=R;y<h-R;y++)for(let x=R;x<w-R;x++){let v=1;for(let dy=-R;dy<=R&&v;dy++)for(let dx=-R;dx<=R;dx++)if(Ba[(y+dy)*w+x+dx]){v=0;break}ok[y*w+x]=v}
+    const okL=[];for(let i=0;i<w*h;i++)if(ok[i])okL.push(i);if(!okL.length)return null;
+    const valid=new Uint8Array(w*h);for(let i=0;i<w*h;i++)valid[i]=Ba[i]&&!Ho[i]?0:1;
+    // initialisation des pixels à remplir
+    const N=new Int32Array(w*h).fill(-1);
+    if(!nnf){for(let i=0;i<w*h;i++)if(Ho[i])N[i]=okL[(rnd()*okL.length)|0];
+      // remplissage initial par diffusion depuis les bords
+      const known=new Uint8Array(w*h);for(let i=0;i<w*h;i++)known[i]=Ho[i]||(Ba[i])?0:1;let left=1,it=0;while(left&&it<400){left=0;it++;const nk=known.slice();
+        for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;if(known[i]||!Ho[i])continue;let r=0,g=0,b=0,n=0;for(const j of[x>0?i-1:-1,x<w-1?i+1:-1,y>0?i-w:-1,y<h-1?i+w:-1])if(j>=0&&known[j]){r+=I[j*3];g+=I[j*3+1];b+=I[j*3+2];n++}
+          if(n){I[i*3]=r/n;I[i*3+1]=g/n;I[i*3+2]=b/n;nk[i]=1}else left=1}known.set(nk)}}
+    else{const {W:pw}=levels[L+1];for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;if(!Ho[i])continue;const px=Math.min(pw-1,x>>1),py=Math.min(levels[L+1].H-1,y>>1);const s=nnf[py*pw+px];
+        let sx,sy;if(s>=0){sx=(s%pw)*2+(x&1);sy=((s/pw)|0)*2+(y&1)}else{const q=okL[(rnd()*okL.length)|0];sx=q%w;sy=(q/w)|0}sx=Math.min(w-1-R,Math.max(R,sx));sy=Math.min(h-1-R,Math.max(R,sy));let q=sy*w+sx;if(!ok[q])q=okL[(rnd()*okL.length)|0];N[i]=q;
+        I[i*3]=I[q*3];I[i*3+1]=I[q*3+1];I[i*3+2]=I[q*3+2]}}
+    const dist=(p,q,best)=>{const px=p%w,py=(p/w)|0,qx=q%w,qy=(q/w)|0;const ey=(qy-py)/h,ex=(qx-px)/w;const pen=6000*ey*ey+600*ex*ex;let s=0,n=0;for(let dy=-R;dy<=R;dy++){const Y=py+dy;if(Y<0||Y>=h)continue;for(let dx=-R;dx<=R;dx++){const X=px+dx;if(X<0||X>=w)continue;const a=Y*w+X;if(!valid[a])continue;const b=(qy+dy)*w+qx+dx;
+        const d0=I[a*3]-I[b*3],d1=I[a*3+1]-I[b*3+1],d2=I[a*3+2]-I[b*3+2];s+=d0*d0+d1*d1+d2*d2;n++}if(n>4&&s/n+pen>best)return 1e12}return n?s/n+pen:1e12};
+    const D=new Float64Array(w*h);const holes=[];for(let i=0;i<w*h;i++)if(Ho[i]){holes.push(i);D[i]=dist(i,N[i],1e12)}
+    const EM=L===0?2:3;
+    for(let em=0;em<EM;em++){
+      for(let itr=0;itr<4;itr++){const fw=itr%2===0;const seq=fw?holes:holes.slice().reverse();const st=fw?1:-1;
+        for(const p of seq){const x=p%w,y=(p/w)|0;
+          for(const [nx,ny] of[[x-st,y],[x,y-st]]){if(nx<0||ny<0||nx>=w||ny>=h)continue;const nb=ny*w+nx;if(!Ho[nb])continue;const c=N[nb]+st*(nx===x?w:1);if(c<0||c>=w*h||!ok[c])continue;const d=dist(p,c,D[p]);if(d<D[p]){D[p]=d;N[p]=c}}
+          let rad=Math.max(w,h);const bx=N[p]%w,by=(N[p]/w)|0;while(rad>=1){const cx=Math.round(bx+(rnd()*2-1)*rad),cy=Math.round(by+(rnd()*2-1)*rad);if(cx>=0&&cy>=0&&cx<w&&cy<h){const c=cy*w+cx;if(ok[c]){const d=dist(p,c,D[p]);if(d<D[p]){D[p]=d;N[p]=c}}}rad*=0.5}}}
+      // vote : chaque pixel prend la moyenne des patchs qui le couvrent
+      const acc=new Float32Array(w*h*4);for(const p of holes){const px=p%w,py=(p/w)|0,q=N[p],qx=q%w,qy=(q/w)|0;const wgt=1/(1+D[p]/400);
+        for(let dy=-R;dy<=R;dy++){const Y=py+dy;if(Y<0||Y>=h)continue;for(let dx=-R;dx<=R;dx++){const X=px+dx;if(X<0||X>=w)continue;const a=Y*w+X;if(!Ho[a])continue;const b=(qy+dy)*w+qx+dx;acc[a*4]+=I[b*3]*wgt;acc[a*4+1]+=I[b*3+1]*wgt;acc[a*4+2]+=I[b*3+2]*wgt;acc[a*4+3]+=wgt}}}
+      for(const p of holes)if(acc[p*4+3]>0){I[p*3]=acc[p*4]/acc[p*4+3];I[p*3+1]=acc[p*4+1]/acc[p*4+3];I[p*3+2]=acc[p*4+2]/acc[p*4+3]}
+      for(const p of holes)D[p]=dist(p,N[p],1e12)}
+    nnf=N}
+  return{img:levels[0].img,nnf}}
+/* efface les constructions démolies sur le canevas de la photo ; cover = alpha du projet (déjà caché), fg = premier plan à garder */
+async function eraseDemolished(g,sh,cover){const W=sh.w,H=sh.h;const ms=demMaskURL(sh);if(!ms)return false;const M=await rasterSVG(ms,W,H);
+  let fgd=null;if(sh.fg||(sh.mask&&sh.mask.length))fgd=await rasterSVG(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${maskInner(sh)}</svg>`,W,H);
+  let x0=W,y0=H,x1=0,y1=0;for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(M[(y*W+x)*4]>127){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}}if(x1<x0)return false;
+  const mw=Math.max(40,(x1-x0)*0.6),mh=Math.max(40,(y1-y0)*0.6);const cx0=Math.max(0,Math.floor(x0-mw)),cy0=Math.max(0,Math.floor(y0-mh)),cx1=Math.min(W-1,Math.ceil(x1+mw)),cy1=Math.min(H-1,Math.ceil(y1+mh));
+  const CW=cx1-cx0+1,CH=cy1-cy0+1;const s=Math.min(1,380/Math.max(CW,CH));const w=Math.max(8,Math.round(CW*s)),h=Math.max(8,Math.round(CH*s));
+  const src=g.getImageData(0,0,W,H);const S0=src.data;
+  const isHole=(x,y)=>{const i=(y*W+x)*4;if(M[i]<=127)return 0;if(fgd&&fgd[i]<128)return 0;if(cover&&cover[i+3]>235)return 2;return 1};
+  // image de travail réduite
+  const sc=document.createElement('canvas');sc.width=w;sc.height=h;const sg=sc.getContext('2d',{willReadFrequently:true});const tmp=document.createElement('canvas');tmp.width=CW;tmp.height=CH;tmp.getContext('2d').putImageData(g.getImageData(cx0,cy0,CW,CH),0,0);sg.drawImage(tmp,0,0,w,h);
+  const sd=sg.getImageData(0,0,w,h).data;const img=new Float32Array(w*h*3);for(let i=0;i<w*h;i++){img[i*3]=sd[i*4];img[i*3+1]=sd[i*4+1];img[i*3+2]=sd[i*4+2]}
+  const hole=new Uint8Array(w*h),bad=new Uint8Array(w*h);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){let hh=0,bb=0;const X0=cx0+Math.floor(x/s),Y0=cy0+Math.floor(y/s),X1=Math.min(cx1,cx0+Math.floor((x+1)/s)),Y1=Math.min(cy1,cy0+Math.floor((y+1)/s));
+    for(let Y=Y0;Y<=Math.max(Y0,Y1-1);Y+=Math.max(1,(Y1-Y0)>>1))for(let X=X0;X<=Math.max(X0,X1-1);X+=Math.max(1,(X1-X0)>>1)){const t=isHole(X,Y);if(t===1)hh=1;if(t||M[(Y*W+X)*4]>127)bb=1}
+    hole[y*w+x]=hh;bad[y*w+x]=bb}
+  if(!hole.some(v=>v))return false;
+  const r=pmInpaint(img,w,h,hole,bad);if(!r)return false;
+  // pleine définition : on recopie la photo d'origine aux décalages trouvés (netteté), sinon la couleur reconstruite
+  const out=new Uint8ClampedArray(S0);const amask=new Float32Array(W*H);
+  for(let Y=cy0;Y<=cy1;Y++)for(let X=cx0;X<=cx1;X++){const t=isHole(X,Y);if(t!==1)continue;const i=Y*W+X;amask[i]=1;const x=Math.min(w-1,Math.floor((X-cx0)*s)),y=Math.min(h-1,Math.floor((Y-cy0)*s));const p=y*w+x;const q=r.nnf[p];
+    let done=false;if(q>=0){const ox=(q%w)-x,oy=((q/w)|0)-y;const SX=Math.round(X+ox/s),SY=Math.round(Y+oy/s);if(SX>=0&&SY>=0&&SX<W&&SY<H&&M[(SY*W+SX)*4]<=127){const j=(SY*W+SX)*4;out[i*4]=S0[j];out[i*4+1]=S0[j+1];out[i*4+2]=S0[j+2];done=true}}
+    if(!done){out[i*4]=r.img[p*3];out[i*4+1]=r.img[p*3+1];out[i*4+2]=r.img[p*3+2]}}
+  // fondu doux sur 3 px au bord du remplissage
+  const A2=new Float32Array(W*H);const rr=3;for(let Y=Math.max(0,cy0-rr);Y<=Math.min(H-1,cy1+rr);Y++)for(let X=Math.max(0,cx0-rr);X<=Math.min(W-1,cx1+rr);X++){let s2=0,n=0;for(let d=-rr;d<=rr;d++){const XX=X+d;if(XX>=0&&XX<W){s2+=amask[Y*W+XX];n++}}A2[Y*W+X]=s2/n}
+  for(let Y=Math.max(0,cy0-rr);Y<=Math.min(H-1,cy1+rr);Y++)for(let X=Math.max(0,cx0-rr);X<=Math.min(W-1,cx1+rr);X++){let s2=0,n=0;for(let d=-rr;d<=rr;d++){const YY=Y+d;if(YY>=0&&YY<H){s2+=A2[YY*W+X];n++}}const a=amask[Y*W+X]?Math.max(0.5,s2/n):s2/n*0.0;const i=(Y*W+X)*4;if(a<=0)continue;
+    for(let c=0;c<3;c++)S0[i+c]=S0[i+c]*(1-a)+out[i+c]*a}
+  g.putImageData(src,0,0);return true}
+
 /* insertion : avant / après sur la même planche */
 function insBefore(far){const ph=S.photos,o=S.onsite||{};if(far)return ph.insFromShot2&&o.shot2?o.shot2.img:null;
   if(ph.insMode==='image')return ph.insFromShot&&o.shot&&o.shot.img?o.shot.img:(ph.ins||null);return ph.ins||null}
@@ -4250,7 +4329,10 @@ function matchMatrix(sh){const st=sh.stats;const k=(sh.match??70)/100;if(!st||!k
   const br=clamp(1+k*(lum-0.47)*0.8,0.68,1.2);const t=c=>clamp(1+k*0.35*(c/avg-1),0.9,1.1)*br;return[t(st.r),t(st.g),t(st.b)]}
 /* masque du premier plan peint au doigt */
 function maskInner(sh){const m=sh.mask||[];return`<rect x="0" y="0" width="${sh.w}" height="${sh.h}" fill="#fff"/>`+(sh.fg?`<image href="${sh.fg}" x="0" y="0" width="${sh.w}" height="${sh.h}" preserveAspectRatio="none"/>`:'')+m.map(s=>s.pts.length?`<path d="M${s.pts.map(p=>p[0].toFixed(0)+' '+p[1].toFixed(0)).join(' L')}${s.pts.length===1?' l0.1 0':''}" fill="none" stroke="${s.e?'#fff':'#000'}" stroke-width="${(s.r*2).toFixed(0)}" stroke-linecap="round" stroke-linejoin="round"/>`:'').join('')}
-function maskVis(sh){const m=sh.mask||[];if(!m.some(s=>!s.e)&&!sh.fg)return'';
+function demVis(sh){if(S.photos.insErase===false)return'';let H=[];try{H=demHulls(sh)}catch(e){}const D=sh.del||[];if(!H.length&&!D.length)return'';
+  return`<g opacity=".38" pointer-events="none">${H.map(h=>`<polygon points="${h.map(q=>q[0].toFixed(0)+','+q[1].toFixed(0)).join(' ')}" fill="#E5483B"/>`).join('')}${D.map(s=>`<path d="M${s.pts.map(p=>p[0].toFixed(0)+' '+p[1].toFixed(0)).join(' L')}${s.pts.length===1?' l0.1 0':''}" fill="none" stroke="#E5483B" stroke-width="${(s.r*2).toFixed(0)}" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}</g>`}
+function maskVis(sh){return demVis(sh)+maskVis0(sh)}
+function maskVis0(sh){const m=sh.mask||[];if(!m.some(s=>!s.e)&&!sh.fg)return'';
   return`<filter id="plWhite"><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0"/></filter><mask id="plVisM"><rect x="0" y="0" width="${sh.w}" height="${sh.h}" fill="#000"/>${sh.fg?`<image href="${sh.fg}" x="0" y="0" width="${sh.w}" height="${sh.h}" preserveAspectRatio="none" filter="url(#plWhite)"/>`:''}${m.map(s=>`<path d="M${s.pts.map(p=>p[0].toFixed(0)+' '+p[1].toFixed(0)).join(' L')}${s.pts.length===1?' l0.1 0':''}" fill="none" stroke="${s.e?'#000':'#fff'}" stroke-width="${(s.r*2).toFixed(0)}" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}</mask><rect x="0" y="0" width="${sh.w}" height="${sh.h}" fill="#3EC6FF" fill-opacity=".38" mask="url(#plVisM)"/>`}
 
 /* ================= Premier plan : détourage automatique et baguette ================= */
@@ -4308,7 +4390,7 @@ async function plFgAuto(){const sh=PL.sh;if(!sh)return;toast('Analyse de la phot
     const prev=await fgFromURL(A,sh.fg);for(let i=0;i<prev.length;i++)if(prev[i])r.m[i]=1;PL.hist.push({t:'fg',prev:sh.fg||null});sh.fg=fgToURL(A,r.m);PL.tool='wand';plRender();toast(`Premier plan détecté sur ${Math.round(r.share*100)} % de la largeur. Vérifiez : 🪄 pour ajouter un objet, Gomme pour corriger.`,7000)}catch(e){toast('Détourage impossible : '+e.message)}}
 async function plFgWand(px,py){const sh=PL.sh;try{const A=await fgAnalyse(sh);const r=fgWand(A,px,py,+($('#plWTol')&&$('#plWTol').value)||34);if(!r){toast('Zone trop grande : touchez l\'objet lui-même, ou réduisez la tolérance.',5000);return}
     const prev=await fgFromURL(A,sh.fg);for(let i=0;i<prev.length;i++)if(prev[i])r[i]=1;PL.hist.push({t:'fg',prev:sh.fg||null});sh.fg=fgToURL(A,r);plRender()}catch(e){toast('Baguette impossible : '+e.message)}}
-function plUndo(){const sh=PL.sh;if(!sh)return;const h=PL.hist.pop();if(!h){if(sh.mask&&sh.mask.length){sh.mask.pop();plRender()}return}if(h.t==='fg')sh.fg=h.prev;else if(h.t==='stroke'&&sh.mask)sh.mask.pop();plRender()}
+function plUndo(){const sh=PL.sh;if(!sh)return;const h=PL.hist.pop();if(!h){if(sh.mask&&sh.mask.length){sh.mask.pop();plRender()}return}if(h.t==='fg')sh.fg=h.prev;else if(h.t==='stroke'&&sh.mask)sh.mask.pop();else if(h.t==='del'&&sh.del)sh.del.pop();plRender()}
 
 /* ---------- végétation du projet (S.vege) ---------- */
 const VEGE={arbre:{n:'Arbre de haute tige',h:6,r:2.2},arbuste:{n:'Arbuste',h:2,r:0.9},haie:{n:'Haie',h:1.6,e:0.8}};
@@ -4365,10 +4447,16 @@ function shotBase(sh){if(mode()==='dp-cloture'||isAmMode()||noBuild())return[];c
   return[...col.values()].sort((a,b)=>a[0]-b[0])}
 function shotRuns(B){const runs=[];let cur=[];for(const b of B){if(cur.length&&b[0]-cur[cur.length-1][0]>3){runs.push(cur);cur=[]}cur.push(b)}if(cur.length)runs.push(cur);return runs}
 async function shotComposite(sh){const im=await loadImg(sh.img);const cv=document.createElement('canvas');cv.width=sh.w;cv.height=sh.h;const g=cv.getContext('2d');g.drawImage(im,0,0,sh.w,sh.h);
-  let B=[];try{B=shotBase(sh)}catch(e){}const src=B.length?g.getImageData(0,0,sh.w,sh.h):null;
+  let B=[];try{B=shotBase(sh)}catch(e){}
+  // premier plan détecté automatiquement une fois (haies, buissons devant le projet), modifiable ensuite dans les outils
+  if(S.photos.insFgAuto!==false&&!sh.fgAutoDone&&!sh.fg&&!(sh.mask&&sh.mask.length)){sh.fgAutoDone=true;try{const A=await fgAnalyse(sh);const r=fgAuto(A,sh);if(r.m)sh.fg=fgToURL(A,r.m)}catch(e){}}
   const svgL=async o=>{const x=shotOverlay(sh,o);if(!x)return;const im2=await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${sh.w}" height="${sh.h}" viewBox="0 0 ${sh.w} ${sh.h}">${x}</svg>`));g.drawImage(im2,0,0)};
   let L3=null;if(S.photos.ins3d!==false&&mode()!=='dp-cloture'&&!isAmMode()&&!noBuild()){try{if(!sh.stats)await new Promise(r=>{photoStats(sh);setTimeout(r,250)});L3=await r3Layer(sh);if(L3)await r3Match(L3,sh)}catch(e){console.warn('rendu 3D indisponible',e);L3=null}}
-  if(L3){await svgL({layer:'back'});g.drawImage(L3,0,0);await svgL({layer:'front'})}else await svgL({});
+  let OV=null;if(!L3){const x=shotOverlay(sh,{});OV=document.createElement('canvas');OV.width=sh.w;OV.height=sh.h;const im2=await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${sh.w}" height="${sh.h}" viewBox="0 0 ${sh.w} ${sh.h}">${x}</svg>`));OV.getContext('2d').drawImage(im2,0,0)}
+  // constructions démolies : effacées de la photo et remplacées par le décor voisin
+  if(S.photos.insErase!==false&&(exDem().length||(sh.del&&sh.del.length))){try{const CV=L3||OV;const cover=CV.getContext('2d').getImageData(0,0,sh.w,sh.h).data;await eraseDemolished(g,sh,cover)}catch(e){console.warn('effacement impossible',e)}}
+  const src=B.length?g.getImageData(0,0,sh.w,sh.h):null;
+  if(L3){await svgL({layer:'back'});g.drawImage(L3,0,0);await svgL({layer:'front'})}else g.drawImage(OV,0,0);
   // ombre de contact sur le sol de la photo (sous le bâtiment)
   if(B.length){const runs=shotRuns(B);g.save();g.beginPath();for(const r of runs){r.forEach((b,i)=>{i?g.lineTo(b[0],b[1]-1):g.moveTo(b[0],b[1]-1)});g.lineTo(r[r.length-1][0],sh.h);g.lineTo(r[0][0],sh.h);g.closePath()}g.clip();const pm=B.reduce((a,b)=>a+b[2],0)/B.length;const sun=sunFor(sh);const k=(S.photos.insShadow??100)/100*(sun.soft?1:0.8)*(L3?0.45:1);
     for(const [wk,al] of[[0.08,0.30],[0.18,0.20],[0.34,0.13],[0.6,0.08]]){g.strokeStyle=`rgba(22,24,16,${(al*k).toFixed(3)})`;g.lineWidth=Math.max(2,pm*wk);g.lineJoin=g.lineCap='round';
@@ -4534,7 +4622,7 @@ function tzMarks(sh,k){const tz=PL.tz;if(!tz||tz.phase==='done')return'';const p
 const PL={sh:null,done:null,view:'plan',ptrs:new Map(),g:null,guides:true,op:1,ortho:true,fine:false,snap:null,edit:null};
 function plRender(){const sh=PL.sh;const port=isPortail();const split=PL.view==='split'&&sh;const photo=(PL.view==='photo'||split)&&sh;const plan=!photo||split;
   $('#plSeg').hidden=!sh;$('#plVPhoto').classList.toggle('on',PL.view==='photo');$('#plVSplit').classList.toggle('on',!!split);$('#plVPlan').classList.toggle('on',!photo);$('.pl-photo').classList.toggle('split',!!split);
-  $('#plTools').hidden=!photo;for(const[id,t]of[['#plTAnchor','anchor'],['#plTBrush','brush'],['#plTErase','erase'],['#plTWand','wand']])$(id).classList.toggle('on',PL.tool===t);$('#plTClear').hidden=$('#plTUndo').hidden=!(PL.sh&&((PL.sh.mask&&PL.sh.mask.length)||PL.sh.fg));$('#plBSize').hidden=!(PL.tool==='brush'||PL.tool==='erase');$('#plWTol').hidden=PL.tool!=='wand';
+  $('#plTools').hidden=!photo;for(const[id,t]of[['#plTAnchor','anchor'],['#plTBrush','brush'],['#plTErase','erase'],['#plTWand','wand'],['#plTDel','del']])$(id).classList.toggle('on',PL.tool===t);$('#plTClear').hidden=$('#plTUndo').hidden=!(PL.sh&&((PL.sh.mask&&PL.sh.mask.length)||PL.sh.fg||(PL.sh.del&&PL.sh.del.length)));$('#plBSize').hidden=!(PL.tool==='brush'||PL.tool==='erase');$('#plWTol').hidden=PL.tool!=='wand';
   $('#plPz').hidden=!photo;$('#plCMode').hidden=$('#plPFine').hidden=PL.tool!=='anchor';$('#plCMode').textContent=PL.cmode==='4'?'4 coins':'2 coins';$('#plCMode').classList.toggle('on',PL.cmode==='4');$('#plPFine').classList.toggle('on',!!PL.pfine);
   $('#plNudge').hidden=!photo||PL.tool!=='anchor'||PL.selC==null;$('#plNudgeL').textContent=PL.selC==null?'':'Ajuster le coin sélectionné';
   $('#plRender').hidden=!photo;$('#plVeg').hidden=!plan||PL.veg==null;$('#plTVeg').classList.toggle('vegon',PL.veg!=null);$$('[data-veg]').forEach(b=>b.classList.toggle('on',b.dataset.veg!==''&&b.dataset.veg===PL.veg));
@@ -4544,7 +4632,7 @@ function plRender(){const sh=PL.sh;const port=isPortail();const split=PL.view===
   if(!photo)$('#plSvg').setAttribute('hidden','');if(!plan)$('#plMap').setAttribute('hidden','');
   if(photo){const svg=$('#plSvg');svg.removeAttribute('hidden');svg.setAttribute('viewBox',(PL.pz||[0,0,sh.w,sh.h]).map(v=>v.toFixed(1)).join(' '));
     const {G,V}=shotView(sh);const s=(sh.w/2)/V.W;const cx=sh.w/2,cy=sh.h/2;const tr=`rotate(${G.r.toFixed(2)} ${cx} ${cy}) translate(${cx} ${cy}) scale(${s.toFixed(4)})`;
-    svg.innerHTML=`<image href="${sh.img}" x="0" y="0" width="${sh.w}" height="${sh.h}" preserveAspectRatio="none"/>`+(PL.guides?`<g transform="${tr}">${shotGuides(V)}</g>`:'')+`<g opacity="${PL.op}">${shotOverlay(sh)}</g>`+`<g id="plVis" pointer-events="none">${PL.tool==='brush'||PL.tool==='erase'?maskVis(sh):''}</g>`+(PL.tool==='anchor'?`<g id="plCorners">${cornersSVG(sh)}</g>`:'')+(()=>{return'';const a=shotProject(sh,anchorWorld());if(!a)return'';const r=sh.w/60;return`<g pointer-events="none"><circle cx="${a[0].toFixed(1)}" cy="${a[1].toFixed(1)}" r="${r.toFixed(1)}" fill="none" stroke="#ff5a4a" stroke-width="${(r/4).toFixed(1)}"/><circle cx="${a[0].toFixed(1)}" cy="${a[1].toFixed(1)}" r="${(r/4).toFixed(1)}" fill="#ff5a4a"/></g>`})()}
+    svg.innerHTML=`<image href="${sh.img}" x="0" y="0" width="${sh.w}" height="${sh.h}" preserveAspectRatio="none"/>`+(PL.guides?`<g transform="${tr}">${shotGuides(V)}</g>`:'')+`<g opacity="${PL.op}">${shotOverlay(sh)}</g>`+`<g id="plVis" pointer-events="none">${PL.tool==='brush'||PL.tool==='erase'||PL.tool==='wand'?maskVis(sh):PL.tool==='del'?demVis(sh):''}</g>`+(PL.tool==='anchor'?`<g id="plCorners">${cornersSVG(sh)}</g>`:'')+(()=>{return'';const a=shotProject(sh,anchorWorld());if(!a)return'';const r=sh.w/60;return`<g pointer-events="none"><circle cx="${a[0].toFixed(1)}" cy="${a[1].toFixed(1)}" r="${r.toFixed(1)}" fill="none" stroke="#ff5a4a" stroke-width="${(r/4).toFixed(1)}"/><circle cx="${a[0].toFixed(1)}" cy="${a[1].toFixed(1)}" r="${(r/4).toFixed(1)}" fill="#ff5a4a"/></g>`})()}
   if(plan){const m=$('#plMap');m.removeAttribute('hidden');m.innerHTML=plMapSVG();m.setAttribute('viewBox',PL.mapVB.join(' '))}
   const cm=isAmMode()?(PL.cmode==='4'?`Tirez les 4 ronds sur les angles ${isPergMode()?'de la pergola, au sol':'du bassin'}.`:`Tirez les 2 ronds rouges sur deux angles ${isPergMode()?'de la pergola, au sol':'du bassin'} (côté rue).`)+' <span class="more">ⓘ</span>':(PL.cmode==='4'?(port?'Tirez les 4 ronds sur les coins du portail.':'Tirez les 4 ronds sur les angles de la maison, au pied des murs.'):(port?'Tirez les 2 ronds rouges sur le bas du portail, au sol.':'Tirez les 2 ronds rouges sur les angles de la façade avant, au pied des murs.'))+(PL.msgMore?' La taille et la perspective se règlent seules. Pincez pour zoomer la photo ; touchez un rond puis les flèches pour l\'ajuster au pixel. <span class="more" data-msgless>moins</span>':' <span class="more" data-msgmore>ⓘ</span>');
   $('#plMsg').innerHTML=mode()==='dp-arbres'?(PL.veg==='del'?'Touchez un arbre pour le <b>retirer</b>.':'<b>Touchez chaque arbre à abattre</b> sur la vue aérienne. Deux doigts : zoom.'):photo&&PL.tool==='anchor'&&PL.tz&&PL.tz.phase!=='done'?tzMsg():photo&&PL.tool==='anchor'&&PL.tz&&PL.tz.phase==='done'?'<b>Calé ✓</b> Vérifiez l\'insertion. Pour affiner, tirez un rond rouge ; « 🎯 Recaler » pour recommencer.':photo&&PL.tool==='wand'?'<b>Touchez un objet</b> qui doit passer <b>devant</b> la construction (haie, arbre, muret, voiture) : il est détouré tout seul.':photo&&PL.tool==='brush'?'<b>Peignez au doigt</b> ce qui doit rester <b>devant</b> la maison (haie, arbre, clôture, voiture) : ces zones repassent au premier plan. Zone peinte en bleu.':
@@ -4624,6 +4712,7 @@ function moveBy(d){if(isPortail()){const c=S.clo.find(o=>o.kind==='portail');con
 function ptrDown(e,which){e.preventDefault();const el=e.currentTarget;try{el.setPointerCapture(e.pointerId)}catch(_){}PL.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(PL.ptrs.size===2){const [a,b]=[...PL.ptrs.values()];if(which==='photo'){const sh=PL.sh;PL.g={two:true,pz:true,dist:Math.hypot(b.x-a.x,b.y-a.y),mid:[(a.x+b.x)/2,(a.y+b.y)/2],vb:(PL.pz||[0,0,sh.w,sh.h]).slice()};loupe(sh,null);return}PL.g={two:true,dist:Math.hypot(b.x-a.x,b.y-a.y),mid:[(a.x+b.x)/2,(a.y+b.y)/2],fov:PL.sh?+PL.sh.pose.fov||66:66,bb:PL.zoomBB&&PL.zoomBB.slice()};return}
   if(which==='photo'&&PL.tool==='wand'){const [px,py]=svgPtOf($('#plSvg'),e);plFgWand(px,py);return}
+  if(which==='photo'&&PL.tool==='del'){const [px,py]=svgPtOf($('#plSvg'),e);const r=+$('#plBSize').value*phK(PL.sh);PL.sh.del=PL.sh.del||[];const st={e:0,r:Math.round(r),pts:[[px,py]]};PL.sh.del.push(st);PL.hist.push({t:'del'});PL.g={stroke:st};plMaskLive();return}
   if(which==='photo'&&(PL.tool==='brush'||PL.tool==='erase')){const [px,py]=svgPtOf($('#plSvg'),e);const r=+$('#plBSize').value*phK(PL.sh);PL.sh.mask=PL.sh.mask||[];const st={e:PL.tool==='erase'?1:0,r:Math.round(r),pts:[[px,py]]};PL.sh.mask.push(st);PL.hist.push({t:'stroke'});PL.g={stroke:st};plMaskLive();return}
   if(which==='photo'&&PL.tool==='anchor'&&PL.tz&&PL.tz.phase!=='done'){const [px,py]=svgPtOf($('#plSvg'),e);PL.g={tzt:true,pt:[px,py],x:e.clientX,y:e.clientY,vb:(PL.pz||[0,0,PL.sh.w,PL.sh.h]).slice(),moved:false};return}
   if(which==='photo'){const [px,py]=svgPtOf($('#plSvg'),e);const pix=cornerPix(PL.sh);if(!pix||!pix.every(Boolean)){PL.g=null;return}const k=phK(PL.sh);const CPf=cornerPlane().front;
@@ -4679,7 +4768,7 @@ $('#plPzIn').onclick=()=>pzZoom(0.6);$('#plPzOut').onclick=()=>pzZoom(1.6);$('#p
 $('#plSvg').addEventListener('wheel',e=>{if(!PL.sh)return;e.preventDefault();pzZoom(e.deltaY>0?1.2:0.83)},{passive:false});
 $$('[data-nudge]').forEach(b=>b.onclick=()=>{const sh=PL.sh;if(PL.selC==null)return;const px=cornerPix(sh);if(!px||!px.every(Boolean))return;const [dx,dy]=b.dataset.nudge.split(',').map(Number);const st=(PL.pfine?0.5:2)*phK(sh);
   const T=px.map(q=>q.slice());T[PL.selC]=[T[PL.selC][0]+dx*st,T[PL.selC][1]+dy*st];solveCorners(sh,T);plRender()});$('#plTBrush').onclick=()=>{PL.tool='brush';plRender()};$('#plTErase').onclick=()=>{PL.tool='erase';plRender()};
-$('#plTClear').onclick=()=>{if(PL.sh){PL.hist.push({t:'fg',prev:PL.sh.fg||null});PL.sh.mask=[];PL.sh.fg=null;plRender()}};$('#plTWand').onclick=()=>{PL.tool='wand';plRender()};$('#plTAuto').onclick=()=>plFgAuto();$('#plTUndo').onclick=()=>plUndo();
+$('#plTClear').onclick=()=>{if(PL.sh){PL.hist.push({t:'fg',prev:PL.sh.fg||null});PL.sh.mask=[];PL.sh.fg=null;PL.sh.del=[];PL.sh.fgAutoDone=true;plRender()}};$('#plTWand').onclick=()=>{PL.tool='wand';plRender()};$('#plTDel').onclick=()=>{PL.tool=PL.tool==='del'?'anchor':'del';plRender();if(PL.tool==='del')toast('Peignez ce qui doit disparaître de la photo. Les constructions marquées « à démolir » sont déjà effacées (zone rouge).',6000)};$('#plTAuto').onclick=()=>plFgAuto();$('#plTUndo').onclick=()=>plUndo();
 $('#plTVeg').onclick=()=>{PL.veg=PL.veg==null?'arbre':null;PL.vegA=null;plRender()};$$('[data-veg]').forEach(b=>b.onclick=()=>{PL.veg=b.dataset.veg===''?(mode()==='dp-arbres'?'abat':null):b.dataset.veg;PL.vegA=null;plRender()});
 $('#plSun').onchange=e=>{const sh=PL.sh;const sf=sunFor(sh);sh.sun={mode:e.target.value,az:Math.round(sf.az),el:Math.round(sf.el)};plRender()};
 $('#plSunAz').oninput=e=>{PL.sh.sun={...(PL.sh.sun||{}),mode:'manuel',az:+e.target.value};plRender()};$('#plSunEl').oninput=e=>{PL.sh.sun={...(PL.sh.sun||{}),mode:'manuel',el:+e.target.value};plRender()};
@@ -4734,12 +4823,12 @@ async function onsiteFlow2(){if(S.demo){toast('Choisissez d\'abord votre terrain
 async function onsiteApply2(){const sh=S.onsite&&S.onsite.shot2;if(!sh)return;const G=shotGeom(sh);const ph=S.photos;ph.insFromShot2=true;ph.p8=sh.img;ph.p8pos=toLL(...G.cw);ph.p8dir=Math.round(G.h);
   try{ph.insImg2=await shotComposite(sh)}catch(e){}S.onsite.composedFor2=onsiteKey();fillInputs();renderAll();save()}
 function removeFar(){const o=S.onsite;if(o)o.shot2=null;S.photos.insImg2=null;renderAll();save()}
-function onsiteKey(){return JSON.stringify(['r4',S.photos.ins3d,S.photos.insGrass,S.photos.insShadow,S.projet,S.clo,S.vege||[],S.photos.vegeAge,S.photos.echelle,typeof amList==='function'?amList():0])}
+function onsiteKey(){return JSON.stringify(['r5',S.photos.insErase,S.photos.insFgAuto,S.existants.map(e=>[e.statut,e.c,e.L,e.W,e.rot,e.hauteur]),S.photos.ins3d,S.photos.insGrass,S.photos.insShadow,S.projet,S.clo,S.vege||[],S.photos.vegeAge,S.photos.echelle,typeof amList==='function'?amList():0])}
 async function onsiteRefresh(){const o=S.onsite;if(o&&o.shot2&&S.photos.insImg2&&o.composedFor2!==onsiteKey()){try{S.photos.insImg2=await shotComposite(o.shot2);o.composedFor2=onsiteKey();save()}catch(e){}}
   if(!o||!o.shot||(S.photos.p7!==o.shot.img&&!S.photos.insFromShot))return;if(o.composedFor===onsiteKey())return;
   try{S.photos.insImg=await shotComposite(o.shot);S.photos.insMode='image';o.composedFor=onsiteKey();save()}catch(e){}}
 setTimeout(()=>{onsiteRefresh().then(()=>{try{fillInputs();renderAll()}catch(e){}}).catch(()=>{})},1800);
-document.addEventListener('change',e=>{if(e.target.closest&&e.target.closest('[data-b="photos.insGrass"],[data-b="photos.insShadow"],[data-b="photos.ins3d"]'))setTimeout(()=>onsiteRefresh().then(()=>renderAll()),80)});
+document.addEventListener('change',e=>{if(e.target.closest&&e.target.closest('[data-b="photos.insErase"],[data-b="photos.insFgAuto"],[data-b="photos.insGrass"],[data-b="photos.insShadow"],[data-b="photos.ins3d"]'))setTimeout(()=>onsiteRefresh().then(()=>renderAll()),80)});
 /* photo d'environnement avec position et direction automatiques */
 async function onsitePhoto(k){if(S.demo){toast('Choisissez d\'abord votre terrain.');return}
   const sh=await openCamera({title:k==='pA2'?'Bâtiments à démolir':k==='p8'?'Photo de l\'environnement lointain':'Photo de l\'environnement proche',tip:k==='p8'?'Reculez dans la rue pour montrer le terrain dans son paysage':'Depuis la rue, face au terrain'});if(!sh)return;
