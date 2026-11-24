@@ -1276,6 +1276,7 @@ function demoState(){
     ui:{tab:'pcmi2',yaw3d:215,modeNb:false,modeVoie:false,zoom:1,sel:null,imSide:'long'}
   };
 }
+var PRINTING=false;
 let S=loadLocal()||demoState();
 S.dossier=S.dossier||{type:'pc',exId:null,avant:null,apres:null};S.clo=S.clo||[];if(!S.projet.toitItems)S.projet.toitItems=[];if(S.regles.hClo===undefined)S.regles.hClo=null;
 {const d={insErase:true,insFgAuto:true,ins3d:true,insGrass:true,insEye:1.6,insFocal:28,insLum:100,insSat:90,insOp:100,insMode:'auto',insAB:true,insFit:'contain',insPan:0,insTilt:0,insSpin:0,insLines:true,insShadow:100,insTrees:true,insRot:0,insFlip:false,insCon:100,insImg:null,insStyle:'photo',vegeAge:'1',echelle:false};for(const k in d)if(S.photos[k]==null)S.photos[k]=d[k];if(S.photos.insOp<60)S.photos.insOp=100}
@@ -1988,7 +1989,7 @@ function svgMasse(){
     const c1=[q[0]+L*Math.sin(br-0.4),q[1]+L*Math.cos(br-0.4)],c2=[q[0]+L*Math.sin(br+0.4),q[1]+L*Math.cos(br+0.4)];void dv;
     o+=`<g data-drag="${key}" style="cursor:move">${polyS([q,c1,c2],`fill="rgba(174,51,40,.15)" stroke="#AE3328" stroke-width="${0.2*k}"`)}<circle cx="${q[0]}" cy="${-q[1]}" r="${1.9*k}" fill="#fff" stroke="#AE3328" stroke-width="${0.3*k}"/>${textS(q,key==='p7'?'7':key==='p8'?'8':'I',2*k,'text-anchor="middle" dominant-baseline="central" fill="#AE3328" font-weight="700"')}</g>`}
   // limites de référence et sélection
-  { const R=implRefs(); [[R.A,'1'],[R.B,'2'],...(R.P&&R.P!==R.A&&R.P!==R.B?[[R.P,'∥']]:[])].forEach(([e,l])=>{if(!e)return;o+=lineS(e.a,e.b,`stroke="rgba(30,90,86,.35)" stroke-width="${1.6*k}" stroke-linecap="round" pointer-events="none"`);
+  if(!PRINTING){ const R=implRefs(); [[R.A,'1'],[R.B,'2'],...(R.P&&R.P!==R.A&&R.P!==R.B?[[R.P,'∥']]:[])].forEach(([e,l])=>{if(!e)return;o+=lineS(e.a,e.b,`stroke="rgba(30,90,86,.35)" stroke-width="${1.6*k}" stroke-linecap="round" pointer-events="none"`);
       const m=[e.mid[0]+e.n[0]*2.4*k,e.mid[1]+e.n[1]*2.4*k];o+=`<g pointer-events="none"><circle cx="${m[0].toFixed(3)}" cy="${(-m[1]).toFixed(3)}" r="${1.5*k}" fill="#1E5A56"/>${textS(m,l,1.9*k,'text-anchor="middle" dominant-baseline="central" fill="#fff" font-weight="700"')}</g>`});
     if(S.ui.sel==='bat')o+=polyS(B.corners,`fill="none" stroke="#1E5A56" stroke-width="${0.6*k}" stroke-dasharray="${1.2*k} ${0.6*k}" pointer-events="none"`); }
   o+=alMasseEdit(k)+amMasse(k);o+=`<g pointer-events="none">${vegeMasse(k)}</g>`;if(MODE==='dp-arbres')o+=arbMasse(k);
@@ -4200,7 +4201,7 @@ $('#bSave').onclick=()=>{const blob=new Blob([packS()],{type:'application/json'}
   saveBlob(blob,`permis-${(S.terrain.commune||'projet').toLowerCase().replace(/[^a-z0-9]+/g,'-')}-${parcelRefs().replace(/[^A-Za-z0-9]+/g,'')}.json`);if(!(IOS&&canShareFiles()))toast('Projet enregistré dans vos téléchargements.')};
 $('#bOpen').onclick=()=>$('#fOpen').click();
 $('#fOpen').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const j=unpackS(JSON.parse(await f.text()));if(!j.terrain||!j.projet)throw new Error('fichier non reconnu');S=Object.assign(demoState(),j);if(!j.existants)S.existants=[];mapCache={};fillInputs();renderExList();renderAll();save();toast('Projet ouvert.')}catch(err){toast('Impossible d\'ouvrir ce fichier : '+err.message)}e.target.value=''});
-function doPrint(only){$$('.wrap').forEach(w=>w.classList.toggle('skip',w.id==='w-checks'||(only&&w.id!=='w-'+only)));window.print();setTimeout(()=>$$('.wrap').forEach(w=>w.classList.remove('skip')),500)}
+function doPrint(only){PRINTING=true;try{renderAll()}catch(e){}setTimeout(()=>{PRINTING=false;try{renderAll()}catch(e){}},1500);$$('.wrap').forEach(w=>w.classList.toggle('skip',w.id==='w-checks'||(only&&w.id!=='w-'+only)));window.print();setTimeout(()=>$$('.wrap').forEach(w=>w.classList.remove('skip')),500)}
 $('#bPdf').onclick=()=>pdfDossier();$('#bZip').onclick=()=>zipDepot();$('#bCerfa').onclick=()=>cerfaRempli();
 $('#bPrint').onclick=()=>{toast('Choisissez « Enregistrer au format PDF » et désactivez les marges et en-têtes du navigateur.',6000);setTimeout(()=>doPrint(null),300)};
 $('#bPrintOne').onclick=()=>{if(S.ui.tab==='checks'){toast('Sélectionnez une pièce à imprimer.');return}doPrint(S.ui.tab)};
@@ -5152,7 +5153,7 @@ function alDefault(){const ve=voieMain();const P=S.projet;const door=frontPt();c
   const mid=[(start[0]+end[0])/2,(start[1]+end[1])/2];P.alTrace=[start,mid,end].map(q=>[Math.round(q[0]*100)/100,Math.round(q[1]*100)/100]);if(!(+P.alW0>0))P.alW0=3.5;if(!(+P.alW1>0))P.alW1=+P.alW0}
 function alSnap(i,q){const T=S.projet.alTrace;if(i!==0&&i!==T.length-1)return q;const g=S.clo&&S.clo.find(c=>c.kind==='portail'||c.kind==='portillon');const gs=g&&cloSeg(g);
   if(gs){const m=[(gs.p0[0]+gs.p1[0])/2,(gs.p0[1]+gs.p1[1])/2];if(hyp(m[0]-q[0],m[1]-q[1])<2)return m}const E=alEdgeAt(q,1.2);return E?E.q.slice():q}
-function alMasseEdit(k){if(!S.ui.alEdit||A1MODE||!alTrace())return'';const T=S.projet.alTrace;let o='';const C=alCenter();
+function alMasseEdit(k){if(PRINTING||!S.ui.alEdit||A1MODE||!alTrace())return'';const T=S.projet.alTrace;let o='';const C=alCenter();
   o+=`<polyline class="al-h" points="${C.map(q=>q[0].toFixed(3)+','+(-q[1]).toFixed(3)).join(' ')}" fill="none" stroke="#1E5A56" stroke-width="${0.25*k}" stroke-dasharray="${0.8*k} ${0.5*k}" pointer-events="none"/>`;
   for(let i=0;i<T.length-1;i++){const m=[(T[i][0]+T[i+1][0])/2,(T[i][1]+T[i+1][1])/2];o+=`<g class="al-h" data-aladd="${i}" style="cursor:copy"><circle cx="${m[0].toFixed(3)}" cy="${(-m[1]).toFixed(3)}" r="${1.6*k}" fill="#fff" fill-opacity=".9" stroke="#1E5A56" stroke-width="${0.2*k}"/>${textS(m,'+',2.6*k,'text-anchor="middle" dominant-baseline="central" fill="#1E5A56" font-weight="700" pointer-events="none"')}</g>`}
   T.forEach((q,i)=>{const on=S.ui.sel==='al:'+i;const end=i===0||i===T.length-1;o+=`<circle class="al-h" data-drag="al:${i}" style="cursor:move" cx="${q[0].toFixed(3)}" cy="${(-q[1]).toFixed(3)}" r="${(end?2.4:2.1)*k}" fill="${on?'#1E5A56':'#fff'}" stroke="#1E5A56" stroke-width="${0.35*k}"/>`});
@@ -5194,7 +5195,7 @@ function alRefresh(){save();renderAll();if(!$('#wiz').hidden)wzRender()}
 document.addEventListener('change',e=>{const el=e.target.closest('[data-al="mode"]');if(!el)return;const P=S.projet;P.alMode=el.value;if(P.alMode==='libre'){if(!Array.isArray(P.alTrace)||P.alTrace.length<2)alDefault();alEditOn()}else S.ui.alEdit=false;alRefresh()});
 function alEditOn(){S.ui.alEdit=true;if(!$('#wiz').hidden)wzClose();goTab('pcmi2');if(isMobile())setView('sheet');toast('Faites glisser les ronds pour tracer la cour. « + » ajoute un point.')}
 document.addEventListener('click',e=>{const b=e.target.closest('button[data-al]');if(!b)return;const k=b.dataset.al;if(k==='edit'){if(S.ui.alEdit){S.ui.alEdit=false;S.ui.sel=null}else alEditOn()}else if(k==='reset'){alDefault();alEditOn()}alRefresh()});
-window.addEventListener('beforeprint',()=>{if(S.ui.alEdit){S.ui.alEdit=false;renderAll()}});
+window.addEventListener('beforeprint',()=>{if(!PRINTING){PRINTING=true;try{renderAll()}catch(e){}}});window.addEventListener('afterprint',()=>{PRINTING=false;try{renderAll()}catch(e){}});
 document.addEventListener('change',e=>{const el=e.target.closest('[data-ab]');if(!el)return;const k=el.dataset.ab;S.projet[k]=el.type==='checkbox'?el.checked:el.type==='number'?+el.value:el.value;save();schedule();if(!$('#wiz').hidden)wzRender()});
 document.addEventListener('click',async e=>{if(e.target.closest('[data-far]')){await onsiteFlow2();if(!$('#wiz').hidden)wzRender()}else if(e.target.closest('[data-farx]')){removeFar();if(!$('#wiz').hidden)wzRender()}});
 /* comparaison avant / après */
@@ -5404,7 +5405,8 @@ function loadLib(k){if(libP[k])return libP[k];libP[k]=new Promise((res,rej)=>{co
 const fileSafe=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9-]+/g,'_').replace(/^_|_$/g,'');
 function pdfBusy(msg){let b=$('#pdfBusy');if(!msg){if(b)b.remove();return}if(!b){b=document.createElement('div');b.id='pdfBusy';b.className='pdf-busy';document.body.appendChild(b)}b.innerHTML=`<div><b>${esc(msg)}</b><span>Ne fermez pas la page.</span></div>`}
 /* une planche -> image haute définition */
-async function sheetCanvas(id){renderSheet(id);const src=$('#w-'+id+' .sheet');if(!src)return null;const host=document.createElement('div');host.className='pdf-host';const cl=src.cloneNode(true);cl.style.transform='none';cl.style.boxShadow='none';
+async function sheetCanvas(id){const was=PRINTING;PRINTING=true;try{return await sheetCanvas0(id)}finally{PRINTING=was;if(!was)try{renderSheet(id)}catch(e){}}}
+async function sheetCanvas0(id){renderSheet(id);const src=$('#w-'+id+' .sheet');if(!src)return null;const host=document.createElement('div');host.className='pdf-host';const cl=src.cloneNode(true);cl.style.transform='none';cl.style.boxShadow='none';
   cl.querySelectorAll('.nadd').forEach(n=>{if(!n.textContent.trim())n.remove();else{n.removeAttribute('contenteditable');n.style.border='0';n.style.background='none'}});cl.querySelectorAll('.todo').forEach(t=>t.style.background='none');
   host.appendChild(cl);document.body.appendChild(host);try{cl.querySelectorAll('svg[data-dc]').forEach(v=>delete v.dataset.dc);declutter(cl)}catch(e){}
   await Promise.all([...cl.querySelectorAll('img')].map(im=>im.complete?0:new Promise(r=>{im.onload=im.onerror=r;setTimeout(r,6000)})));
