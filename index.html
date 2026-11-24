@@ -5536,15 +5536,29 @@ function pdfBusy(msg){let b=$('#pdfBusy');if(!msg){if(b)b.remove();return}if(!b)
 /* une planche -> image haute définition */
 async function sheetCanvas(id){const was=PRINTING;PRINTING=true;try{return await sheetCanvas0(id)}finally{PRINTING=was;if(!was)try{renderSheet(id)}catch(e){}}}
 async function sheetCanvas0(id){renderSheet(id);const src=$('#w-'+id+' .sheet');if(!src)return null;const host=document.createElement('div');host.className='pdf-host';const cl=src.cloneNode(true);cl.style.transform='none';cl.style.boxShadow='none';
-  cl.querySelectorAll('.nadd').forEach(n=>{if(!n.textContent.trim())n.remove();else{n.removeAttribute('contenteditable');n.style.border='0';n.style.background='none'}});cl.querySelectorAll('.todo').forEach(t=>t.style.background='none');
+  cl.querySelectorAll('.nadd').forEach(n=>{if(!n.textContent.trim())n.remove();else{n.removeAttribute('contenteditable');n.style.border='0';n.style.background='none'}});cl.querySelectorAll('.todo').forEach(t=>t.style.background='none');cl.querySelectorAll('.notice-body h2,.notice-body h3').forEach(hh=>{let n=hh.nextElementSibling;while(n&&!n.textContent.trim())n=n.nextElementSibling;if(!n||(/^H[23]$/.test(n.tagName)&&(hh.tagName==='H3'||n.tagName==='H2')))hh.remove()});
   host.appendChild(cl);document.body.appendChild(host);try{cl.querySelectorAll('svg[data-dc]').forEach(v=>delete v.dataset.dc);declutter(cl)}catch(e){}
+  try{paginate(cl)}catch(e){}
   await Promise.all([...cl.querySelectorAll('img')].map(im=>im.complete?0:new Promise(r=>{im.onload=im.onerror=r;setTimeout(r,6000)})));
   try{return await html2canvas(cl,{scale:2.4,useCORS:true,backgroundColor:'#ffffff',logging:false,imageTimeout:8000})}finally{host.remove()}}
+/* pages A4 portrait : aucun paragraphe coupé, un titre n'est jamais laissé seul en bas de page */
+function paginate(cl){if(!cl.classList.contains('port'))return;const body=cl.querySelector('.notice-body,.cerfa');if(!body)return;const W=cl.getBoundingClientRect().width;const mm=W/210;const pageH=297*mm,mt=12*mm,mb=12*mm;
+  const top0=()=>cl.getBoundingClientRect().top;let limit=pageH-mb;const kids=[...body.children].filter(e=>e.offsetHeight>0);
+  for(let i=0;i<kids.length;i++){const el=kids[i];const r=el.getBoundingClientRect();const t=r.top-top0(),b=r.bottom-top0();if(b<=limit)continue;
+    if(r.height>pageH-mt-mb){while(b>limit)limit+=pageH-mt-mb;continue}
+    let mv=el;const pv=kids[i-1];if(pv&&/^H[1-4]$/.test(pv.tagName)){mv=pv;const pv2=kids[i-2];if(pv2&&/^H[1-4]$/.test(pv2.tagName))mv=pv2}
+    const mt0=mv.getBoundingClientRect().top-top0();const cs=getComputedStyle(mv);mv.style.marginTop=(parseFloat(cs.marginTop)||0)+(limit-mt0)+4*mm+'px';limit+=pageH-mt-mb;void t}}
 /* ajoute une planche au document (découpée si plus haute qu'une page) */
 function addCanvas(doc,c){const land=c.width>c.height;const W=land?297:210,H=land?210:297;const pageH=Math.round(c.width*H/W);let first=true;
   if(c.height>pageH&&c.height<=pageH*1.15){const k=pageH/c.height;const p=document.createElement('canvas');p.width=c.width;p.height=pageH;const g=p.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,p.width,p.height);g.drawImage(c,(c.width-c.width*k)/2,0,c.width*k,pageH);c=p}
-  for(let y=0;y<c.height-4;y+=pageH){const h=Math.min(pageH,c.height-y);const p=document.createElement('canvas');p.width=c.width;p.height=pageH;const g=p.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,p.width,p.height);g.drawImage(c,0,y,c.width,h,0,0,c.width,h);
-    if(doc.__n++)doc.addPage([W,H],land?'l':'p');else{doc.deletePage(1);doc.addPage([W,H],land?'l':'p')}doc.addImage(p.toDataURL('image/jpeg',0.9),'JPEG',0,0,W,H,undefined,'FAST');first=false}
+  // découpage en pages : coupe sur une ligne blanche (jamais au milieu d'une ligne de texte), marges hautes et basses sur les pages suivantes
+  const mm=c.width/W,mt=Math.round(12*mm),mb=Math.round(12*mm);const cg=c.getContext('2d',{willReadFrequently:true});
+  const blank=yy=>{const d=cg.getImageData(0,yy,c.width,1).data;for(let i=0;i<d.length;i+=12)if(d[i]<235||d[i+1]<235||d[i+2]<235)return false;return true};
+  let y=0,n=0;while(y<c.height-4){const top=n?mt:0;const avail=pageH-top-(c.height-y>pageH-top?mb:0);let end=Math.min(c.height,y+avail);
+    if(end<c.height){let e=end;const lim=Math.max(y+avail*0.6,y+1);while(e>lim&&!(blank(e)&&blank(e-1)&&blank(e-2)))e--;if(e>lim)end=e}
+    const h=end-y;const p=document.createElement('canvas');p.width=c.width;p.height=pageH;const g=p.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,p.width,p.height);g.drawImage(c,0,y,c.width,h,0,top,c.width,h);
+    if(doc.__n++)doc.addPage([W,H],land?'l':'p');else{doc.deletePage(1);doc.addPage([W,H],land?'l':'p')}doc.addImage(p.toDataURL('image/jpeg',0.9),'JPEG',0,0,W,H,undefined,'FAST');first=false;y=end;n++;
+    while(y<c.height-4&&blank(y))y++}
   void first}
 function newDoc(){const {jsPDF}=window.jspdf;const d=new jsPDF({unit:'mm',format:'a4',orientation:'l',compress:true});d.__n=0;d.setProperties({title:'Dossier '+(mode()==='pc'?'de permis de construire':'de déclaration préalable'),creator:'Atelier PC'});return d}
 function dossierName(){const D=S.dem;return[mode()==='pc'?'PC':'DP',fileSafe(S.terrain.commune||''),fileSafe(D.nom||'')].filter(Boolean).join('_')}
