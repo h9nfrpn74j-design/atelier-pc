@@ -65,12 +65,18 @@ body.fs header.top,body.fs .mnav,body.fs aside,body.fs #scaleBar,body.fs .tabs{d
 .i3d-seg{display:flex;gap:4px;overflow-x:auto}.i3d-seg button{border:1px solid rgba(255,255,255,.18);background:none;color:#fff;border-radius:10px;padding:5px 10px;font:600 13px var(--f-ui);white-space:nowrap;display:flex;flex-direction:column;align-items:flex-start;line-height:1.15}
 .i3d-seg button small{font:500 10.5px var(--f-ui);opacity:.65}.i3d-seg button.on{background:#fff;color:#0d1211}
 .i3d-stage{position:relative;min-height:0;touch-action:none;overflow:hidden;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none}
-.i3d-stage svg{width:100%;height:100%;display:block}
+.i3d-stage:not(.zm-stage) svg{width:100%;height:100%;display:block}
 .i3d-hint{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);background:rgba(0,0,0,.6);padding:7px 12px;border-radius:99px;font-size:13px;pointer-events:none;white-space:nowrap;transition:opacity .4s}.i3d-hint.gone{opacity:0}
 .i3d-empty{max-width:420px;padding:20px;display:flex;flex-direction:column;gap:10px;text-align:center}.i3d-empty[hidden]{display:none}.i3d-empty .hint{color:rgba(255,255,255,.6)}
 .i3d-panel{background:var(--panel);color:var(--ink);padding:12px 14px calc(12px + env(safe-area-inset-bottom));overflow:auto;display:flex;flex-direction:column;gap:8px}
 .i3d-panel.dis>*:not(.i3d-use){opacity:.4;pointer-events:none}.i3d-panel .f b{float:right;font:600 12px var(--f-mono);color:var(--accent)}
 .i3d-panel .btn.on{background:var(--accent);color:#fff;border-color:var(--accent)}.i3d-more summary{cursor:pointer;font-weight:600;padding:4px 0}.i3d-use{margin-top:auto;min-height:48px;font-size:15px;position:sticky;bottom:0;box-shadow:0 -10px 14px var(--panel)}
+.zm-stage{display:block}#zmMap{position:absolute;inset:0;background:#e8e6df}.zm-st{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);z-index:500;background:rgba(13,18,17,.82);color:#fff;padding:6px 12px;border-radius:99px;font-size:13px;pointer-events:none;white-space:nowrap;max-width:90%;overflow:hidden;text-overflow:ellipsis}
+.zm-lbl span{display:inline-block;transform:translate(-50%,-50%);background:#fff;border:2px solid;border-radius:6px;padding:1px 6px;font:700 12px var(--f-ui);color:#18211F;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.zm-mine,.zm-sel{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg)}.zm-sel{border-color:var(--accent)}
+.zm-mine span,.zm-sel span,.zm-h{display:block;font:600 11px var(--f-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--mut)}.zm-mine b,.zm-sel b{font-size:20px;display:block;margin:2px 0}.zm-mine p,.zm-sel p{margin:4px 0}
+.zm-tg{display:grid;gap:2px}.zm-leg{display:grid;gap:4px}.zm-li{display:grid;grid-template-columns:18px auto 1fr;gap:8px;align-items:center;text-align:left;background:none;border:1px solid var(--line);border-radius:10px;padding:6px 8px;color:var(--ink);font:inherit;cursor:pointer}
+.zm-li i{width:18px;height:18px;border-radius:4px;border:1px solid rgba(0,0,0,.3)}.zm-li span{font-size:12px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:820px){.i3d{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr) auto}.i3d-panel{max-height:44vh}.i3d-bar>b{display:none}}
 .btn.i3d-b{gap:6px}@media (max-width:820px){.btn.i3d-b{display:none}}
 .varm{position:fixed;inset:0;z-index:95;background:rgba(10,14,12,.55);display:flex;align-items:center;justify-content:center;padding:14px}.varm[hidden]{display:none}
@@ -755,6 +761,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
   <button type="button" data-v3d="open"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 12l9-5M12 12v10M12 12L3 7"/></svg>Vue 3D du projet</button>
   <button type="button" id="mHome"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>Accueil : mes projets</button>
   <button type="button" data-i3dopen><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 22V12M21 7l-9 5-9-5"/></svg>Insertion 3D sur photo</button>
+  <button type="button" data-zmopen><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg> Carte des zones du PLU</button>
   <button type="button" id="mExpert"></button>
   <button type="button" id="mLex"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/><path d="M9 8h6M9 12h4"/></svg>Lexique des mots du permis</button>
   <button type="button" id="mTheme"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg>Thème : automatique</button>
@@ -825,6 +832,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
       <button class="btn primary" id="bReglRead" type="button" hidden>Lire les règles de ma zone</button>
       <p class="hint" id="pluHint"></p>
       <details class="refbox plu-docs" id="pluDocs" hidden></details>
+      <button class="btn" type="button" data-zmopen style="width:100%;margin:2px 0 6px"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg> Voir les zones sur une carte</button>
       <div id="gpuBox"></div>
       <label class="toggle"><input type="checkbox" data-b="ui.gpuMapOn" id="gpuMapOn"> Afficher les prescriptions du PLU sur le plan de masse</label>
       <p class="hint">Reportez ci-dessous les règles de votre zone : elles servent aux contrôles de conformité. Le bouton de lecture vous propose les valeurs trouvées dans le règlement.</p>
@@ -1125,6 +1133,11 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
 </div>
 <div class="histpill" id="histPill"><button type="button" data-mmundo aria-label="Annuler"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-4"/></svg></button><button type="button" data-mmredo aria-label="Rétablir"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h4"/></svg></button></div>
 <div class="rev" id="rev" hidden role="dialog" aria-label="Relecture avant dépôt"><div class="rev-top"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg><b>Relecture avant dépôt</b><span class="sp"></span><button type="button" data-revclose aria-label="Fermer">✕</button></div><div id="revBody"></div></div>
+<div class="i3d zmap" id="zmap" hidden role="dialog" aria-label="Carte des zones d'urbanisme">
+ <div class="i3d-bar"><b><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg> Zones d'urbanisme</b><div class="i3d-seg" id="zmSeg"><button type="button" data-zb="plan" class="on">Plan</button><button type="button" data-zb="photo">Photo aérienne</button></div><span class="sp"></span><button type="button" id="zmX" aria-label="Fermer">✕</button></div>
+ <div class="i3d-stage zm-stage"><div id="zmMap"></div><div class="zm-st" id="zmSt"></div></div>
+ <div class="i3d-panel" id="zmPanel"></div>
+</div>
 <div class="i3d" id="i3d" hidden role="dialog" aria-label="Insertion 3D">
  <div class="i3d-bar"><b><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 22V12M21 7l-9 5-9-5"/></svg> Insertion 3D</b><div class="i3d-seg" id="i3dSeg"></div><span class="sp"></span><button type="button" id="i3dX" aria-label="Fermer">✕</button></div>
  <div class="i3d-stage" id="i3dStage"><svg id="i3dSvg" preserveAspectRatio="xMidYMid meet" hidden></svg>
@@ -3283,6 +3296,70 @@ async function eraseDemolished(g,sh,cover){const W=sh.w,H=sh.h;const ms=demMaskU
   for(let Y=Math.max(0,cy0-rr);Y<=Math.min(H-1,cy1+rr);Y++)for(let X=Math.max(0,cx0-rr);X<=Math.min(W-1,cx1+rr);X++){let s2=0,n=0;for(let d=-rr;d<=rr;d++){const YY=Y+d;if(YY>=0&&YY<H){s2+=A2[YY*W+X];n++}}const a=amask[Y*W+X]?Math.max(0.5,s2/n):s2/n*0.0;const i=(Y*W+X)*4;if(a<=0)continue;
     for(let c=0;c<3;c++)S0[i+c]=S0[i+c]*(1-a)+out[i+c]*a}
   g.putImageData(src,0,0);return true}
+
+/* ================= Carte des zones d'urbanisme (Leaflet + Géoportail de l'urbanisme) ================= */
+const ZM={map:null,base:null,lay:{},cache:new Map(),pcache:new Map(),sel:null,t:0,busy:0};
+const ZTYPE={U:['#d9534f','Zone urbaine : déjà bâtie, équipée ; on peut y construire selon les règles de la zone.'],AUc:['#f0a03a','Zone à urbaniser, ouverte : constructible dans le cadre d\'un projet d\'aménagement.'],AUs:['#f5c27a','Zone à urbaniser fermée : pas constructible avant une modification du PLU.'],
+  A:['#e6c845','Zone agricole : réservée à l\'agriculture ; seules les extensions et annexes limitées des maisons existantes sont admises.'],N:['#5ea25e','Zone naturelle : protégée ; seules les extensions et annexes limitées des maisons existantes sont admises.']};
+function ztype(p){const t=String(p.typezone||'').replace(/\s/g,'');if(ZTYPE[t])return t;if(/^AU/i.test(t))return'AUc';const c=String(p.libelle||'').toUpperCase();if(/^AU/.test(c))return'AUc';if(/^U/.test(c))return'U';if(/^A/.test(c))return'A';if(/^N/.test(c))return'N';return'U'}
+function zcol(p){const t=ztype(p);const base=ZTYPE[t][0];let h=0;for(const ch of String(p.libelle||''))h=(h*31+ch.charCodeAt(0))%997;const k=0.82+(h%5)*0.07;return hexShade(base,k)}
+function hexShade(hex,k){const n=parseInt(hex.slice(1),16);const f=c=>Math.max(0,Math.min(255,Math.round(c*k)));return'#'+[n>>16,(n>>8)&255,n&255].map(f).map(v=>v.toString(16).padStart(2,'0')).join('')}
+async function lfLoad(){if(window.L&&window.L.map)return window.L;
+  if(!document.querySelector('link[data-lf]')){const l=document.createElement('link');l.rel='stylesheet';l.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';l.dataset.lf=1;document.head.appendChild(l)}
+  await new Promise((ok,ko)=>{const s=document.createElement('script');s.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';s.onload=ok;s.onerror=ko;document.head.appendChild(s)});return window.L}
+async function zmOpen(){{const mm=$('#mMenu');if(mm)mm.hidden=true}const box=$('#zmap');box.hidden=false;document.body.classList.add('zm-on');zmPanel();
+  let L;try{L=await lfLoad()}catch(e){$('#zmSt').textContent='La carte ne peut pas se charger (connexion ?).';return}
+  if(!ZM.map){ZM.map=L.map('zmMap',{zoomControl:true,attributionControl:true,minZoom:6,maxZoom:19});
+    const W=(l,f,st)=>`https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=${l}&STYLE=${encodeURIComponent(st||'normal')}&FORMAT=${encodeURIComponent(f)}&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}`;
+    ZM.bases={plan:L.tileLayer(W('GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2','image/png'),{maxZoom:19,maxNativeZoom:18,attribution:'© IGN – Géoplateforme · Géoportail de l\'urbanisme'}),
+      photo:L.tileLayer(W('ORTHOIMAGERY.ORTHOPHOTOS','image/jpeg'),{maxZoom:19,attribution:'© IGN – Géoplateforme · Géoportail de l\'urbanisme'})};
+    ZM.lay.cad=L.tileLayer(W('CADASTRALPARCELS.PARCELLAIRE_EXPRESS','image/png','PCI vecteur'),{maxZoom:19,opacity:.85});
+    ZM.lay.zones=L.layerGroup();ZM.lay.labels=L.layerGroup();ZM.lay.presc=L.layerGroup();ZM.lay.proj=L.layerGroup();
+    ZM.base='plan';ZM.bases.plan.addTo(ZM.map);for(const k of['zones','labels','presc','cad','proj'])if(S.ui['zm_'+k]!==false)ZM.lay[k].addTo(ZM.map);
+    ZM.map.on('moveend',()=>{clearTimeout(ZM.t);ZM.t=setTimeout(zmFetch,350)});
+    ZM.map.attributionControl.setPrefix('<a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>');L.control.scale({imperial:false}).addTo(ZM.map)}
+  setTimeout(()=>{ZM.map.invalidateSize();zmProject();const T=S.terrain;let c=null;try{c=T.parcels.length?siteCenter():null}catch(e){}
+    if(ZM.lay.proj.getLayers().length)ZM.map.fitBounds(L.featureGroup(ZM.lay.proj.getLayers()).getBounds().pad(2.5),{maxZoom:17});else if(c)ZM.map.setView([c[1],c[0]],16);else ZM.map.setView([46.6,2.4],6);zmFetch()},60)}
+function zmClose(){$('#zmap').hidden=true;document.body.classList.remove('zm-on')}
+/* terrain et projet */
+function zmProject(){const L=window.L;const g=ZM.lay.proj;g.clearLayers();const T=S.terrain;if(!T.parcels||!T.parcels.length)return;
+  for(const p of T.parcels)for(const r of p.rings)L.polygon(r.map(q=>[q[1],q[0]]),{color:'#0b3d3a',weight:3,fill:false,dashArray:'6 4'}).bindTooltip(`Votre terrain · ${esc(p.section)} ${esc(String(p.numero).replace(/^0+/,''))}`,{sticky:true}).addTo(g);
+  try{if(!noBuild())L.polygon(bldPoly().map(q=>{const a=toLL(q[0],q[1]);return[a[1],a[0]]}),{color:'#111',weight:2,fillColor:'#1E5A56',fillOpacity:.75}).bindTooltip('Projet',{sticky:true}).addTo(g)}catch(e){}
+  try{for(const e of exDem()){const r=exRing(e);if(r)L.polygon(r.map(q=>{const a=toLL(q[0],q[1]);return[a[1],a[0]]}),{color:'#AE3328',weight:2,dashArray:'4 3',fillOpacity:.08}).bindTooltip(`${esc(e.usage||'Construction')} à démolir`,{sticky:true}).addTo(g)}}catch(e){}}
+/* zones et prescriptions dans la vue */
+async function zmFetch(){const M=ZM.map;if(!M||$('#zmap').hidden)return;const L=window.L;const st=$('#zmSt');
+  if(M.getZoom()<13){st.textContent='Zoomez pour afficher les zones du PLU.';return}
+  const b=M.getBounds();const poly={type:'Polygon',coordinates:[[[b.getWest(),b.getSouth()],[b.getEast(),b.getSouth()],[b.getEast(),b.getNorth()],[b.getWest(),b.getNorth()],[b.getWest(),b.getSouth()]]]};
+  const g=encodeURIComponent(JSON.stringify(poly));const id=++ZM.busy;st.textContent='Chargement des zones…';
+  const get=async k=>{try{const j=await getJSON(`https://apicarto.ign.fr/api/gpu/${k}?geom=${g}`);return j.features||[]}catch(e){return null}};
+  const [z,sc,ps,pl,pp]=await Promise.all(['zone-urba','secteur-cc','prescription-surf','prescription-lin','prescription-pct'].map(get));if(id!==ZM.busy)return;
+  if(z===null&&sc===null){st.textContent='Géoportail de l\'urbanisme injoignable pour l\'instant.';return}
+  let n=0;for(const f of[...(z||[]),...(sc||[]).map(f=>({...f,properties:{...f.properties,typezone:f.properties.typesect,cc:1}}))]){const p=f.properties||{};const k=(p.gid||p.id||'')+'|'+p.libelle+'|'+p.idurba+'|'+JSON.stringify(f.geometry.coordinates).length;if(ZM.cache.has(k))continue;n++;
+    const col=zcol(p);const lay=L.geoJSON(f,{style:{color:hexShade(col,0.7),weight:1.2,fillColor:col,fillOpacity:+(S.ui.zm_op??0.38)}}).on('click',ev=>{L.DomEvent.stopPropagation(ev);zmSelect(p)});lay.addTo(ZM.lay.zones);
+    try{const c=lay.getBounds().getCenter();const pt=L.marker(c,{interactive:false,icon:L.divIcon({className:'zm-lbl',html:`<span style="border-color:${col}">${esc(p.libelle||'?')}</span>`,iconSize:null})});pt.addTo(ZM.lay.labels)}catch(e){}
+    ZM.cache.set(k,{p,col,lay})}
+  for(const f of[...(ps||[]),...(pl||[]),...(pp||[])]){const p=f.properties||{};const k=(p.gid||p.id||'')+'|'+p.libelle+'|'+JSON.stringify(f.geometry.coordinates).slice(0,80);if(ZM.pcache.has(k))continue;
+    const ebc=/bois|EBC/i.test((p.libelle||'')+' '+(p.txt||''));const c=ebc?'#2e7d32':'#7b3fa0';
+    const lay=L.geoJSON(f,{style:{color:c,weight:2,dashArray:'5 4',fillColor:c,fillOpacity:.12},pointToLayer:(ft,ll)=>L.circleMarker(ll,{radius:6,color:c,weight:2,fillOpacity:.4})}).bindPopup(`<b>${esc(p.libelle||'Prescription')}</b>${p.txt?`<br>${esc(p.txt)}`:''}<br><small>Prescription du PLU</small>`);
+    lay.addTo(ZM.lay.presc);ZM.pcache.set(k,{p,lay})}
+  st.textContent=ZM.cache.size?'Touchez une zone pour voir ce qu\'elle autorise.':'Aucun document d\'urbanisme publié ici (règlement national d\'urbanisme possible).';zmLegend()}
+function zmSelect(p){ZM.sel=p;zmPanel()}
+function zmLegend(){const el=$('#zmLeg');if(!el)return;const seen=new Map();const b=ZM.map&&ZM.map.getBounds();for(const {p,col,lay} of ZM.cache.values()){if(b&&!b.intersects(lay.getBounds()))continue;if(!seen.has(p.libelle))seen.set(p.libelle,{p,col})}
+  el.innerHTML=[...seen.values()].sort((a,b)=>String(a.p.libelle).localeCompare(b.p.libelle,'fr',{numeric:true})).map(({p,col})=>`<button type="button" class="zm-li" data-zl="${esc(p.libelle)}"><i style="background:${col}"></i><b>${esc(p.libelle)}</b><span>${esc(p.libelong||ZTYPE[ztype(p)][1].split(' :')[0])}</span></button>`).join('')||'<p class="hint">—</p>'}
+function zmPanel(){const el=$('#zmPanel');if(!el)return;const T=S.terrain,Z=T.zone;const p=ZM.sel;
+  const mine=Z&&Z.libelle&&Z.libelle!=='?'?`<div class="zm-mine"><span>Votre terrain</span><b>Zone ${esc(Z.libelle)}</b><p>${esc(Z.libelong||'')}</p><p class="hint">${esc(ZTYPE[ztype({libelle:Z.libelle,typezone:Z.typezone})][1])}</p></div>`:'<div class="zm-mine"><span>Votre terrain</span><p class="hint">Zone inconnue pour l\'instant.</p></div>';
+  const sel=p?`<div class="zm-sel"><span>Zone sélectionnée</span><b>${esc(p.libelle||'?')}</b>${p.libelong?`<p>${esc(p.libelong)}</p>`:''}<p class="hint">${esc(ZTYPE[ztype(p)][1])}</p>${p.urlfic?`<a class="btn sm" href="${esc(p.urlfic)}" target="_blank" rel="noopener">📄 Règlement</a>`:p.gpu_doc_id?`<a class="btn sm" href="https://www.geoportail-urbanisme.gouv.fr/document/by-id/${esc(p.gpu_doc_id)}" target="_blank" rel="noopener">📄 Document d'urbanisme</a>`:''}</div>`:'';
+  const tg=(k,t)=>`<label class="toggle"><input type="checkbox" data-zmt="${k}"${S.ui['zm_'+k]!==false?' checked':''}> ${t}</label>`;
+  el.innerHTML=`${mine}${sel}<div class="zm-tg">${tg('zones','Zones du PLU')}${tg('labels','Noms des zones')}${tg('presc','Prescriptions (espaces boisés, éléments protégés…)')}${tg('cad','Parcelles cadastrales')}${tg('proj','Mon terrain et mon projet')}</div>
+    <label class="f">Transparence des zones<input type="range" min="0.1" max="0.8" step="0.05" id="zmOp" value="${S.ui.zm_op??0.38}"></label>
+    <div class="zm-h">Zones visibles</div><div id="zmLeg" class="zm-leg"><p class="hint">—</p></div>
+    <p class="hint">Source : Géoportail de l'urbanisme (documents publiés par la commune ou l'intercommunalité). En cas de doute, le document en mairie fait foi.</p>`;zmLegend()}
+document.addEventListener('change',e=>{const t=e.target.closest('[data-zmt]');if(!t||!ZM.map)return;const k=t.dataset.zmt;S.ui['zm_'+k]=t.checked;save();if(t.checked)ZM.lay[k].addTo(ZM.map);else ZM.map.removeLayer(ZM.lay[k])});
+document.addEventListener('input',e=>{if(e.target.id!=='zmOp')return;const v=+e.target.value;S.ui.zm_op=v;for(const {lay} of ZM.cache.values())lay.setStyle({fillOpacity:v})});
+document.addEventListener('click',e=>{if(e.target.closest('[data-zmopen]')){e.preventDefault();zmOpen();return}if(e.target.closest('#zmX')){zmClose();return}
+  const b=e.target.closest('[data-zb]');if(b&&ZM.map){ZM.map.removeLayer(ZM.bases[ZM.base]);ZM.base=b.dataset.zb;ZM.bases[ZM.base].addTo(ZM.map);ZM.bases[ZM.base].bringToBack();$$('#zmSeg button').forEach(x=>x.classList.toggle('on',x===b));return}
+  const li=e.target.closest('[data-zl]');if(li){const it=[...ZM.cache.values()].find(v=>v.p.libelle===li.dataset.zl);if(it){zmSelect(it.p);ZM.map.fitBounds(it.lay.getBounds(),{maxZoom:17})}}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#zmap').hidden)zmClose()});
 
 /* insertion : avant / après sur la même planche */
 function insBefore(far){const ph=S.photos,o=S.onsite||{};if(far)return ph.insFromShot2&&o.shot2?o.shot2.img:null;
