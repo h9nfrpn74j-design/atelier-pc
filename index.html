@@ -838,6 +838,20 @@ body.pick-on #svg-masse{cursor:crosshair}
 @media (max-width:820px){.ck-sec{padding:14px 14px 16px;border-radius:12px}.ck-top{top:-12px}}
 .ck-sec .bud>h3:first-child{border-top:0;padding-top:0;margin-top:0}
 @media (max-width:820px){#bUndo{display:none!important}}
+.stagecol{grid-template-rows:auto auto 1fr}
+.stage-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 24px;border-bottom:1px solid var(--line);background:var(--panel)}
+.stage-tools[hidden]{display:none}.stage-tools .pick-b{position:static;box-shadow:none;padding:7px 12px;font-size:12.5px}
+.stage-tools .st-hint{font-size:12px;color:var(--muted);margin-left:auto}
+.feu-c{padding:10px 12px;gap:10px}.feu-c>div>b{font-size:14px;margin:0}.feu-c>div>span{margin:1px 0 4px}.feu-c ul{margin:2px 0 4px}.feu-c li{padding:2px 0 2px 14px;border:0;font-size:12.5px;font-weight:600}.feu-c li::before{top:8px}
+.bak{display:flex;align-items:center;gap:10px;border:0;border-left:3px solid #4A8FC7;background:#EEF5FB;border-radius:6px;padding:7px 10px;margin:0 0 8px;font-size:12px}.bak>span{flex:1;margin:0}.bak .lnk{background:none;border:0;color:#1F5F8F;font-weight:700;text-decoration:underline;cursor:pointer;font-size:12px;padding:0}
+.bak-x{border:0;background:none;color:#6A7F90;font-size:17px;line-height:1;cursor:pointer;padding:0 2px}
+body.stp .body .sub{font:700 13px var(--f-ui);letter-spacing:.02em;text-transform:none;color:var(--ink);border-top:1px solid var(--line);margin-top:14px;padding-top:16px}
+body.stp .body .sub:first-child{border-top:0;margin-top:0;padding-top:0}
+body.stp .impl-h{font:700 13px var(--f-ui);letter-spacing:.02em;text-transform:none;color:var(--ink)}
+body.stp .am-step h4{font:700 13px var(--f-ui)}
+body.stp #amStep,body.stp #cloEditor{border-top:1px solid var(--line);padding-top:14px}
+.ck-back{justify-self:start;margin-bottom:8px}
+@media (max-width:820px){.stage-tools{padding:8px 10px}.stage-tools .st-hint{display:none}}
 .st-only{display:none}body.stp .st-only{display:inline-block}
 #modesAll{background:none;border:0;padding:2px 0;color:var(--accent);font:600 13px var(--f-ui);text-decoration:underline;cursor:pointer;justify-self:start}
 @media (max-width:820px){#bExpress{font-size:0;gap:0;padding:6px 10px}#bExpress svg{width:18px;height:18px}#chkChip{max-width:40vw;font-size:10.5px}header.top{gap:6px}.brand{font-size:13px}.mnav{grid-template-columns:none!important;grid-auto-flow:column;grid-auto-columns:1fr}}
@@ -1011,7 +1025,8 @@ body.pick-on #svg-masse{cursor:crosshair}
       <div id="amStep" class="am-step"><h4>Terrasse et piscine</h4><div id="amEditor"></div></div>
       <div id="divStep" class="am-step" hidden><h4>Division du terrain</h4><div id="divEditor"></div></div>
       <div id="arbStep" class="am-step" hidden><h4>Arbres à abattre</h4><div id="protBox"></div><div id="arbEditor"></div></div>
-      <div id="projBody">
+      <div id="bakBox"></div><div id="projBody">
+      <div class="sub pc-only">Votre construction</div>
       <label class="f pc-only">Nature du projet
         <select data-b="projet.nature"><option value="maison">Construction d'une maison individuelle</option><option value="extension">Extension d'une construction existante</option><option value="annexe">Annexe (garage, abri, atelier…)</option></select>
       </label>
@@ -1026,7 +1041,7 @@ body.pick-on #svg-masse{cursor:crosshair}
       <div class="btns pc-only"><button class="btn primary" id="bParse" type="button">Remplir à partir de la description</button></div>
       <ul class="understood" id="understood" hidden></ul>
 
-      <div class="sub">Volume et implantation</div>
+      <div class="sub">Dimensions et implantation</div>
       <label class="toggle pc-only"><input type="checkbox" data-b="ui.zoneOk"> Montrer sur le plan de masse où je peux construire</label>
       <div class="preview3d" id="prev3d"></div>
       <label class="adv f">Rotation de la vue 3D<input type="range" min="0" max="359" step="1" data-b="ui.yaw3d"></label>
@@ -1074,6 +1089,7 @@ body.pick-on #svg-masse{cursor:crosshair}
         <div class="btns"><button class="btn primary sm" id="bImApply" type="button">Placer la construction</button><button class="btn sm" type="button" onclick="pickModeSet(true)">📐 Ou cliquer sur le plan</button></div>
         <p class="hint">Choisissez n'importe quelles limites : la distance se mesure perpendiculairement à la limite, depuis le point le plus proche de la construction. « ∥ » fixe la limite à laquelle la construction reste parallèle, et quel côté lui fait face. Sur le plan de masse : cliquez la construction, puis flèches du clavier (10 cm, Maj : 1 m, Alt : 1 cm) et R / Maj+R pour tourner de 0,5°.</p>
       </div>
+      <div class="sub">Hauteurs et sol</div>
       <div class="grid3">
         <label class="f">Niveaux<input type="number" step="1" min="1" max="4" data-b="projet.niveaux"></label>
         <label class="f">H. d'étage (m)<input type="number" step="0.05" min="2.4" data-b="projet.hEtage"></label>
@@ -1251,7 +1267,7 @@ body.pick-on #svg-masse{cursor:crosshair}
 </aside>
 <section class="stagecol">
   <nav class="tabs" id="tabs"></nav>
-  <div class="pick-g" id="pickG"><button type="button" class="pick-b pick-r" data-rot90 title="Tourner la construction d'un quart de tour">↻ 90°</button></div><button type="button" id="pickBtn" class="pick-b" hidden title="Cliquez ensuite sur une limite ou le bord d'un bâtiment existant">📐 Placer par rapport à une limite ou un bâtiment</button>
+  <div class="stage-tools" id="pickG" hidden><button type="button" id="pickBtn" class="pick-b" title="Cliquez ensuite sur une limite ou le bord d'un bâtiment existant">📐 Placer par rapport à une limite ou un bâtiment</button><button type="button" class="pick-b" data-rot90 title="Tourner la construction d'un quart de tour">↻ Tourner de 90°</button><span class="st-hint">Glissez le bâtiment sur le plan pour le déplacer</span></div>
   <div id="stage"></div>
   <div class="scalebar" id="scaleBar" hidden><label for="scSel">Échelle</label><select id="scSel"></select><select id="facLay" aria-label="Mise en page des façades"><option value="duo">2 façades par planche</option><option value="solo">1 façade par planche (plus grand)</option></select><span id="scWarn"></span></div>
   <div class="zoombar" id="zoombar"><button type="button" id="zOut" aria-label="Réduire">−</button><span id="zVal">100 %</span><button type="button" id="zIn" aria-label="Agrandir">+</button><button type="button" id="zFit">Ajuster</button><button type="button" data-v3d="open" title="Vue 3D à faire tourner"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 12l9-5M12 12v10M12 12L3 7"/></svg></button><button type="button" id="zFs" title="Plein écran">⤢</button></div>
@@ -3493,7 +3509,8 @@ function zmPanel(){const el=$('#zmPanel');if(!el)return;const T=S.terrain,Z=T.zo
     <p class="hint">Source : Géoportail de l'urbanisme (documents publiés par la commune ou l'intercommunalité). En cas de doute, le document en mairie fait foi.</p>`;zmLegend()}
 document.addEventListener('change',e=>{const t=e.target.closest('[data-zmt]');if(!t||!ZM.map)return;const k=t.dataset.zmt;S.ui['zm_'+k]=t.checked;save();if(t.checked)ZM.lay[k].addTo(ZM.map);else ZM.map.removeLayer(ZM.lay[k])});
 document.addEventListener('input',e=>{if(e.target.id!=='zmOp')return;const v=+e.target.value;S.ui.zm_op=v;for(const {lay} of ZM.cache.values())lay.setStyle({fillOpacity:v})});
-document.addEventListener('click',e=>{{const fx=e.target.closest('[data-feufix]');if(fx){e.preventDefault();feuFix(fx.dataset.feufix);return}}if(e.target.closest('[data-feu]')){e.preventDefault();S.ui.feuOpen=!S.ui.feuOpen;renderSide();return}if(e.target.closest('[data-zmopen]')){e.preventDefault();zmOpen();return}if(e.target.closest('#zmX')){zmClose();return}
+document.addEventListener('click',e=>{{const fx=e.target.closest('[data-feufix]');if(fx){e.preventDefault();feuFix(fx.dataset.feufix);return}}if(e.target.closest('[data-feu]')){e.preventDefault();try{zmClose()}catch(_){}goTab('checks');setTimeout(()=>{const t=$('#cks-feu');if(t)t.scrollIntoView({block:'start'})},60);return}
+  if(e.target.closest('[data-backplan]')){e.preventDefault();goTab('pcmi2');return}if(e.target.closest('[data-zmopen]')){e.preventDefault();zmOpen();return}if(e.target.closest('#zmX')){zmClose();return}
   const b=e.target.closest('[data-zb]');if(b&&ZM.map){ZM.map.removeLayer(ZM.bases[ZM.base]);ZM.base=b.dataset.zb;ZM.bases[ZM.base].addTo(ZM.map);ZM.bases[ZM.base].bringToBack();$$('#zmSeg button').forEach(x=>x.classList.toggle('on',x===b));return}
   const li=e.target.closest('[data-zl]');if(li){const it=[...ZM.cache.values()].find(v=>v.p.libelle===li.dataset.zl);if(it){zmSelect(it.p);ZM.map.fitBounds(it.lay.getBounds(),{maxZoom:17})}}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#zmap').hidden)zmClose()});
@@ -3631,7 +3648,7 @@ function bakRestore(){const b=(S.bak||[]).pop();if(!b){toast('Aucune version pr�
 function toastAct(msg,btn,fn,ms=9000){const t=$('#toast');t.innerHTML=`<span>${esc(msg)}</span>${btn?`<button type="button" class="toast-b">${esc(btn)}</button>`:''}`;t.hidden=false;
   const b=t.querySelector('.toast-b');if(b)b.onclick=()=>{t.hidden=true;fn&&fn()};clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,ms)}
 function bakHTML(){const b=(S.bak||[]).slice(-1)[0];if(!b||S.ui.bakHide)return'';
-  return`<div class="bak"><span>↶ Votre projet a été modifié automatiquement (${esc(b.label)}). Avant : <b>${esc(bakDesc(b.projet))}</b>.</span><div class="btns"><button class="btn sm primary" type="button" data-bak="restore">Revenir à mon projet</button><button class="btn sm ghost" type="button" data-bak="keep">Garder les modifications</button></div></div>`}
+  return`<div class="bak"><span>↶ Modifié automatiquement : ${esc(b.label)} (avant : ${esc(bakDesc(b.projet))})</span><button class="lnk" type="button" data-bak="restore">Revenir</button><button class="bak-x" type="button" data-bak="keep" aria-label="Garder les modifications" title="Garder les modifications">×</button></div>`}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-bak]');if(!b)return;e.preventDefault();if(b.dataset.bak==='restore')bakRestore();else{S.ui.bakHide=true;schedule()}});
 function feuFix(k){if(k!=='pickhab')bakTake({max:'taille maximale autorisée',emp50:'annexe ramenée à 50 m²',h25:'égout abaissé à 2,50 m'}[k]||'correction automatique');const p=S.projet;
   if(k==='max'){feuMax();fillInputs();schedule();return}
@@ -3641,9 +3658,10 @@ function feuFix(k){if(k!=='pickhab')bakTake({max:'taille maximale autorisée',em
     while(h.hE>lim+0.004&&i++<40){if(p.hPlancher>0.1)p.hPlancher=Math.max(0.1,Math.round((p.hPlancher-0.05)*100)/100);else if(p.hEtage>2.0)p.hEtage=Math.round((p.hEtage-0.05)*100)/100;else break;h=heights()}
     toastAct(h.hE<=lim+0.004?`Égout ramené à ${fmt(h.hE)} m.`:`Impossible de descendre sous ${fmt(h.hE)} m sur ce terrain en pente : déplacez l'annexe ou décaissez.`,'Annuler',bakRestore)}
   fillInputs();schedule()}
-function feuHTML(full){const fo=!full&&S.ui.feuOpen;if(fo)full=true;let F;try{F=feasibility()}catch(e){return''}if(F.c==='none'||F.c==='wait')return`<div class="feu feu-n"><i></i><div><b>${esc(F.t)}</b>${F.it.map(x=>`<p>${esc(x.t)}</p>`).join('')}</div></div>`;
-  const BK=bakHTML();const pj=feuProjet();const top=F.it.filter(x=>x.l===F.c).slice(0,full?99:3);
-  return`${BK}<div class="feu feu-${F.c}"><i></i><div><span>${esc(FEU_LBL[pj]||'Votre projet')} · ${esc(F.ref||'')}</span><b>${esc(F.t)}</b>
+function feuHTML(full){const fo=false;let F;try{F=feasibility()}catch(e){return''}if(F.c==='none'||F.c==='wait')return`<div class="feu feu-n"><i></i><div><b>${esc(F.t)}</b>${F.it.map(x=>`<p>${esc(x.t)}</p>`).join('')}</div></div>`;
+  const pj=feuProjet();const top=F.it.filter(x=>x.l===F.c).slice(0,full?99:3);
+  if(!full){const np=F.pi&&F.c!=='g'?F.pi.length:0;return`<div class="feu feu-c feu-${F.c}"><i></i><div><b>${esc(F.t)}</b><span>${esc(FEU_LBL[pj]||'Votre projet')} · ${esc(F.ref||'')}</span>${F.c!=='g'?`<ul>${top.slice(0,2).map(x=>`<li class="fl-${x.l}">${esc(x.t)}</li>`).join('')}</ul>`:''}<button class="lnk" type="button" data-feu="more">${np?`Voir le détail et ${np} solution${np>1?'s':''}`:'Voir le détail'} →</button></div></div>`}
+  return`<div class="feu feu-${F.c}"><i></i><div><span>${esc(FEU_LBL[pj]||'Votre projet')} · ${esc(F.ref||'')}</span><b>${esc(F.t)}</b>
     <ul>${(full?F.it:top).map(x=>`<li class="fl-${x.l}"><b>${esc(x.t)}</b>${x.s?`<span>${esc(x.s)}</span>`:''}</li>`).join('')}</ul>
     ${F.pi&&F.pi.length&&F.c!=='g'?(full?`<div class="feu-pi"><h4>💡 Pistes pour rendre le projet possible</h4><p class="hint">Des solutions qui respectent le règlement : à choisir selon votre besoin.</p><ol>${F.pi.map(x=>`<li><b>${esc(x.t)}</b><span>${esc(x.s)}</span>${x.fix?`<button class="btn sm" type="button" data-feufix="${x.fix}">${x.fix==='pickhab'?'Choisir ma maison':'Appliquer au projet'}</button>`:''}</li>`).join('')}</ol></div>`:`<p class="feu-pic">💡 ${F.pi.length} piste${F.pi.length>1?'s':''} pour le rendre possible</p>`):''}
     ${full?`<p class="hint">Règles transcrites du règlement écrit${F.it.some(x=>x.src)?` (<a href="${esc((F.it.find(x=>x.src)||{}).src)}" target="_blank" rel="noopener">source</a>)`:''}. Un feu vert ne remplace pas l'avis de la mairie : faites confirmer, idéalement par un certificat d'urbanisme opérationnel.</p>${fo?'<button class="lnk" type="button" data-feu="less">Masquer le détail</button>':''}`:`<button class="lnk" type="button" data-feu="more">${F.c==='r'?'Voir le détail et les solutions':'Voir le détail'}</button>`}</div></div>`}
@@ -3686,8 +3704,8 @@ function dimLimHTML(){const L=feuLimits(),p=S.projet;let h={};try{h=heights()}ca
   if(L.emp){const over=sf.emprise>L.emp+0.05;out.push(`<li class="${over?'bad':''}">Emprise au sol : <b>${fmt(sf.emprise,1)} m²</b> pour <b>${fmt(L.emp,0)} m² au plus</b>${over?` → avec l = ${fmt(p.W,1)} m, L ≤ ${fmt(Math.floor(L.emp/p.W*10)/10,1)} m`:''}</li>`)}
   if(L.hE){const over=h.hE>L.hE+0.005;out.push(`<li class="${over?'bad':''}">Hauteur à l'égout : <b>${fmt(h.hE)} m</b> pour <b>${fmt(L.hE)} m au plus</b></li>`)}
   if(L.hF){const over=h.hF>L.hF+0.005;out.push(`<li class="${over?'bad':''}">Hauteur totale : <b>${fmt(h.hF)} m</b> pour <b>${fmt(L.hF)} m au plus</b></li>`)}
-  const BK=bakHTML();if(!out.length)return BK;const bad=out.some(x=>x.includes('class="bad"'));
-  return`${BK}<div class="dimlim${bad?' bad':''}"><span>Ce que le PLU autorise ici</span><ul>${out.join('')}</ul>${bad?'<button class="btn sm primary" type="button" data-feufix="max">Taille maximale autorisée</button>':''}</div>`}
+  if(!out.length)return'';const bad=out.some(x=>x.includes('class="bad"'));
+  return`<div class="dimlim${bad?' bad':''}"><span>Ce que le PLU autorise ici</span><ul>${out.join('')}</ul>${bad?'<button class="btn sm primary" type="button" data-feufix="max">Taille maximale autorisée</button>':''}</div>`}
 function feuMax(silent){const L=feuLimits(),p=S.projet;const msg=[];
   if(L.emp){const sf=surfaces();if(sf.emprise>L.emp+0.05){if(p.ouvL&&p.ouvL>0&&sf.empClos<=L.emp)p.ouvL=0;const W=Math.min(+p.W,Math.sqrt(L.emp)*1.6);p.W=Math.round(W*10)/10;p.L=Math.max(3,Math.floor(L.emp/p.W*10)/10);if(p.ouvL>p.L-1.5)p.ouvL=0;msg.push(`${fmt(p.L,1)} × ${fmt(p.W,1)} m`)}}
   const tgt=L.hE||null;if(tgt){let h=heights();if(h.hE>tgt+0.004){p.combles=false;let i=0;h=heights();while(h.hE>tgt+0.004&&i++<60){if(p.hPlancher>0.1)p.hPlancher=Math.max(0.1,Math.round((p.hPlancher-0.05)*100)/100);else if(p.hEtage>2.0)p.hEtage=Math.round((p.hEtage-0.05)*100)/100;else break;h=heights()}msg.push(`égout à ${fmt(h.hE)} m`)}}
@@ -3728,7 +3746,7 @@ function profAct(a){if(a==='save'){if(!S.dem.nom){toast('Renseignez au moins vot
 
 function easyRender(){
   const set=(id,h)=>{const el=$(id);if(el&&el.__h!==h){el.innerHTML=h;el.__h=h}};
-  set('#reglAuto',reglAutoHTML());set('#dimLim',dimLimHTML());set('#exAsk',exAskHTML());set('#profBox',profHTML());
+  set('#reglAuto',reglAutoHTML());set('#bakBox',bakHTML());set('#dimLim',dimLimHTML());set('#exAsk',exAskHTML());set('#profBox',profHTML());
   const he=$('#hEg');if(he&&document.activeElement!==he){try{he.value=heights().hE.toFixed(2)}catch(e){}}
   const L=feuLimits();for(const s of['#hEg']){const el=$(s);if(el){let bad=false;try{const h=heights();bad=(L.hE&&h.hE>L.hE+0.005)}catch(e){}el.classList.toggle('over',!!bad)}}
   try{const sf=surfaces();const bad=L.emp&&sf.emprise>L.emp+0.05;$$('input[data-b="projet.L"],input[data-b="projet.W"]').forEach(i=>i.classList.toggle('over',!!bad))}catch(e){}}
@@ -3814,7 +3832,7 @@ function pickPopRender(x,y){let el=$('#pickPop');if(!el){el=document.createEleme
    <div class="btns"><button class="btn primary sm" type="button" data-pk="place">Placer la construction</button><button class="btn sm" type="button" data-pk="clear">Recommencer</button></div>`}
 function pickModeSet(on){S.ui.pickRef=!!on;if(!on){PK2.refs=[];pickPopRender()}document.body.classList.toggle('pick-on',!!on);const b=$('#pickBtn');if(b)b.classList.toggle('on',!!on);
   if(on){try{if(S.ui.tab!=='pcmi2')goTab('pcmi2')}catch(_){}toast('Cliquez sur une limite de propriété ou sur le bord d\'une construction existante.',5000)}renderAll()}
-function pickBtnUpd(){const b=$('#pickBtn');if(!b)return;const m=mode();const g=$('#pickG');b.hidden=!(S.ui.tab==='pcmi2'&&(m==='pc'||m==='dp-constr')&&S.terrain.parcels.length&&!noBuild());if(g)g.hidden=b.hidden}
+function pickBtnUpd(){const b=$('#pickBtn');if(!b)return;const m=mode();const g=$('#pickG');const show=(S.ui.tab==='pcmi2'&&(m==='pc'||m==='dp-constr')&&S.terrain.parcels.length&&!noBuild());b.hidden=false;if(g)g.hidden=!show}
 function pickMasse(k){if(!S.ui.pickRef||!PK2.refs.length)return'';return`<g pointer-events="none" data-nodc="1">${PK2.refs.map((r,i)=>lineS(r.e.a,r.e.b,`stroke="#E07A00" stroke-width="${(0.7*k).toFixed(3)}" stroke-linecap="round" opacity=".85"`)+textS(r.e.mid,String(i+1),2.6*k,`text-anchor="middle" dominant-baseline="middle" font-weight="700" fill="#fff" stroke="#E07A00" stroke-width="${(1.6*k).toFixed(3)}" paint-order="stroke"`)).join('')}</g>`}
 $('#stage').addEventListener('pointerdown',e=>{if(!S.ui.pickRef)return;const sv=e.target.closest&&e.target.closest('#svg-masse');if(!sv)return;e.stopPropagation();e.preventDefault();
   const [x,y]=svgPtOf(sv,e);const w=[x,-y];const vb=sv.viewBox.baseVal;const tol=Math.max(1.2,vb.width/sv.getBoundingClientRect().width*14);const ed=pickNearest(w,tol);
@@ -4144,7 +4162,7 @@ function checksHTML(C){const ck=c=>`<div class="ck ${c.lvl}"><div class="ic">${{
   const grp=(l,t,cls)=>{const L=G(l);return L.length?`<div class="ck-g ${cls}"><h3>${t} <em>${L.length}</em></h3>${L.map(ck).join('')}</div>`:''};
   const bud=budgetHTML();
   const nav=[['feu','Faisabilité',`<i class="fd fd-${F.c==='g'?'g':F.c==='r'?'r':'o'}"></i>`],['ctrl','Contrôles',nb?`<em class="b">${nb}</em>`:nw?`<em class="w">${nw}</em>`:'<em class="o">✓</em>'],...(bud?[['couts','Coûts',''],['suivi','Calendrier et suivi','']]:[])];
-  return`<div class="checks"><div class="ck-top"><h2>Suivi du dossier</h2><nav class="ck-nav">${nav.map(([k,t,x],i)=>`<button type="button" data-cks="${k}"><span>${i+1}</span>${t}${x}</button>`).join('')}</nav></div>
+  return`<div class="checks"><div class="ck-top">${typeof stepCur==='function'&&stepCur()<=2?'<button class="btn sm ck-back" type="button" data-backplan>← Revenir au plan de masse</button>':''}<h2>Suivi du dossier</h2><nav class="ck-nav">${nav.map(([k,t,x],i)=>`<button type="button" data-cks="${k}"><span>${i+1}</span>${t}${x}</button>`).join('')}</nav></div>
   <section class="ck-sec" id="cks-feu"><h2 class="ck-h"><span>1</span>Faisabilité au regard du PLU</h2>${feuHTML(true)}</section>
   <section class="ck-sec" id="cks-ctrl"><h2 class="ck-h"><span>2</span>Contrôles du dossier<small>${nb?nb+' à corriger · ':''}${nw?nw+' à compléter · ':''}${no} conforme${no>1?'s':''}</small></h2>
     <button class="btn primary rev-cta" type="button" data-rev>${ICO('review')} Relecture pièce par pièce avant dépôt</button>
