@@ -1054,12 +1054,12 @@ body.pick-on #svg-masse{cursor:crosshair}
       <div class="grid3">
         <label class="f">Niveaux<input type="number" step="1" min="1" max="4" data-b="projet.niveaux"></label>
         <label class="f">H. d'étage (m)<input type="number" step="0.05" min="2.4" data-b="projet.hEtage"></label>
-        <label class="adv f">Plancher / TN (m)<input type="number" step="0.05" min="0" data-b="projet.hPlancher"></label>
+        <label class="f">Plancher / TN (m)<input type="number" step="0.05" min="0" data-b="projet.hPlancher"></label>
       </div>
       <label class="f">Hauteur à l'égout souhaitée (m)<input type="number" step="0.05" min="1.8" id="hEg" inputmode="decimal"></label>
       <p class="hint" style="margin-top:-4px">Bas de la toiture (gouttière), mesuré depuis le terrain avant travaux. L'appli ajuste la hauteur d'étage pour vous.</p>
       <label class="adv f">Altitude NGF du plancher RDC (facultatif, en mètres NGF)<input type="number" step="0.01" data-b="projet.plancherNGF" id="plNGF"></label>
-      <label class="adv toggle"><input type="checkbox" data-b="projet.regrade"> Terrain naturel repris au droit de la construction (plateforme)</label>
+      <label class="toggle"><input type="checkbox" data-b="projet.regrade"> <span><b>Sol mis à niveau sous le bâtiment</b> (plateforme : terrain naturel repris au droit de la construction, raccordé par des talus)</span></label>
       <p class="hint adv" id="plHint">Laissez vide : l'altitude est calculée depuis le terrain. Pour régler la hauteur du plancher au-dessus du sol, utilisez « Plancher / TN ».</p>
       <div class="sub">Toiture</div>
       <div class="grid3">
@@ -4165,7 +4165,7 @@ $('#tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');i
 $('#chkChip').addEventListener('click',()=>{S.ui.tab='checks';$$('.wrap').forEach(w=>w.classList.toggle('on',w.id==='w-checks'));renderTabs()});
 $('#modeNb').addEventListener('change',e=>{S.ui.modeNb=e.target.checked;if(e.target.checked){S.ui.modeVoie=false;$('#modeVoie').checked=false;goTab('pcmi2')}renderSheet('pcmi2')});
 $('#modeVoie').addEventListener('change',e=>{S.ui.modeVoie=e.target.checked;if(e.target.checked){S.ui.modeNb=false;$('#modeNb').checked=false;goTab('pcmi2')}renderSheet('pcmi2')});
-function goTab(id){if(isMobile()&&document.body.dataset.view==='panel'&&id!==S.ui.tab){const d=$('#mDot');if(d)d.hidden=false}S.ui.tab=id;$$('.wrap').forEach(w=>w.classList.toggle('on',w.id==='w-'+id));renderTabs();fit()}
+function goTab(id){setTimeout(()=>{try{pickBtnUpd();if(id!=='pcmi2'&&S.ui.pickRef)pickModeSet(false)}catch(e){}},0);if(isMobile()&&document.body.dataset.view==='panel'&&id!==S.ui.tab){const d=$('#mDot');if(d)d.hidden=false}S.ui.tab=id;$$('.wrap').forEach(w=>w.classList.toggle('on',w.id==='w-'+id));renderTabs();fit()}
 $('#bAlign').onclick=()=>{if(alignVoie())schedule()};
 $('#bPlace').onclick=()=>{if(!voieMain()){toast('Désignez d\'abord la voie sur le plan de masse.');return}placeFromVoie(S.regles.reculVoie||3);schedule();goTab('pcmi2')};
 $('#bCenter').onclick=()=>{centerBuilding();schedule();goTab('pcmi2')};
