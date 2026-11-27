@@ -1,5 +1,5 @@
 /* Atelier PC : page toujours à jour (réseau d'abord), utilisable sans réseau (copie locale) */
-const C='atelier-pc-v7',T='atelier-pc-tiles',D='atelier-pc-data';
+const C='atelier-pc-v8',T='atelier-pc-tiles',D='atelier-pc-data';
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>c.addAll(['./','./manifest.webmanifest','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./lib/pdf-lib.min.js']).catch(()=>{})))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>![C,T,D].includes(x)).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
 let puts=0;

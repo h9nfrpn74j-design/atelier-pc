@@ -801,6 +801,9 @@ label.f{font-size:12.5px}
 body.stp .modes:not(.all) label:not(:has(input:checked)){display:none}
 body.stp .modes:not(.all){grid-template-columns:1fr}
 body.stp .body>*{min-width:0}body.stp #feuBox2{order:-1}body.stp #cloEditor,body.stp #amStep{order:2}body.stp #projBody{order:1}
+.bak{border:1px solid #9CC3E0;background:#EAF3FB;color:#123A5A;border-radius:10px;padding:9px 12px;margin:6px 0 8px;font-size:12.5px}.bak>span{display:block;margin-bottom:6px}.bak .btns{display:flex;gap:6px;flex-wrap:wrap}
+.toast{display:flex;align-items:center;gap:12px}.toast[hidden]{display:none}.toast-b{flex:none;border:0;border-radius:6px;background:#fff;color:var(--ink);font:700 12.5px var(--f-ui);padding:6px 10px;cursor:pointer}
+#bUndo{width:auto;padding:0 10px;display:inline-flex;align-items:center;gap:6px;font:600 12.5px var(--f-ui)}
 .st-only{display:none}body.stp .st-only{display:inline-block}
 #modesAll{background:none;border:0;padding:2px 0;color:var(--accent);font:600 13px var(--f-ui);text-decoration:underline;cursor:pointer;justify-self:start}
 @media (max-width:820px){#bExpress{font-size:0;gap:0;padding:6px 10px}#bExpress svg{width:18px;height:18px}#chkChip{max-width:40vw;font-size:10.5px}header.top{gap:6px}.brand{font-size:13px}.mnav{grid-template-columns:none!important;grid-auto-flow:column;grid-auto-columns:1fr}}
@@ -814,7 +817,7 @@ body.stp .body>*{min-width:0}body.stp #feuBox2{order:-1}body.stp #cloEditor,body
   <div class="brand" id="brandHome" title="Accueil : vos projets">Atelier <b>PC</b></div>
   <div class="addr" id="topAddr">—</div>
   <span class="saved" id="savedInd" aria-live="polite"></span>
-  <button class="hbtn" id="bUndo" type="button" title="Annuler (Ctrl+Z)" aria-label="Annuler" disabled><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-4"/></svg></button><button class="hbtn" id="bRedo" type="button" title="Rétablir (Ctrl+Maj+Z)" aria-label="Rétablir" disabled><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h4"/></svg></button>
+  <button class="hbtn" id="bUndo" type="button" title="Annuler (Ctrl+Z)" aria-label="Annuler" disabled><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-4"/></svg><span class="ul">Annuler</span></button><button class="hbtn" id="bRedo" type="button" title="Rétablir (Ctrl+Maj+Z)" aria-label="Rétablir" disabled><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h4"/></svg></button>
   <button class="chip" id="chkChip" type="button"></button>
   <button class="btn i3d-b" type="button" id="bI3d" title="Poser le projet en 3D sur une photo du terrain"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 22V12M21 7l-9 5-9-5"/></svg> Insertion 3D</button><button class="btn express" id="bExpress" type="button" title="Assistant pas à pas : le dossier en 10 minutes"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg> Guidé</button>
   <button class="btn" id="bDos" type="button">Mes dossiers</button>
@@ -3580,17 +3583,30 @@ function feuPistes(K,c){const P=[];const add=(t,s,fix)=>P.push({t,s,fix});const 
   if(K.r2)add(K.r2.lim?'Construire en limite ou s\'en écarter':`S'écarter des limites de ${fmt(K.r2.r-K.r2.d+0.1,1)} m`,K.r2.lim?`Soit collé à la limite, soit à ${fmt(K.r2.r)} m au moins.`:'Déplacez-le sur le plan de masse.');
   if(c!=='g'&&!K.rnu)add('Faire confirmer par un certificat d\'urbanisme opérationnel','Avant d\'investir dans les plans, la mairie répond en 2 mois sur la faisabilité de la solution retenue.');
   return P}
-function feuFix(k){const p=S.projet;
+
+/* ===== Sauvegarde avant toute modification automatique, et retour arrière ===== */
+function bakDesc(P){if(!P)return'';const n={maison:'maison',extension:'extension',annexe:'annexe'}[P.nature]||'projet';return`${n} ${fmt(+P.L,1)} × ${fmt(+P.W,1)} m${+P.ouvL?` (dont ${fmt(+P.ouvL,1)} m ouverts)`:''}`}
+function bakTake(label){try{const b={t:Date.now(),label,projet:JSON.parse(JSON.stringify(S.projet)),existants:JSON.parse(JSON.stringify(S.existants)),regles:JSON.parse(JSON.stringify(S.regles))};
+  S.bak=(S.bak||[]).filter(x=>Date.now()-x.t<864e5*60);S.bak.push(b);if(S.bak.length>8)S.bak.shift();S.ui.bakHide=false;return b}catch(e){return null}}
+function bakRestore(){const b=(S.bak||[]).pop();if(!b){toast('Aucune version précédente.');return}
+  S.projet=b.projet;S.existants=b.existants;S.regles=b.regles;S.ui.bakHide=true;try{fillInputs();renderExList()}catch(e){}schedule();
+  toastAct(`Projet d'origine rétabli : ${bakDesc(b.projet)}.`,null)}
+function toastAct(msg,btn,fn,ms=9000){const t=$('#toast');t.innerHTML=`<span>${esc(msg)}</span>${btn?`<button type="button" class="toast-b">${esc(btn)}</button>`:''}`;t.hidden=false;
+  const b=t.querySelector('.toast-b');if(b)b.onclick=()=>{t.hidden=true;fn&&fn()};clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,ms)}
+function bakHTML(){const b=(S.bak||[]).slice(-1)[0];if(!b||S.ui.bakHide)return'';
+  return`<div class="bak"><span>↶ Votre projet a été modifié automatiquement (${esc(b.label)}). Avant : <b>${esc(bakDesc(b.projet))}</b>.</span><div class="btns"><button class="btn sm primary" type="button" data-bak="restore">Revenir à mon projet</button><button class="btn sm ghost" type="button" data-bak="keep">Garder les modifications</button></div></div>`}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-bak]');if(!b)return;e.preventDefault();if(b.dataset.bak==='restore')bakRestore();else{S.ui.bakHide=true;schedule()}});
+function feuFix(k){if(k!=='pickhab')bakTake({max:'taille maximale autorisée',emp50:'annexe ramenée à 50 m²',h25:'égout abaissé à 2,50 m'}[k]||'correction automatique');const p=S.projet;
   if(k==='max'){feuMax();fillInputs();schedule();return}
   if(k==='pickhab'){if(typeof stepGo==='function'&&stepCur()!==1)stepGo(1,true);const d=$('#exAsk');if(d){const st=d.closest('details');if(st)st.open=true;d.scrollIntoView({behavior:'smooth',block:'center'})}return}
-  if(k==='emp50'){const W=Math.min(+p.W||7,7.07);p.W=W;p.L=Math.floor(GP_COM.anEmp/W*10)/10;if(p.ouvL)p.ouvL=0;toast(`Annexe ramenée à ${fmt(p.L,1)} × ${fmt(W,1)} m.`)}
+  if(k==='emp50'){const W=Math.min(+p.W||7,7.07);p.W=W;p.L=Math.floor(GP_COM.anEmp/W*10)/10;if(p.ouvL)p.ouvL=0;toastAct(`Annexe ramenée à ${fmt(p.L,1)} × ${fmt(W,1)} m.`,'Annuler',bakRestore)}
   if(k==='h25'){const lim=GP_COM.annexeH;p.combles=false;let h=heights();let i=0;
     while(h.hE>lim+0.004&&i++<40){if(p.hPlancher>0.1)p.hPlancher=Math.max(0.1,Math.round((p.hPlancher-0.05)*100)/100);else if(p.hEtage>2.0)p.hEtage=Math.round((p.hEtage-0.05)*100)/100;else break;h=heights()}
-    toast(h.hE<=lim+0.004?`Égout ramené à ${fmt(h.hE)} m.`:`Impossible de descendre sous ${fmt(h.hE)} m sur ce terrain en pente : déplacez l'annexe ou décaissez.`)}
+    toastAct(h.hE<=lim+0.004?`Égout ramené à ${fmt(h.hE)} m.`:`Impossible de descendre sous ${fmt(h.hE)} m sur ce terrain en pente : déplacez l'annexe ou décaissez.`,'Annuler',bakRestore)}
   fillInputs();schedule()}
 function feuHTML(full){const fo=!full&&S.ui.feuOpen;if(fo)full=true;let F;try{F=feasibility()}catch(e){return''}if(F.c==='none'||F.c==='wait')return`<div class="feu feu-n"><i></i><div><b>${esc(F.t)}</b>${F.it.map(x=>`<p>${esc(x.t)}</p>`).join('')}</div></div>`;
-  const pj=feuProjet();const top=F.it.filter(x=>x.l===F.c).slice(0,full?99:3);
-  return`<div class="feu feu-${F.c}"><i></i><div><span>${esc(FEU_LBL[pj]||'Votre projet')} · ${esc(F.ref||'')}</span><b>${esc(F.t)}</b>
+  const BK=bakHTML();const pj=feuProjet();const top=F.it.filter(x=>x.l===F.c).slice(0,full?99:3);
+  return`${BK}<div class="feu feu-${F.c}"><i></i><div><span>${esc(FEU_LBL[pj]||'Votre projet')} · ${esc(F.ref||'')}</span><b>${esc(F.t)}</b>
     <ul>${(full?F.it:top).map(x=>`<li class="fl-${x.l}"><b>${esc(x.t)}</b>${x.s?`<span>${esc(x.s)}</span>`:''}</li>`).join('')}</ul>
     ${F.pi&&F.pi.length&&F.c!=='g'?(full?`<div class="feu-pi"><h4>💡 Pistes pour rendre le projet possible</h4><p class="hint">Des solutions qui respectent le règlement : à choisir selon votre besoin.</p><ol>${F.pi.map(x=>`<li><b>${esc(x.t)}</b><span>${esc(x.s)}</span>${x.fix?`<button class="btn sm" type="button" data-feufix="${x.fix}">${x.fix==='pickhab'?'Choisir ma maison':'Appliquer au projet'}</button>`:''}</li>`).join('')}</ol></div>`:`<p class="feu-pic">💡 ${F.pi.length} piste${F.pi.length>1?'s':''} pour le rendre possible</p>`):''}
     ${full?`<p class="hint">Règles transcrites du règlement écrit${F.it.some(x=>x.src)?` (<a href="${esc((F.it.find(x=>x.src)||{}).src)}" target="_blank" rel="noopener">source</a>)`:''}. Un feu vert ne remplace pas l'avis de la mairie : faites confirmer, idéalement par un certificat d'urbanisme opérationnel.</p>${fo?'<button class="lnk" type="button" data-feu="less">Masquer le détail</button>':''}`:`<button class="lnk" type="button" data-feu="more">${F.c==='r'?'Voir le détail et les solutions':'Voir le détail'}</button>`}</div></div>`}
@@ -3633,13 +3649,13 @@ function dimLimHTML(){const L=feuLimits(),p=S.projet;let h={};try{h=heights()}ca
   if(L.emp){const over=sf.emprise>L.emp+0.05;out.push(`<li class="${over?'bad':''}">Emprise au sol : <b>${fmt(sf.emprise,1)} m²</b> pour <b>${fmt(L.emp,0)} m² au plus</b>${over?` → avec l = ${fmt(p.W,1)} m, L ≤ ${fmt(Math.floor(L.emp/p.W*10)/10,1)} m`:''}</li>`)}
   if(L.hE){const over=h.hE>L.hE+0.005;out.push(`<li class="${over?'bad':''}">Hauteur à l'égout : <b>${fmt(h.hE)} m</b> pour <b>${fmt(L.hE)} m au plus</b></li>`)}
   if(L.hF){const over=h.hF>L.hF+0.005;out.push(`<li class="${over?'bad':''}">Hauteur totale : <b>${fmt(h.hF)} m</b> pour <b>${fmt(L.hF)} m au plus</b></li>`)}
-  if(!out.length)return'';const bad=out.some(x=>x.includes('class="bad"'));
-  return`<div class="dimlim${bad?' bad':''}"><span>Ce que le PLU autorise ici</span><ul>${out.join('')}</ul>${bad?'<button class="btn sm primary" type="button" data-feufix="max">Taille maximale autorisée</button>':''}</div>`}
+  const BK=bakHTML();if(!out.length)return BK;const bad=out.some(x=>x.includes('class="bad"'));
+  return`${BK}<div class="dimlim${bad?' bad':''}"><span>Ce que le PLU autorise ici</span><ul>${out.join('')}</ul>${bad?'<button class="btn sm primary" type="button" data-feufix="max">Taille maximale autorisée</button>':''}</div>`}
 function feuMax(silent){const L=feuLimits(),p=S.projet;const msg=[];
   if(L.emp){const sf=surfaces();if(sf.emprise>L.emp+0.05){if(p.ouvL&&p.ouvL>0&&sf.empClos<=L.emp)p.ouvL=0;const W=Math.min(+p.W,Math.sqrt(L.emp)*1.6);p.W=Math.round(W*10)/10;p.L=Math.max(3,Math.floor(L.emp/p.W*10)/10);if(p.ouvL>p.L-1.5)p.ouvL=0;msg.push(`${fmt(p.L,1)} × ${fmt(p.W,1)} m`)}}
   const tgt=L.hE||null;if(tgt){let h=heights();if(h.hE>tgt+0.004){p.combles=false;let i=0;h=heights();while(h.hE>tgt+0.004&&i++<60){if(p.hPlancher>0.1)p.hPlancher=Math.max(0.1,Math.round((p.hPlancher-0.05)*100)/100);else if(p.hEtage>2.0)p.hEtage=Math.round((p.hEtage-0.05)*100)/100;else break;h=heights()}msg.push(`égout à ${fmt(h.hE)} m`)}}
   if(L.hF){let h=heights();let i=0;while(h.hF>L.hF+0.004&&i++<60){if(p.toit!=='plat'&&p.pente>10)p.pente=Math.max(10,p.pente-1);else if(p.hEtage>2.0)p.hEtage=Math.round((p.hEtage-0.05)*100)/100;else break;h=heights()}}
-  if(!silent)toast(msg.length?'Projet ramené à la taille maximale : '+msg.join(', ')+'.':'Le projet respecte déjà les limites.');return msg.length}
+  if(!silent)if(msg.length)toastAct('Projet ramené à la taille maximale : '+msg.join(', ')+'.','Annuler',bakRestore);else toast('Le projet respecte déjà les limites.');return msg.length}
 /* hauteur à l'égout saisie directement */
 function setEgout(v){const p=S.projet;if(!(v>0))return;const n=Math.max(1,+p.niveaux||1);
   for(let k=0;k<3;k++){const d=v-heights().hE;if(Math.abs(d)<0.005)break;let he=p.hEtage+d/n;if(he<2.0){p.hPlancher=Math.max(0,Math.round((p.hPlancher-(2.0-he)*n)*100)/100);he=2.0}p.hEtage=Math.round(he*100)/100}}
@@ -3651,8 +3667,8 @@ const TPL={garage:{t:'Garage 1 voiture',s:'6 × 3,5 m',p:{nature:'annexe',usage:
   abri:{t:'Abri de jardin',s:'3 × 2,5 m',p:{nature:'annexe',usage:'abri',L:3,W:2.5,niveaux:1,hEtage:2.1,combles:false,toit:'mono',pente:15,ouvL:0}},
   ext:{t:'Extension 20 m²',s:'5 × 4 m',p:{nature:'extension',L:5,W:4,niveaux:1,hEtage:2.6,combles:false,toit:'mono',pente:15,ouvL:0}},
   maison:{t:'Maison plain-pied',s:'12 × 8,5 m',p:{nature:'maison',L:12,W:8.5,niveaux:1,hEtage:2.6,combles:false,toit:'2pans',pente:35,ouvL:0}}};
-function tplApply(k){const T=TPL[k];if(!T)return;Object.assign(S.projet,JSON.parse(JSON.stringify(T.p)));S.projet.hPlancher=0.2;S.projet.sdpManuel=null;
-  const n=feuMax(true);fillInputs();schedule();toast(`Modèle « ${T.t} » appliqué${n?', ajusté aux limites du PLU':''}. Placez-le sur le plan de masse.`)}
+function tplApply(k){const T=TPL[k];if(!T)return;bakTake('modèle « '+T.t+' »');Object.assign(S.projet,JSON.parse(JSON.stringify(T.p)));S.projet.hPlancher=0.2;S.projet.sdpManuel=null;
+  const n=feuMax(true);fillInputs();schedule();toastAct(`Modèle « ${T.t} » appliqué${n?', ajusté aux limites du PLU':''}. Placez-le sur le plan de masse.`,'Annuler',bakRestore)}
 
 /* constructions existantes : quelle est la maison, doublons */
 function exDups(){const K=S.existants;const out=[];for(let i=0;i<K.length;i++)for(let j=i+1;j<K.length;j++){try{const a=exRing(K[i]),b=exRing(K[j]);if(pip(centroid(a),b)||pip(centroid(b),a))out.push([i,j])}catch(e){}}return out}
@@ -4648,7 +4664,7 @@ $('#exList').addEventListener('input',e=>{const el=e.target.closest('[data-ex]')
   x[k]=el.type==='number'?(el.value===''?null:parseFloat(el.value)):el.value;schedule()});
 $('#exList').addEventListener('change',e=>{const m=e.target.closest('[data-exmerge]');if(m&&m.value!==''){exMerge(+m.dataset.exmerge,+m.value);return}if(e.target.closest('[data-ex]'))renderExList()});
 /* deux contours relevés pour un même bâtiment : on n'en garde qu'un, qui englobe les deux */
-function exMerge(i,j){const A=S.existants[i],B=S.existants[j];if(!A||!B)return;const pts=exRing(A).concat(exRing(B));const H=hull2(pts);
+function exMerge(i,j){const A=S.existants[i],B=S.existants[j];if(!A||!B)return;bakTake('deux bâtiments existants fusionnés');const pts=exRing(A).concat(exRing(B));const H=hull2(pts);
   const M={...A,id:'f'+Date.now(),src:'fusion',ring:H.map(q=>toLL(q[0],q[1])),hauteur:Math.max(+A.hauteur||0,+B.hauteur||0)||A.hauteur,sdp:null};delete M.c;delete M.L;delete M.W;delete M.rot;
   S.existants=S.existants.filter((_,k)=>k!==i&&k!==j);S.existants.splice(Math.min(i,j),0,M);renderExList();schedule();toast('Les deux contours ne forment plus qu\'un seul bâtiment. Vérifiez sa hauteur.')}
 $('#exList').addEventListener('click',e=>{const b=e.target.closest('[data-exrm]');if(!b)return;S.existants.splice(+b.dataset.exrm,1);renderExList();schedule()});
