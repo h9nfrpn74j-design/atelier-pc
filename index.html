@@ -1534,7 +1534,8 @@ function demoState(){
   };
 }
 var PRINTING=false;
-let S=loadLocal()||demoState();
+var ESSAI=/[?&]essai\b/.test(location.search);/* mode essai : rien n'est lu ni écrit dans le navigateur */
+let S=(ESSAI?null:loadLocal())||demoState();
 S.dossier=S.dossier||{type:'pc',exId:null,avant:null,apres:null};S.clo=S.clo||[];if(!S.projet.toitItems)S.projet.toitItems=[];if(S.regles.hClo===undefined)S.regles.hClo=null;
 {const d={insErase:true,insFgAuto:true,ins3d:true,insGrass:true,insEye:1.6,insFocal:28,insLum:100,insSat:90,insOp:100,insMode:'auto',insAB:true,insFit:'contain',insPan:0,insTilt:0,insSpin:0,insLines:true,insShadow:100,insTrees:true,insRot:0,insFlip:false,insCon:100,insImg:null,insStyle:'photo',vegeAge:'1',echelle:false};for(const k in d)if(S.photos[k]==null)S.photos[k]=d[k];if(S.photos.insOp<60)S.photos.insOp=100}
 if(!S.existants)S.existants=[];if(!S.projet.nature)S.projet.nature='maison';
@@ -1543,7 +1544,7 @@ let saveT;
 let quotaWarned=false;
 function packS(){const o=S.onsite&&S.onsite.shot,o2=S.onsite&&S.onsite.shot2;const r1=o&&o.img&&o.img===S.photos.p7,r2=o2&&o2.img&&o2.img===S.photos.p8;const i1=r1&&o.img,i2=r2&&o2.img;if(r1)o.img='@p7';if(r2)o2.img='@p8';try{return JSON.stringify(S)}finally{if(r1)o.img=i1;if(r2)o2.img=i2}}
 function unpackS(x){if(x&&x.onsite&&x.onsite.shot&&x.onsite.shot.img==='@p7')x.onsite.shot.img=x.photos&&x.photos.p7||null;if(x&&x.onsite&&x.onsite.shot2&&x.onsite.shot2.img==='@p8')x.onsite.shot2.img=x.photos&&x.photos.p8||null;return x}
-function saveLocal(){if(typeof idbSave==='function')idbSave();if(typeof histRecord==='function'){histRecord();savedUI(S.demo?'demo':'saving')}clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem('atelier-pc',packS())}catch(e){try{const c=JSON.parse(JSON.stringify(S));for(const k of['p7','p8','ins','insImg'])c.photos[k]=null;if(c.onsite)c.onsite.shot=null;localStorage.setItem('atelier-pc',JSON.stringify(c));
+function saveLocal(){if(ESSAI){try{const el=$('#savedInd');if(el){el.dataset.st='demo';el.textContent='Mode essai : rien n\'est enregistré'}}catch(e){}return}if(typeof idbSave==='function')idbSave();if(typeof histRecord==='function'){histRecord();savedUI(S.demo?'demo':'saving')}clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem('atelier-pc',packS())}catch(e){try{const c=JSON.parse(JSON.stringify(S));for(const k of['p7','p8','ins','insImg'])c.photos[k]=null;if(c.onsite)c.onsite.shot=null;localStorage.setItem('atelier-pc',JSON.stringify(c));
   if(!quotaWarned&&!window.indexedDB){quotaWarned=true;toast('Vos images sont trop lourdes pour la sauvegarde automatique du navigateur. Elles restent affichées : utilisez « Enregistrer » pour les conserver dans un fichier projet.',8000)}}catch(_){}}},400)}
 
 /* ================= Géométrie locale ================= */
@@ -6637,11 +6638,11 @@ function dossierId(){S.meta=S.meta||{};if(!S.meta.id)S.meta.id='d'+Date.now().to
 function dossierTitle(x){const T=x.terrain||{};const D=x.dem||{};const t=x.dossier&&x.dossier.type||'pc';const k={pc:'Permis',['dp-facade']:'DP façade',['dp-toiture']:'DP toiture',['dp-cloture']:'DP clôture',['dp-piscine']:'DP piscine',['dp-pergola']:'DP pergola',['dp-division']:'DP division',['dp-constr']:'DP construction',['dp-arbres']:'DP arbres'}[t]||'Dossier';
   const lieu=[T.num,T.street].filter(Boolean).join(' ')||T.label||'Terrain non choisi';return{k,lieu,commune:T.commune||'',nom:[D.prenom,D.nom].filter(Boolean).join(' ')}}
 let idbT=null;
-function idbSave(){if(S.demo){savedUI('demo');return}askPersist();clearTimeout(idbT);idbT=setTimeout(()=>{const id=dossierId();S.meta.saved=Date.now();try{localStorage.setItem('atelier-pc-cur',id)}catch(e){}
+function idbSave(){if(ESSAI)return;if(S.demo){savedUI('demo');return}askPersist();clearTimeout(idbT);idbT=setTimeout(()=>{const id=dossierId();S.meta.saved=Date.now();try{localStorage.setItem('atelier-pc-cur',id)}catch(e){}
   let thumb=null;try{thumb=S.photos.insMode==='image'?S.photos.insImg:null}catch(e){}
   idbPut({id,updated:S.meta.saved,data:JSON.parse(JSON.stringify(S)),thumb:thumb&&thumb.length<400000?thumb:null,prog:dossierProgress(),mini:miniPlan()}).then(()=>savedUI('saved')).catch(()=>savedUI('err'))},700)}
 /* au démarrage : la version complète (avec photos) vient d'IndexedDB */
-async function idbRestore(){let cur=null;try{cur=localStorage.getItem('atelier-pc-cur')}catch(e){}const id=(S.meta&&S.meta.id)||cur;if(!id)return;
+async function idbRestore(){if(ESSAI)return;let cur=null;try{cur=localStorage.getItem('atelier-pc-cur')}catch(e){}const id=(S.meta&&S.meta.id)||cur;if(!id)return;
   try{const rec=await idbGet(id);if(!rec)return;const lsT=(S.meta&&S.meta.saved)||0;const lost=['p7','p8','ins','insImg'].some(k=>rec.data.photos&&rec.data.photos[k]&&!S.photos[k]);
     if(rec.updated>lsT+1000||lost){openDossierData(rec.data,true)}}catch(e){}}
 function openDossierData(d,silent){setTimeout(()=>{if(typeof histReset==='function')histReset()},50);S=unpackS(JSON.parse(JSON.stringify(d)));S.dossier=S.dossier||{type:'pc',exId:null,avant:null,apres:null};S.clo=S.clo||[];S.existants=S.existants||[];if(!S.projet.toitItems)S.projet.toitItems=[];
@@ -6683,7 +6684,7 @@ window.addEventListener('appinstalled',()=>{INSTALL=null;const b=$('#mInstall');
   if(INSTALL){INSTALL.prompt();try{await INSTALL.userChoice}catch(e){}INSTALL=null;b.hidden=true}else toast('Sur iPhone ou iPad : touchez Partager, puis « Sur l\'écran d\'accueil ».',7000)}}}
 // première ouverture : proposer le mode express
 /* accueil à l'ouverture (sauf lien partagé ou ouverture automatisée pour les tests) */
-if(!SHARED&&!navigator.webdriver&&!/[?&]atelier\b/.test(location.search))setTimeout(homeOpen,250);else if(S.demo&&!loadLocal()&&!SHARED)setTimeout(wzOpen,300);
+if(ESSAI){}else if(!SHARED&&!navigator.webdriver&&!/[?&]atelier\b/.test(location.search))setTimeout(homeOpen,250);else if(S.demo&&!loadLocal()&&!SHARED)setTimeout(wzOpen,300);
 </script>
 </body>
 </html>
