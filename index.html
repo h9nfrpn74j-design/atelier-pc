@@ -219,6 +219,19 @@ nav.tabs button .d{width:7px;height:7px;border-radius:50%}
 .checks{max-width:780px;margin:0 auto;display:grid;gap:8px}
 .checks h2{font:600 20px var(--f-ui);margin:0 0 6px}
 .ck{display:grid;grid-template-columns:22px 1fr;gap:10px;align-items:start;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px}
+.feu{display:flex;gap:10px;align-items:flex-start;border-radius:10px;padding:10px 12px;margin:6px 0 10px;border:1px solid;font-size:13px;line-height:1.35}
+.feu>i{flex:none;width:22px;height:22px;border-radius:50%;margin-top:2px;box-shadow:0 0 0 4px rgba(0,0,0,.05)}
+.feu>div{min-width:0;flex:1}.feu>div>span{display:block;font-size:11px;opacity:.75;margin-bottom:1px}.feu>div>b{display:block;font-size:14px;margin-bottom:4px}
+.feu ul{margin:0;padding:0;list-style:none}.feu li{padding:4px 0 4px 14px;position:relative;border-top:1px solid rgba(0,0,0,.07)}.feu li:first-child{border-top:0}
+.feu li::before{content:"";position:absolute;left:0;top:10px;width:7px;height:7px;border-radius:50%}.feu li b{font-weight:600;display:block}.feu li span{display:block;opacity:.8;font-size:12px}
+.feu .fl-g::before{background:#2F9E5B}.feu .fl-o::before{background:#E0A021}.feu .fl-r::before{background:#D2493B}
+.feu-g{background:#EAF6EE;border-color:#B5DEC3;color:#173D27}.feu-g>i{background:#2F9E5B}
+.feu-o{background:#FDF4E1;border-color:#F0D49A;color:#4A3505}.feu-o>i{background:#E0A021}
+.feu-r{background:#FCEBE8;border-color:#F1BDB5;color:#5A1710}.feu-r>i{background:#D2493B}
+.feu-n{background:#F1F3F2;border-color:#DDE2E0;color:#3A4542}.feu-n>i{background:#AEB7B4}
+.feu .lnk{background:none;border:0;padding:4px 0 0;color:inherit;text-decoration:underline;cursor:pointer;font:inherit;font-size:12px;font-weight:600}
+.feu .hint{margin:6px 0 0;font-size:11.5px}.feu-h{margin:4px 0 0;font-size:14px}
+@media print{.feu{display:none}}
 .ck .ic{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;color:#fff;font:700 12px var(--f-mono)}
 .ck.ok .ic{background:var(--ok)}.ck.warn .ic{background:var(--warn)}.ck.bad .ic{background:var(--bad)}.ck.info .ic{background:var(--accent)}
 .ck b{display:block;font-weight:600}
@@ -834,7 +847,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
       <p class="hint" id="pluHint"></p>
       <details class="refbox plu-docs" id="pluDocs" hidden></details>
       <button class="btn" type="button" data-zmopen style="width:100%;margin:2px 0 6px"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg> Voir les zones sur une carte</button>
-      <div id="gpuBox"></div>
+      <div id="feuBox"></div><div id="gpuBox"></div>
       <label class="toggle"><input type="checkbox" data-b="ui.gpuMapOn" id="gpuMapOn"> Afficher les prescriptions du PLU sur le plan de masse</label>
       <p class="hint">Reportez ci-dessous les règles de votre zone : elles servent aux contrôles de conformité. Le bouton de lecture vous propose les valeurs trouvées dans le règlement.</p>
       <div class="grid2">
@@ -1823,7 +1836,7 @@ async function fetchZoneFiles(){const z=S.terrain.zone;if(!z||!z.docId)return;
     if(z.nomfic&&!z.files.some(x=>x.name===z.nomfic))z.files.unshift({name:z.nomfic,title:'Règlement écrit',path:'Règlements'});renderSide();save()}catch(e){}}
 async function fetchZone(){const {rings}=boundary();const c=toLL(...parcelCentroid(rings));const g=encodeURIComponent(JSON.stringify({type:'Point',coordinates:c}));
   let j=await getJSON(`https://apicarto.ign.fr/api/gpu/zone-urba?geom=${g}`);
-  if(j.features&&j.features.length){const pr=j.features[0].properties;S.terrain.zone={libelle:pr.libelle,libelong:pr.libelong,typezone:pr.typezone,urlfic:pr.urlfic,doc:/PLUI/i.test(pr.idurba||'')?'PLUi':/POS/i.test(pr.idurba||'')?'POS':'PLU',nomfic:pr.nomfic,partition:pr.partition,docId:pr.gpu_doc_id,files:null};fetchZoneFiles();return}
+  if(j.features&&j.features.length){const pr=j.features[0].properties;S.terrain.zone={libelle:pr.libelle,libelong:pr.libelong,typezone:pr.typezone,urlfic:pr.urlfic,idurba:pr.idurba||'',doc:/PLUI/i.test(pr.idurba||'')?'PLUi':/POS/i.test(pr.idurba||'')?'POS':'PLU',nomfic:pr.nomfic,partition:pr.partition,docId:pr.gpu_doc_id,files:null};fetchZoneFiles();return}
   try{j=await getJSON(`https://apicarto.ign.fr/api/gpu/secteur-cc?geom=${g}`);if(j.features&&j.features.length){const pr=j.features[0].properties;S.terrain.zone={libelle:pr.libelle,libelong:pr.libelong||'',typezone:pr.typesect,urlfic:pr.urlfic,doc:'Carte communale',partition:pr.partition,docId:pr.gpu_doc_id,files:null};fetchZoneFiles();return}}catch(e){}
   S.terrain.zone={libelle:'?',libelong:'Aucun document publié sur le Géoportail de l\'urbanisme (RNU possible). Vérifiez en mairie.',doc:'—'}}
 async function reverse(lon,lat){try{const j=await getJSON(`${GEO}/reverse?lon=${lon}&lat=${lat}&limit=1`);return j.features[0]?.properties||null}catch(e){return null}}
@@ -3351,16 +3364,107 @@ function zmPanel(){const el=$('#zmPanel');if(!el)return;const T=S.terrain,Z=T.zo
   const mine=Z&&Z.libelle&&Z.libelle!=='?'?`<div class="zm-mine"><span>Votre terrain</span><b>Zone ${esc(Z.libelle)}</b><p>${esc(Z.libelong||'')}</p><p class="hint">${esc(ZTYPE[ztype({libelle:Z.libelle,typezone:Z.typezone})][1])}</p></div>`:'<div class="zm-mine"><span>Votre terrain</span><p class="hint">Zone inconnue pour l\'instant.</p></div>';
   const sel=p?`<div class="zm-sel"><span>Zone sélectionnée</span><b>${esc(p.libelle||'?')}</b>${p.libelong?`<p>${esc(p.libelong)}</p>`:''}<p class="hint">${esc(ZTYPE[ztype(p)][1])}</p>${p.urlfic?`<a class="btn sm" href="${esc(p.urlfic)}" target="_blank" rel="noopener">📄 Règlement</a>`:p.gpu_doc_id?`<a class="btn sm" href="https://www.geoportail-urbanisme.gouv.fr/document/by-id/${esc(p.gpu_doc_id)}" target="_blank" rel="noopener">📄 Document d'urbanisme</a>`:''}</div>`:'';
   const tg=(k,t)=>`<label class="toggle"><input type="checkbox" data-zmt="${k}"${S.ui['zm_'+k]!==false?' checked':''}> ${t}</label>`;
-  el.innerHTML=`${mine}${sel}<div class="zm-tg">${tg('zones','Zones du PLU')}${tg('labels','Noms des zones')}${tg('presc','Prescriptions (espaces boisés, éléments protégés…)')}${tg('cad','Parcelles cadastrales')}${tg('proj','Mon terrain et mon projet')}</div>
+  el.innerHTML=`${mine}${feuHTML(false)}${sel}<div class="zm-tg">${tg('zones','Zones du PLU')}${tg('labels','Noms des zones')}${tg('presc','Prescriptions (espaces boisés, éléments protégés…)')}${tg('cad','Parcelles cadastrales')}${tg('proj','Mon terrain et mon projet')}</div>
     <label class="f">Transparence des zones<input type="range" min="0.1" max="0.8" step="0.05" id="zmOp" value="${S.ui.zm_op??0.38}"></label>
     <div class="zm-h">Zones visibles</div><div id="zmLeg" class="zm-leg"><p class="hint">—</p></div>
     <p class="hint">Source : Géoportail de l'urbanisme (documents publiés par la commune ou l'intercommunalité). En cas de doute, le document en mairie fait foi.</p>`;zmLegend()}
 document.addEventListener('change',e=>{const t=e.target.closest('[data-zmt]');if(!t||!ZM.map)return;const k=t.dataset.zmt;S.ui['zm_'+k]=t.checked;save();if(t.checked)ZM.lay[k].addTo(ZM.map);else ZM.map.removeLayer(ZM.lay[k])});
 document.addEventListener('input',e=>{if(e.target.id!=='zmOp')return;const v=+e.target.value;S.ui.zm_op=v;for(const {lay} of ZM.cache.values())lay.setStyle({fillOpacity:v})});
-document.addEventListener('click',e=>{if(e.target.closest('[data-zmopen]')){e.preventDefault();zmOpen();return}if(e.target.closest('#zmX')){zmClose();return}
+document.addEventListener('click',e=>{if(e.target.closest('[data-feu]')){e.preventDefault();try{zmClose()}catch(_){}goTab('checks');return}if(e.target.closest('[data-zmopen]')){e.preventDefault();zmOpen();return}if(e.target.closest('#zmX')){zmClose();return}
   const b=e.target.closest('[data-zb]');if(b&&ZM.map){ZM.map.removeLayer(ZM.bases[ZM.base]);ZM.base=b.dataset.zb;ZM.bases[ZM.base].addTo(ZM.map);ZM.bases[ZM.base].bringToBack();$$('#zmSeg button').forEach(x=>x.classList.toggle('on',x===b));return}
   const li=e.target.closest('[data-zl]');if(li){const it=[...ZM.cache.values()].find(v=>v.p.libelle===li.dataset.zl);if(it){zmSelect(it.p);ZM.map.fitBounds(it.lay.getBounds(),{maxZoom:17})}}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#zmap').hidden)zmClose()});
+
+/* ================= Faisabilité : feu vert / orange / rouge =================
+   Base de règles transcrites des règlements écrits (PLUi du Grand Périgueux, version consultée en novembre 2026)
+   + règles nationales pour les communes sans PLU. Chaque règle porte sa source. */
+const nrmCom=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z]/g,'').replace(/^(saint|st)/,'st');
+const GP_SECT={
+  2:['Agonac','Annesse-et-Beaulieu','Antonne-et-Trigonant','Château-l\'Évêque','Cornille','Coursac','Escoire','La Chapelle-Gonaguet','La Douze','Mensignac','Razac-sur-l\'Isle','Saint-Pierre-de-Chignac','Sarliac-sur-l\'Isle','Savignac-les-Églises','Sorges et Ligueux en Périgord','Val de Louyre et Caudeau','Vergt'],
+  3:['Bourrou','Chalagnac','Creyssensac-et-Pissot','Église-Neuve-de-Vergt','Fouleix','Grun-Bordas','Lacropte','Manzac-sur-Vern','Saint-Amand-de-Vergt','Saint-Crépin-d\'Auberoche','Saint-Geyrac','Saint-Maime-de-Péreyrol','Saint-Michel-de-Villadeix','Saint-Paul-de-Serre','Salon','Veyrines-de-Vergt']};
+const GP_SRC={2:'https://www.grandperigueux.fr/grandperigueux_plui_reglement_secteur_2_2026_01',3:'https://www.grandperigueux.fr/grandperigueux_plui_reglement_secteur_3_2026_01',1:'https://www.grandperigueux.fr/au-quotidien/urbanisme/le-plan-local-durbanisme-intercommunal-plui/pdf'};
+/* règles par zone. hab : habitation nouvelle (true / 'oap' / false) ; an : régime « habitations existantes en zone A/N » (extensions +30 % ou +60 m², 3 annexes ≤ 50 m² à 20 m) ;
+   none : aucune construction nouvelle ; h : hauteur max (m, à l'égout, au milieu de la façade) ; emp : emprise max (% du terrain) ; r1 : recul voie (m, [RD, autres]) ; r2 : retrait limites ; pt : pleine terre (%). */
+const GP_Z={
+  2:{UA:{hab:true,h:10,emp:null,r1:0,r2:3,r2lim:true,pt:20,t:'Centre ancien'},UB:{hab:true,h:7,emp:60,r1:5,r2:3,r2lim:true,pt:30,t:'Quartiers résidentiels'},UC:{hab:true,h:7,emp:40,r1:5,r2:3,pt:40,t:'Habitat pavillonnaire'},UD:{hab:true,h:7,emp:20,r1:5,r2:'H/2',pt:70,t:'Habitat peu dense'},
+     UE:{hab:false,t:'Équipements publics'},UT:{hab:false,h:7,t:'Tourisme'},UY:{hab:false,h:20,emp:70,t:'Activités'},'1AUh':{hab:'oap',t:'À urbaniser (habitat)'},'1AUm':{hab:'oap',t:'À urbaniser (mixte)'},'1AUx':{hab:false,t:'À urbaniser (activités)'},'1AUy':{hab:false,t:'À urbaniser (activités)'},
+     '2AU':{hab:false,an:true,h:7,emp:50,r1:[7,5],r2:3,pt:40,t:'Urbanisation future (fermée)'},A:{hab:false,an:true,h:7,r1:[7,5],r2:3,t:'Agricole'},Ah:{hab:true,an:true,h:7,emp:50,r1:[7,5],r2:3,pt:40,t:'Hameau agricole constructible (STECAL)'},Ap:{none:true,t:'Agricole protégé'},Ay:{hab:false,an:true,h:10,emp:70,t:'Activités isolées (STECAL)'},Ace:{hab:false,t:'Centre équestre'},Ae:{hab:false,t:'Équipements'},
+     N:{hab:false,an:true,h:7,r1:[7,5],r2:3,t:'Naturelle'},Nh:{hab:true,an:true,h:7,emp:40,r1:[7,5],r2:3,pt:40,t:'Hameau naturel constructible (STECAL)'},Np:{none:true,t:'Naturelle protégée'},NL:{hab:false,an:true,h:7,emp:40,t:'Loisirs'},Nt:{hab:false,an:true,h:7,emp:50,t:'Tourisme'},Ny:{hab:false,an:true,h:10,emp:70,t:'Activités isolées (STECAL)'},Ne:{hab:false,t:'Équipements'},Nca:{none:true,t:'Carrières'},Npv:{none:true,t:'Photovoltaïque'}},
+  3:null};
+GP_Z[3]=JSON.parse(JSON.stringify(GP_Z[2]));Object.assign(GP_Z[3],{UB:{...GP_Z[2].UB,emp:50},UX:{hab:false,t:'Activités'},Ax:{hab:false,an:true,emp:70,t:'Activités isolées (STECAL)'},Nx:{hab:false,an:true,h:10,emp:70,t:'Activités isolées (STECAL)'},Nj:{none:true,t:'Jardins familiaux'}});
+for(const z of['N','Nh','NL','Nt'])GP_Z[3][z]={...GP_Z[3][z],r2:4};
+const GP_COM={annexeH:2.5,carportH:4,anExtPct:0.30,anExtM2:60,anNb:3,anDist:20,anDistPisc:25,anEmp:50};
+function gpSecteur(){const T=S.terrain;const z=T.zone||{};const com=nrmCom((T.parcels[0]||{}).commune||T.commune||'');
+  for(const k of[2,3])if(GP_SECT[k].some(c=>nrmCom(c)===com))return k;if(/^200040392/.test(z.idurba||''))return 1;return 0}
+function zoneKey(lib,tab){const L=String(lib||'').trim();if(tab[L])return L;const u=L.replace(/\s/g,'');if(tab[u])return u;
+  const m=Object.keys(tab).filter(k=>u.toUpperCase().startsWith(k.toUpperCase())).sort((a,b)=>b.length-a.length)[0];return m||null}
+/* type de projet, en clair */
+function feuProjet(){const m=mode(),P=S.projet;if(m==='dp-piscine')return'piscine';if(m==='dp-cloture')return'cloture';if(/^dp-(facade|toiture|arbres|division)/.test(m))return m;if(m==='dp-pergola')return'annexe';
+  if(P.nature==='maison')return'maison';if(P.nature==='extension')return'extension';const O=(()=>{try{return openPart()}catch(e){return null}})();return O&&O.Lc<0.5?'carport':'annexe'}
+const FEU_LBL={maison:'une maison',extension:'une extension',annexe:'une annexe (garage, atelier, abri…)',carport:'un carport',piscine:'une piscine',cloture:'une clôture','dp-facade':'une modification de façade','dp-toiture':'une modification de toiture','dp-arbres':'un abattage d\'arbres','dp-division':'une division'};
+function feuHab(){const H=exKept().filter(e=>/habit|r[ée]sid|logement|maison|indiff/i.test(e.usage||''));return H.length?H.sort((a,b)=>exArea(b)-exArea(a))[0]:null}
+/* le verdict */
+function feasibility(){const T=S.terrain,P=S.projet;const it=[];const add=(l,t,s,src)=>it.push({l,t,s:s||'',src:src||''});
+  if(!T.parcels.length)return{c:'none',t:'Choisissez un terrain',it};if(S.demo)return{c:'none',t:'Terrain d\'exemple',it:[{l:'o',t:'Chargez votre terrain pour obtenir un verdict.',s:''}]};
+  const Z=T.zone;if(!Z)return{c:'wait',t:'Lecture du document d\'urbanisme…',it};
+  const pj=feuProjet();const sec=gpSecteur();let h={},sf={},D={};try{h=heights();sf=surfaces();D=distances()}catch(e){}
+  const isB=['maison','extension','annexe','carport'].includes(pj);
+  // ----- servitudes, risques, protections (tous documents)
+  try{const G=T.gpu;if(G&&G.ok){for(const s of G.sup||[]){if(/^PM1/i.test(s.code))add('o','Plan de prévention des risques sur le terrain',`${s.titre}${s.nom?' — '+s.nom:''}. Son règlement s'ajoute au PLU et peut interdire ou limiter les constructions selon la zone (rouge, bleue…).`);else if(/^AC1/i.test(s.code))add('o','Abords d\'un monument historique',`Avis de l'architecte des Bâtiments de France obligatoire.`);}
+    if(isB){const hits=gpuBldHits();for(const x of hits){const ebc=/bois|EBC/i.test(x.lib||'');add(ebc?'r':'o',ebc?'Le projet empiète sur un espace boisé classé':`Le projet touche une prescription : ${x.lib}`,ebc?'Toute construction y est interdite : déplacez le projet.':'Vérifiez ce que cette prescription autorise.')}}}}catch(e){}
+  try{for(const r of risqueList())if(r.lvl==='bad')add('o',r.t,r.s)}catch(e){}
+  // ----- pas de document d'urbanisme : règlement national
+  if(Z.libelle==='?'||Z.doc==='—'){
+    add('o','Commune sans PLU : règlement national d\'urbanisme','On ne peut construire que dans les « parties actuellement urbanisées » de la commune (article L111-3). Ailleurs, seuls sont admis l\'adaptation, la réfection et l\'extension des constructions existantes et les bâtiments agricoles. La mairie et la préfecture apprécient au cas par cas.','https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000031211160');
+    if(pj==='maison')add('o','Maison neuve','Possible seulement si le terrain est dans le bourg ou un hameau déjà bâti, entouré de constructions. Demandez un certificat d\'urbanisme opérationnel.');
+    return feuOut(it,'Règlement national, à confirmer en mairie')}
+  // ----- carte communale
+  if(Z.doc==='Carte communale'){const cons=/^0?1$|constructible/i.test(String(Z.typezone||Z.libelle||''))&&!/non/i.test(Z.libelong||'');
+    if(cons)add('g','Secteur constructible de la carte communale','Les règles nationales s\'appliquent (accès, réseaux, aspect).');
+    else if(pj==='maison')add('r','Secteur non constructible de la carte communale','Une maison neuve n\'y est pas autorisée. Seuls l\'adaptation, la réfection et l\'extension des constructions existantes, et les constructions agricoles ou d\'intérêt collectif, sont admises.');
+    else add('o','Secteur non constructible de la carte communale','Extensions et annexes des constructions existantes : appréciées au cas par cas par la mairie.');
+    return feuOut(it,'Carte communale')}
+  // ----- PLU non transcrit
+  const tab=sec&&GP_Z[sec===1?2:sec];const zk=tab&&zoneKey(Z.libelle,tab);
+  if(!sec||!zk){const t=String(Z.typezone||'').replace(/\s/g,'');const AN=/^[AN]/.test(t)||/^[AN]/i.test(Z.libelle||'');
+    add('o',`Zone ${Z.libelle} du ${Z.doc||'PLU'} : règles pas encore transcrites`,`L'appli connaît la zone mais pas encore les chiffres de ce règlement. ${AN?(pj==='maison'?'En zone agricole ou naturelle, une maison neuve est presque toujours interdite (sauf petits secteurs « h » de hameau).':'En zone agricole ou naturelle, seules des extensions et annexes limitées des maisons existantes sont en général admises.'):'Zone urbaine ou à urbaniser : vérifiez hauteur, emprise et reculs dans le règlement.'}`);
+    if(AN&&pj==='maison')it[it.length-1].l='r';
+    return feuOut(it,`${Z.doc||'PLU'} — zone ${Z.libelle}`)}
+  const R=tab[zk];const ref=`PLUi du Grand Périgueux, secteur ${sec}, zone ${zk}`;const src=GP_SRC[sec];const s1=sec===1;
+  if(s1)add('o','Secteur 1 du PLUi : chiffres de la zone à confirmer','Le règlement du secteur 1 n\'a pas pu être relu ; l\'appli applique les règles communes aux trois secteurs (annexes, zones A et N) et celles du secteur 2 pour le reste.',src);
+  // ----- interdictions de zone
+  if(R.none&&pj!=='cloture'&&!/^dp-(facade|toiture|arbres)/.test(pj)){add('r',`Zone ${zk} (${R.t}) : constructions nouvelles interdites`,'Ce secteur est protégé : aucune construction nouvelle n\'y est admise, hormis quelques équipements publics ou installations légères.',src);return feuOut(it,ref)}
+  if(pj==='maison'){if(R.hab===false)add('r',`Maison neuve interdite en zone ${zk}`,R.an?`Zone ${R.t.toLowerCase()} : seules les extensions et annexes des maisons existantes sont admises.`:`Zone réservée : ${R.t.toLowerCase()}.`,src);
+    else if(R.hab==='oap')add('o',`Zone ${zk} : construction possible dans le cadre de l'OAP`,'Les orientations d\'aménagement du secteur fixent l\'implantation, les hauteurs et la densité. À vérifier dans le document « OAP ».',src);else add('g',`Maison autorisée en zone ${zk}`,R.t,src)}
+  // ----- régime des habitations existantes en zone A / N / 2AU
+  const hab=feuHab();
+  if(R.an&&R.hab!==true&&['extension','annexe','carport','piscine'].includes(pj)){
+    if(!hab)add('o','Aucune habitation existante repérée sur le terrain','En zone '+zk+', extensions et annexes ne sont admises que pour une habitation existante. Indiquez-la dans « Constructions déjà sur le terrain ».',src);
+    if(pj==='extension'&&hab){const E0=exArea(hab),mx=Math.max(GP_COM.anExtPct*E0,GP_COM.anExtM2);add(sf.emprise<=mx+0.5?'g':'r',`Extension : ${fmt(sf.emprise,0)} m² pour ${fmt(mx,0)} m² maximum`,`+30 % de l'emprise de la maison (${fmt(E0,0)} m²) ou +60 m², la règle la plus favorable.`,src)}
+    if(pj==='annexe'||pj==='carport'||pj==='piscine'){
+      const nbEx=exKept().filter(e=>e!==hab&&!/habit|r[ée]sid|logement|maison/i.test(e.usage||'')).length;const nb=nbEx+1;add(nb<=GP_COM.anNb?'g':'r',`${nb} annexe${nb>1?'s':''} après travaux pour ${GP_COM.anNb} maximum`,nbEx?`Dont ${nbEx} existante${nbEx>1?'s':''} conservée${nbEx>1?'s':''}.`:'',src);
+      if(hab){let d=null;try{d=polyDist(bldPoly(),exRing(hab)).d}catch(e){}const lim=pj==='piscine'?GP_COM.anDistPisc:GP_COM.anDist;if(d!=null)add(d<=lim+0.05?'g':'r',`À ${fmt(d)} m de l'habitation pour ${lim} m maximum`,'Des dérogations sont possibles seulement pour des contraintes de terrain avérées.',src)}
+      if(pj!=='piscine'){const e=sf.emprise;add(e<=GP_COM.anEmp+0.05?'g':'r',`Emprise de l'annexe : ${fmt(e,0)} m² pour ${GP_COM.anEmp} m² maximum`,(()=>{try{const O=openPart();return O?`Partie fermée ${fmt(sf.empClos,0)} m² + abri ouvert ${fmt(e-sf.empClos,0)} m² : un seul bâtiment, donc une seule annexe. Deux bâtiments distincts (atelier ≤ 50 m² + carport ≤ 50 m²) compteraient comme deux annexes.`:''}catch(e){return''}})(),src)}}}
+  // ----- hauteurs
+  if(isB){const accol=(()=>{try{const ne=nearestExisting();return ne&&ne.d<0.1}catch(e){return false}})();
+    if(pj==='annexe'||pj==='carport'){if(accol)add('o','Annexe accolée','Sa hauteur ne doit pas dépasser celle de la construction existante.',src);
+      else{const lim=pj==='carport'?GP_COM.carportH:GP_COM.annexeH;const v=pj==='carport'?h.hF:h.hE;add(v<=lim+0.005?'g':'r',`Hauteur ${pj==='carport'?'du carport':'de l\'annexe'} : ${fmt(v)} m pour ${fmt(lim)} m maximum`,`Mesurée au milieu de la façade, depuis le terrain avant travaux, ${pj==='carport'?'au point le plus haut':'jusqu\'à l\'égout'}.${pj==='annexe'?' Un carport (abri pour véhicules non entièrement clos) a droit à 4 m.':''}`,src)}}
+    else if(R.h){add(h.hE<=R.h+0.005?'g':'r',`Hauteur : ${fmt(h.hE)} m pour ${fmt(R.h)} m maximum`,'À l\'égout, au milieu de la façade, depuis le terrain avant travaux.',src)}
+    // emprise au sol de zone
+    if(R.emp){const tot=sf.emprise+exKept().reduce((a,e)=>a+exArea(e),0);const A=parcelArea();const pc=A?tot/A*100:0;add(pc<=R.emp+0.05?'g':'r',`Emprise au sol totale : ${fmt(pc,0)} % du terrain pour ${R.emp} % maximum`,`${fmt(tot,0)} m² bâtis sur ${fmt(A,0)} m².`,src)}
+    // recul sur voie
+    if(R.r1!=null&&D.dv!=null){const r1=Array.isArray(R.r1)?R.r1[1]:R.r1;if(r1>0)add(D.dv+0.005>=r1?'g':(Array.isArray(R.r1)?'o':'r'),`Recul sur la voie : ${fmt(D.dv)} m pour ${r1} m minimum`,Array.isArray(R.r1)?`${R.r1[0]} m le long d'une route départementale.`:'',src)}
+    if(R.r2!=null&&D.dl!=null&&pj!=='annexe'&&pj!=='carport'){const r2=R.r2==='H/2'?Math.max(3,(h.hE||0)/2):R.r2;const ok=D.dl+0.005>=r2||(R.r2lim&&D.dl<0.05);add(ok?'g':'r',`Retrait des limites : ${fmt(D.dl)} m pour ${fmt(r2)} m minimum`,R.r2lim?'Implantation en limite également possible.':'',src)}
+    if(R.pt){const A=parcelArea();const tot=sf.emprise+exKept().reduce((a,e)=>a+exArea(e),0);const lib=A?100-tot/A*100:0;const ok=lib-R.pt>=15;add(ok?'g':'o',`Pleine terre : environ ${fmt(lib,0)} % libres pour ${R.pt} % minimum`,ok?'Estimation hors allées, terrasses et piscine : la marge est confortable.':'Estimation hors allées, terrasses et piscine : comptez précisément les surfaces imperméabilisées.',src)}}
+  if(pj==='cloture'){let hm=0;try{hm=Math.max(0,...(S.clo||[]).map(c=>+c.h||0))}catch(e){}const ppri=it.some(x=>/prévention des risques/.test(x.t));if(hm)add(hm<=(ppri?1.2:1.8)+0.005?'g':'r',`Clôture : ${fmt(hm)} m pour ${ppri?'1,20':'1,80'} m maximum`,'1,50 m si mur plein sur la voie ; fil barbelé interdit.',src)}
+  if(/^dp-(facade|toiture)/.test(pj))add('g','Travaux sur l\'existant admis','Respectez les règles d\'aspect de la zone (teintes, matériaux).',src);
+  return feuOut(it,ref)}
+function feuOut(it,ref){const c=it.some(x=>x.l==='r')?'r':it.some(x=>x.l==='o')?'o':it.length?'g':'o';return{c,ref,it:it.sort((a,b)=>'rog'.indexOf(a.l)-'rog'.indexOf(b.l)),t:c==='r'?'Projet non faisable en l\'état':c==='o'?'Faisable sous conditions — à vérifier':'Projet faisable selon les règles connues'}}
+function feuHTML(full){let F;try{F=feasibility()}catch(e){return''}if(F.c==='none'||F.c==='wait')return`<div class="feu feu-n"><i></i><div><b>${esc(F.t)}</b>${F.it.map(x=>`<p>${esc(x.t)}</p>`).join('')}</div></div>`;
+  const pj=feuProjet();const top=F.it.filter(x=>x.l===F.c).slice(0,full?99:3);
+  return`<div class="feu feu-${F.c}"><i></i><div><span>${esc(FEU_LBL[pj]||'Votre projet')} · ${esc(F.ref||'')}</span><b>${esc(F.t)}</b>
+    <ul>${(full?F.it:top).map(x=>`<li class="fl-${x.l}"><b>${esc(x.t)}</b>${x.s?`<span>${esc(x.s)}</span>`:''}</li>`).join('')}</ul>
+    ${full?`<p class="hint">Règles transcrites du règlement écrit${F.it.some(x=>x.src)?` (<a href="${esc((F.it.find(x=>x.src)||{}).src)}" target="_blank" rel="noopener">source</a>)`:''}. Un feu vert ne remplace pas l'avis de la mairie : faites confirmer, idéalement par un certificat d'urbanisme opérationnel.</p>`:`<button class="lnk" type="button" data-feu="more">Voir le détail (${F.it.length})</button>`}</div></div>`}
 
 /* insertion : avant / après sur la même planche */
 function insBefore(far){const ph=S.photos,o=S.onsite||{};if(far)return ph.insFromShot2&&o.shot2?o.shot2.img:null;
@@ -3673,12 +3777,12 @@ function pcToDp(h){if(mode()!=='dp-constr')return h;return h.replace(/PCMI([1-8]
 function renderSheet(id){const sh=activeSheets().find(s=>s.id===id)||SHEETS.find(s=>s.id===id);let w=$('#w-'+id);if(!w){w=document.createElement('div');w.className='wrap';w.id='w-'+id;$('#stage').appendChild(w)}
   w.innerHTML=`<div class="sheet ${sh.o}">${pcToDp(/^dp/.test(id)?sheetHTML(sh):withVariant('apres',()=>sheetHTML(sh)))}</div>`;w.classList.toggle('on',S.ui.tab===id);if(S.ui.tab===id)fit()}
 function renderChecks(){let w=$('#w-checks');if(!w){w=document.createElement('div');w.id='w-checks';w.className='wrap';$('#stage').appendChild(w)}
-  const C=checks().map(c=>({...c,t:pcToDp(c.t),s:pcToDp(c.s)}));const ae=document.activeElement;const keep=ae&&ae.dataset&&ae.dataset.suivi;w.innerHTML=`<div class="checks"><h2>Contrôles de cohérence</h2><button class="btn primary rev-cta" type="button" data-rev>${ICO('review')} Relecture pièce par pièce avant dépôt</button>${C.map(c=>`<div class="ck ${c.lvl}"><div class="ic">${{ok:'✓',warn:'!',bad:'×',info:'i'}[c.lvl]}</div><div><b>${c.t}</b><span>${c.s}</span></div></div>`).join('')}${budgetHTML()}</div>`;if(keep){const n=w.querySelector(`[data-suivi="${keep}"]`);if(n)n.focus()}
+  const C=checks().map(c=>({...c,t:pcToDp(c.t),s:pcToDp(c.s)}));const ae=document.activeElement;const keep=ae&&ae.dataset&&ae.dataset.suivi;w.innerHTML=`<div class="checks"><h2>Contrôles de cohérence</h2><h3 class="feu-h">Faisabilité au regard du PLU</h3>${feuHTML(true)}<button class="btn primary rev-cta" type="button" data-rev>${ICO('review')} Relecture pièce par pièce avant dépôt</button>${C.map(c=>`<div class="ck ${c.lvl}"><div class="ic">${{ok:'✓',warn:'!',bad:'×',info:'i'}[c.lvl]}</div><div><b>${c.t}</b><span>${c.s}</span></div></div>`).join('')}${budgetHTML()}</div>`;if(keep){const n=w.querySelector(`[data-suivi="${keep}"]`);if(n)n.focus()}
   w.classList.toggle('on',S.ui.tab==='checks');
   const nb=C.filter(c=>c.lvl==='bad').length,nw=C.filter(c=>c.lvl==='warn').length;const ch=$('#chkChip');
   ch.innerHTML=`<span class="d" style="background:${nb?'#E07A6F':nw?'#E3B04B':'#7CC39A'}"></span>${nb?nb+' non-conformité'+(nb>1?'s':''):nw?nw+' point'+(nw>1?'s':'')+' à compléter':'Dossier cohérent'}`;
   ch.style.background='#26322F';ch.style.color='#fff';progRender()}
-function renderSide(){renderModeUI();{const gb=$('#gpuBox');if(gb)gb.innerHTML=gpuHTML()}if(typeof swRender==='function')swRender();$$('input.dmode').forEach(r=>r.checked=r.value===mode());renderImpl();{const ph=S.photos;const pc=$('#insPhotoCtl');if(pc)pc.hidden=!ph.ins;const img=ph.insMode==='image';$('#insImageCtl').hidden=!img;$('#insAutoCtl').hidden=img;$('#insTreesRow').hidden=!!ph.ins;
+function renderSide(){renderModeUI();{const gb=$('#gpuBox');if(gb)gb.innerHTML=gpuHTML();const fb=$('#feuBox');if(fb)fb.innerHTML=feuHTML(false)}if(typeof swRender==='function')swRender();$$('input.dmode').forEach(r=>r.checked=r.value===mode());renderImpl();{const ph=S.photos;const pc=$('#insPhotoCtl');if(pc)pc.hidden=!ph.ins;const img=ph.insMode==='image';$('#insImageCtl').hidden=!img;$('#insAutoCtl').hidden=img;$('#insTreesRow').hidden=!!ph.ins;
     const IC=insCamera();const ae=document.activeElement;if(ae!==$('#insDist'))$('#insDist').value=IC.dist.toFixed(1);if(ae!==$('#insAz'))$('#insAz').value=Math.round(IC.az)}{const mr=$('#monoInvRow');if(mr)mr.hidden=S.projet.toit!=='mono'}
   const T=S.terrain;$('#topAddr').textContent=(S.demo?'Exemple — ':'')+(adresseTerrain()||T.label||'');
   $('#plist').innerHTML=T.parcels.map(p=>`<span class="pchip">${esc(p.section)} ${esc(String(p.numero).replace(/^0+/,''))} · ${fmt(p.contenance||0,0)} m²</span>`).join('');
