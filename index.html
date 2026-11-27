@@ -857,6 +857,23 @@ body.stp #amStep,body.stp #cloEditor{border-top:1px solid var(--line);padding-to
 @media (max-width:820px){#bExpress{font-size:0;gap:0;padding:6px 10px}#bExpress svg{width:18px;height:18px}#chkChip{max-width:40vw;font-size:10.5px}header.top{gap:6px}.brand{font-size:13px}.mnav{grid-template-columns:none!important;grid-auto-flow:column;grid-auto-columns:1fr}}
 @media print{.stepper,.st-head,.st-foot{display:none!important}}
 :root[data-theme=dark] header.top,:root[data-theme=dark] .top .btn{background:var(--panel)}
+
+/* ===== cartes bien séparées ===== */
+body.stp aside{background:#EEF1EE}
+body.stp aside .st-head{background:var(--panel);border-bottom:1px solid var(--line);padding-bottom:16px}
+body.stp aside details.step>summary{padding:22px 18px 10px;font:800 13px var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:10px}
+body.stp aside details.step>summary::before{content:"";width:4px;height:16px;border-radius:2px;background:var(--accent)}
+body.stp aside details.step.st-on+details.step.st-on{border-top:0;margin-top:6px}
+body.stp aside .body{padding:0 14px 6px;gap:12px}
+.card-sec{background:var(--panel);border:1px solid #D5DCD8;border-radius:14px;padding:0 16px 16px;display:grid;gap:12px;box-shadow:0 1px 2px rgba(20,40,35,.05);min-width:0}
+.card-sec>.card-h,body.stp .body .card-sec>.sub.card-h{margin:0 -16px 2px!important;padding:12px 16px!important;border-top:0!important;border-bottom:1px solid var(--line);background:#F7F9F8;border-radius:14px 14px 0 0;font:700 14.5px var(--f-ui)!important;letter-spacing:0!important;text-transform:none!important;color:var(--ink)!important;display:flex;align-items:center;gap:8px}
+.card-sec>.card-h::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
+body.stp #amStep,body.stp #cloEditor,body.stp #divStep,body.stp #arbStep,body.stp #dpBat{background:var(--panel);border:1px solid #D5DCD8;border-radius:14px;padding:12px 16px 16px;box-shadow:0 1px 2px rgba(20,40,35,.05)}
+body.stp #amStep h4,body.stp #divStep h4,body.stp #arbStep h4,body.stp #cloEditor>.impl-h,body.stp #dpBat>.impl-h{font:700 14.5px var(--f-ui)!important;text-transform:none!important;letter-spacing:0!important;color:var(--ink)!important;margin:0 0 10px!important;padding-bottom:10px;border-bottom:1px solid var(--line)}
+body.stp #projBody{display:grid;gap:12px}
+body.stp .modes{margin:0}
+body.stp .st-foot{background:var(--panel)}
+@media (max-width:820px){body.stp aside .body{padding:0 10px 6px}.card-sec{padding:0 12px 14px}.card-sec>.card-h{margin:0 -12px 2px!important;padding:11px 12px!important}}
 </style>
 </head>
 <body>
@@ -967,6 +984,7 @@ body.stp #amStep,body.stp #cloEditor{border-top:1px solid var(--line);padding-to
   <details class="step">
     <summary><span class="n">02</span>Règles d'urbanisme<span class="s" id="sumPlu"></span></summary>
     <div class="body">
+      <div class="sub">Votre zone et le feu</div>
       <div class="status" id="stPlu">—</div>
       <div class="btns" id="pluLinks"></div>
       <button class="btn primary" id="bReglRead" type="button" hidden>Lire les règles de ma zone</button>
@@ -975,6 +993,7 @@ body.stp #amStep,body.stp #cloEditor{border-top:1px solid var(--line);padding-to
       <button class="btn" type="button" data-zmopen style="width:100%;margin:2px 0 6px"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg> Voir les zones sur une carte</button>
       <div id="feuBox"></div><div id="gpuBox"></div>
       <label class="toggle"><input type="checkbox" data-b="ui.gpuMapOn" id="gpuMapOn"> Afficher les prescriptions du PLU sur le plan de masse</label>
+      <div class="sub">Règles de votre zone</div>
       <div id="reglAuto"></div><p class="hint adv">Ces règles servent aux contrôles de conformité. Le bouton de lecture vous propose les valeurs trouvées dans le règlement.</p>
       <div class="grid2">
         <label class="f">Recul min. / voie (m)<input type="number" step="0.5" min="0" data-b="regles.reculVoie"></label>
@@ -1163,7 +1182,7 @@ body.stp #amStep,body.stp #cloEditor{border-top:1px solid var(--line);padding-to
   <details class="step">
     <summary><span class="n">04</span>Photos et insertion<span class="s" id="sumPhotos"></span></summary>
     <div class="body">
-      <div class="sub" style="border:0;padding:0;margin:0">PCMI7 · environnement proche</div>
+      <div class="sub">PCMI7 · environnement proche</div>
       <input type="file" accept="image/*,.jpg,.jpeg,.png,.webp,.heic,.heif,.tif,.tiff,.bmp,.gif,.avif,.pdf,application/pdf" data-photo="p7">
       <div class="btns"><button class="btn sm" data-placepv="p7" type="button">Placer le point de vue sur le plan</button></div>
       <label class="f">Direction de la prise de vue (° depuis le Nord)<input type="range" min="0" max="359" data-b="photos.p7dir"></label>
@@ -1251,6 +1270,7 @@ body.stp #amStep,body.stp #cloEditor{border-top:1px solid var(--line);padding-to
         <label class="f">Courriel<input type="email" data-b="dem.email"></label>
       </div>
       <div id="profBox"></div>
+      <div class="sub">Date et version des plans</div>
       <div class="grid2">
         <label class="f">Date des plans<input type="date" data-b="meta.date"></label>
         <label class="f">Indice<input type="text" data-b="meta.indice"></label>
@@ -1258,6 +1278,7 @@ body.stp #amStep,body.stp #cloEditor{border-top:1px solid var(--line);padding-to
       <label class="f">Objet de cet indice (repris dans le cartouche)<input type="text" data-b="meta.revNote" placeholder="ex. Première émission"></label>
       <div class="btns"><button class="btn sm" type="button" id="bNewRev">Nouvel indice (après des modifications)</button></div>
       <p class="hint" id="revList"></p>
+      <div class="sub">Si vous préparez le dossier pour quelqu'un</div>
       <label class="f">Dossier établi par (cartouche et page de garde)<input type="text" data-b="meta.auteur" placeholder="ex. Atelier Le Dreau — 06 12 34 56 78"></label>
       <div class="btns"><label class="btn sm">Logo du cartouche<input type="file" accept="image/*" data-logo hidden></label><button class="btn sm" type="button" data-logodel>Retirer le logo</button></div>
       <p class="hint">La notice PCMI4 se rédige toute seule à partir de vos réglages et se met à jour à chaque modification. Pour ajouter vos propres informations, écrivez dans les cadres en pointillé sous chaque rubrique de la planche : ils sont conservés et imprimés à la suite du texte généré.</p>
@@ -3758,6 +3779,14 @@ document.addEventListener('click',e=>{const t=e.target;let b;
   if(b=t.closest('[data-prof]')){profAct(b.dataset.prof);return}});
 document.addEventListener('change',e=>{if(e.target.id==='hEg'){setEgout(parseFloat(String(e.target.value).replace(',','.')));fillInputs();schedule()}});
 
+
+/* panneau gauche en cartes : chaque titre de section ouvre un cadre bien séparé */
+function cardify(box,lead){if(!box||box.dataset.cards)return;box.dataset.cards='1';const kids=[...box.children];let cur=null;
+  const mk=h=>{const sec=document.createElement('section');sec.className='card-sec';if(h){h.classList.add('card-h');for(const c of['pc-only','adv','dem-only'])if(h.classList.contains(c))sec.classList.add(c)}
+    else if(lead){h=document.createElement('div');h.className='sub card-h';h.textContent=lead}if(h)sec.appendChild(h);box.appendChild(sec);return sec};
+  for(const k of kids){if(k.classList.contains('sub')){cur=mk(k);continue}if(!cur){if(['feuBox','feuBox2','bakBox','reglAuto'].includes(k.id)||k.matches('.modes,#modesAll')){box.appendChild(k);continue}cur=mk(null)}cur.appendChild(k)}}
+function cardifyAll(){const D=$$('aside details.step');const leads=[null,'Adresse et parcelle',null,null,null,'Vos coordonnées'];
+  D.forEach((d,i)=>{const b=d.querySelector(':scope>.body');if(!b)return;if(i===3){cardify($('#projBody'),null);return}if(i===0)return;cardify(b,leads[i])})}
 /* ================= Parcours en 4 étapes ================= */
 const STEPS=[{n:1,t:'Terrain',d:'Adresse et règles',h:'Votre terrain',i:'Cherchez votre adresse ou votre parcelle. L\'appli lit le PLU et remplit les règles de votre zone.'},
   {n:2,t:'Projet',d:'Ce que vous construisez',h:'Votre projet',i:'Dites ce que vous voulez faire et placez-le sur le plan. Le feu vous dit tout de suite si c\'est autorisé.'},
@@ -3778,7 +3807,7 @@ function stepperRender(){const el=$('#stepper');if(!el)return;const c=stepCur();
   if(c===4)fh=`<div class="st-exp"><button class="btn primary" type="button" data-click="bPdf">⬇ Télécharger le dossier complet (PDF)</button><button class="btn" type="button" data-click="bCerfa">Formulaire cerfa pré-rempli</button><button class="btn" type="button" data-click="bZip">Fichiers pour le dépôt en ligne</button><button class="btn" type="button" data-click="bPrint">Imprimer le dossier</button></div>`;
   fh+=`<div class="st-nav">${c>1?`<button class="btn" type="button" data-step="${c-1}">← ${STEPS[c-2].t}</button>`:'<span></span>'}${c<4?`<button class="btn primary" type="button" data-step="${c+1}">Étape suivante : ${STEPS[c].t} →</button>`:''}</div>`;
   if(sf&&sf.__h!==fh){sf.innerHTML=fh;sf.__h=fh}}
-function stepApply(){const c=stepCur();{const M=$('.modes');if(M&&!$('#modesAll')){const b=document.createElement('button');b.type='button';b.id='modesAll';b.className='lnk st-only';b.textContent='Changer de type de dossier';b.onclick=()=>{M.classList.toggle('all');b.textContent=M.classList.contains('all')?'Masquer les autres types':'Changer de type de dossier'};M.after(b)}}document.body.classList.add('stp');for(let k=1;k<=4;k++)document.body.classList.toggle('stp-'+k,k===c);
+function stepApply(){try{cardifyAll()}catch(e){}const c=stepCur();{const M=$('.modes');if(M&&!$('#modesAll')){const b=document.createElement('button');b.type='button';b.id='modesAll';b.className='lnk st-only';b.textContent='Changer de type de dossier';b.onclick=()=>{M.classList.toggle('all');b.textContent=M.classList.contains('all')?'Masquer les autres types':'Changer de type de dossier'};M.after(b)}}document.body.classList.add('stp');for(let k=1;k<=4;k++)document.body.classList.toggle('stp-'+k,k===c);
   $$('aside details.step').forEach((d,i)=>{const on=(STEP_OF[i]||4)===c;d.classList.toggle('st-on',on);if(on)d.open=true});stepperRender()}
 function stepGo(n,noTab){n=Math.max(1,Math.min(4,+n));S.ui.step=n;stepApply();const A=$('aside');if(A)A.scrollTop=0;
   if(!noTab){let t=null;const ids=activeSheets().map(s=>s.id);
