@@ -4884,9 +4884,12 @@ if(!S.meta.date)S.meta.date=today();
 /* premier affichage : lancé en fin de script, quand tous les modules sont définis */
 /* lien de réglage : #regler:L=16,W=7,ouvL=6,egout=3 — appliqué seulement après clic de l'utilisateur */
 function hashRegler(){const m=/^#regler:(.+)$/.exec(decodeURIComponent(location.hash||''));if(!m)return;try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
-  const v={};for(const kv of m[1].split(',')){const [k,x]=kv.split('=');const n=parseFloat(String(x).replace(',','.'));if(['L','W','ouvL','egout','hPlancher'].includes(k)&&isFinite(n)&&n>=0&&n<200)v[k]=n}
-  if(!Object.keys(v).length)return;const txt=[v.L!=null&&v.W!=null?`${fmt(v.L,1)} × ${fmt(v.W,1)} m`:'',v.ouvL!=null?`ouvert sur ${fmt(v.ouvL,1)} m`:'',v.egout!=null?`égout à ${fmt(v.egout)} m`:''].filter(Boolean).join(', ');
-  toastAct(`Appliquer à votre dossier : ${txt} ?`,'Appliquer',()=>{bakTake('dimensions rechargées par lien');const p=S.projet;for(const k of['L','W','ouvL','hPlancher'])if(v[k]!=null)p[k]=v[k];
+  const v={};const EN={nature:['maison','extension','annexe'],usage:['garage','atelier','abri','autre'],toit:['2pans','4pans','mono','plat']};
+  for(const kv of m[1].split(',')){const [k,x]=kv.split('=');const n=parseFloat(String(x).replace(',','.'));
+    if(['L','W','ouvL','egout','hPlancher','hEtage','pente','niveaux'].includes(k)&&isFinite(n)&&n>=0&&n<200)v[k]=n;
+    else if(EN[k]&&EN[k].includes(x))v[k]=x;else if(['combles','regrade'].includes(k)&&/^[01]$/.test(x))v[k]=x==='1'}
+  if(!Object.keys(v).length)return;const txt=[v.L!=null&&v.W!=null?`${fmt(v.L,1)} × ${fmt(v.W,1)} m`:'',v.ouvL!=null?`ouvert sur ${fmt(v.ouvL,1)} m`:'',v.egout!=null?`égout à ${fmt(v.egout)} m`:'',v.hEtage!=null?`égout à +${fmt(v.hEtage*(v.niveaux||1))} m au-dessus du plancher`:'',v.toit?`toit ${v.toit==='2pans'?'2 pans':v.toit}${v.pente!=null?' à '+fmt(v.pente,1)+'°':''}`:''].filter(Boolean).join(', ');
+  toastAct(`Appliquer à votre dossier : ${txt} ?`,'Appliquer',()=>{bakTake('dimensions rechargées par lien');const p=S.projet;for(const k of['nature','usage','toit','pente','niveaux','hEtage','combles','regrade','L','W','ouvL','hPlancher'])if(v[k]!=null)p[k]=v[k];
     if(v.egout!=null){p.combles=false;setEgout(v.egout)}fillInputs();schedule();try{stepGo(2)}catch(e){}toastAct(`Projet rechargé : ${bakDesc(p)}${v.egout!=null?`, égout à ${fmt(heights().hE)} m`:''}.`,'Annuler',bakRestore)},60000)}
 function startApp(){setTimeout(()=>{try{hashRegler()}catch(e){}},1800);if(S.ui&&S.ui.gpuMapOn==null)S.ui.gpuMapOn=true;if(S.ui&&S.ui.zoneOk==null)S.ui.zoneOk=true;setTimeout(()=>{try{helpInit();const J=soonJalons(7);if(J.length&&!S.demo)toast(`Bientôt : ${frDate(J[0][0])} — ${J[0][1]}`,6000)}catch(e){}},400);setTimeout(()=>{histReset();savedUI(S.demo?'demo':'saved')},0);if(!S.demo){const d0=document.querySelector('aside details.step');if(d0)d0.open=false}try{fillInputs();renderExList();renderAll()}catch(e){window.__errs.push('Démarrage : '+e.message);window.__showErr()}
   setTimeout(()=>netCheck(false),800);
