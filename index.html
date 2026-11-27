@@ -749,6 +749,63 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
 .am-it input[type=number],.am-it select{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px}
 .pl-edit{position:absolute;left:8px;right:8px;top:8px;display:flex;gap:8px;align-items:center;background:var(--panel);border-radius:12px;padding:10px;box-shadow:0 6px 20px rgba(0,0,0,.3);font-size:14px;color:var(--ink)}
 .pl-edit input{width:90px;padding:8px;border:1px solid var(--line);border-radius:8px;font:600 16px var(--f-mono)}.pl-edit #plEditLbl{flex:1;font-weight:600}
+
+/* ===== Refonte : parcours en étapes, barre allégée, style ===== */
+:root{--paper:#F3F4F1;--line:#DCE1DE;--r:10px}
+body{background:var(--paper)}
+header.top{background:var(--panel);color:var(--ink);border-bottom:1px solid var(--line);padding:10px 18px 0;gap:12px;row-gap:8px}
+.brand b{color:var(--accent)}
+.top .addr{opacity:1;color:var(--muted);font-weight:500}
+.top .btn{background:var(--panel);color:var(--ink);border-color:var(--line)}.top .btn:hover{background:var(--soft)}
+.top .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.top .btn.primary:hover{filter:brightness(1.1)}
+.hbtn{border-color:var(--line);color:var(--ink)}.saved{color:var(--ok)}.saved[data-st=saving]{color:var(--muted)}.saved[data-st=demo]{color:var(--warn)}
+#bI3d,#bDos,#bOpen,#bSave,#bPrintOne,#bPrint,#bCerfa,#bZip{display:none!important}
+.prog{background:transparent}
+.stepper{flex-basis:100%;order:20;display:flex;align-items:stretch;gap:0;margin:0 -18px;padding:0 18px;border-top:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.stepper::-webkit-scrollbar{display:none}
+.stepper button{flex:1;min-width:0;display:flex;align-items:center;gap:10px;border:0;background:none;padding:10px 6px 11px;cursor:pointer;text-align:left;font:inherit;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px}
+.stepper button:hover{color:var(--ink)}
+.stepper button i{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:700 12.5px var(--f-ui);font-style:normal;background:var(--soft);border:1px solid var(--line);color:var(--muted)}
+.stepper button.ok i{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+.stepper button.on{color:var(--ink);border-bottom-color:var(--accent)}.stepper button.on i{background:var(--accent);color:#fff;border-color:var(--accent)}
+.stepper span{display:grid;min-width:0}.stepper b{font-size:13.5px;font-weight:650}.stepper small{font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px}
+.stepper .sep{flex:0 0 18px;align-self:center;height:1px;background:var(--line)}
+.fd{width:8px;height:8px;border-radius:50%;flex:none;display:inline-block}.fd-g{background:#2F9E5B}.fd-o{background:#E0A021}.fd-r{background:#D2493B}
+.main{grid-template-columns:420px 1fr}
+aside{padding:0 0 30px;background:var(--panel)}
+.st-head{padding:20px 22px 6px}.st-head .st-k{font:600 11px var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.st-head h2{margin:2px 0 4px;font:700 21px/1.2 var(--f-ui);color:var(--ink)}.st-head p{margin:0;font-size:13px;color:var(--muted);line-height:1.45}
+body.stp aside details.step{display:none;border:0}
+body.stp aside details.step.st-on{display:block}
+body.stp aside details.step>summary{pointer-events:none;padding:18px 22px 8px;font:650 12px var(--f-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+body.stp aside details.step>summary .n{display:none}
+body.stp aside details.step>summary .s{text-transform:none;letter-spacing:0}
+body.stp aside details.step.st-on+details.step.st-on{border-top:1px solid var(--line);margin-top:8px}
+body.stp .body{padding:0 22px 14px}
+body.stp-1 nav.tabs,body.stp-2 nav.tabs{display:none}
+.st-foot{padding:16px 22px 8px;display:grid;gap:12px;border-top:1px solid var(--line);margin-top:10px}
+.st-nav{display:flex;justify-content:space-between;gap:10px}.st-nav .btn.primary{flex:1}
+.st-exp{display:grid;gap:8px}.st-exp .btn{justify-content:flex-start;padding:11px 14px}.st-exp .btn.primary{justify-content:center;font-size:14px;padding:13px 14px}
+input[type=text],input[type=number],input[type=email],input[type=tel],input[type=date],select,textarea{border-radius:8px;padding:8px 10px}
+.btn{border-radius:8px}
+label.f{font-size:12.5px}
+.feu{border-radius:12px}
+@media (max-width:820px){
+  header.top{flex-wrap:wrap;padding-bottom:0}
+  .stepper{margin:0 -12px;padding:0 6px}
+  .stepper button{flex-direction:column;gap:3px;padding:7px 2px 8px;align-items:center;text-align:center}
+  .stepper small{display:none}.stepper b{font-size:11.5px}.stepper .sep{display:none}.stepper button i{width:24px;height:24px}
+  .st-head{padding:16px 16px 4px}.st-head h2{font-size:19px}
+  body.stp aside details.step>summary{padding:16px 16px 6px}body.stp .body{padding:0 16px 14px}.st-foot{padding:14px 16px}
+}
+body.stp .modes:not(.all) label:not(:has(input:checked)){display:none}
+body.stp .modes:not(.all){grid-template-columns:1fr}
+body.stp .body>*{min-width:0}body.stp #feuBox2{order:-1}body.stp #cloEditor,body.stp #amStep{order:2}body.stp #projBody{order:1}
+.st-only{display:none}body.stp .st-only{display:inline-block}
+#modesAll{background:none;border:0;padding:2px 0;color:var(--accent);font:600 13px var(--f-ui);text-decoration:underline;cursor:pointer;justify-self:start}
+@media (max-width:820px){#bExpress{font-size:0;gap:0;padding:6px 10px}#bExpress svg{width:18px;height:18px}#chkChip{max-width:40vw;font-size:10.5px}header.top{gap:6px}.brand{font-size:13px}.mnav{grid-template-columns:none!important;grid-auto-flow:column;grid-auto-columns:1fr}}
+@media print{.stepper,.st-head,.st-foot{display:none!important}}
+:root[data-theme=dark] header.top,:root[data-theme=dark] .top .btn{background:var(--panel)}
 </style>
 </head>
 <body>
@@ -770,6 +827,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
   <button class="btn primary" id="bPdf" type="button">PDF du dossier</button>
   <button class="btn mmenu-b" id="bMenu" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Menu">⋯</button>
   <input type="file" id="fOpen" accept=".json,application/json" hidden>
+<nav class="stepper" id="stepper" aria-label="Étapes du dossier"></nav>
 <div class="prog" aria-hidden="true"><i id="progBar"></i></div>
 </header>
 <div class="mmenu" id="mMenu" hidden>
@@ -778,6 +836,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
   <button type="button" data-mm="bOpen"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5h6l2 2h10v4"/><path d="M3 7v12h16l3-8H6z"/></svg>Ouvrir un projet</button>
   <button type="button" data-mm="bSave"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7V3M8 21v-7h8v7"/></svg>Enregistrer le projet</button>
   <button type="button" data-mm="bPrintOne"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="8" rx="1"/><path d="M7 14h10v7H7z"/></svg>Imprimer la planche affichée</button>
+  <button type="button" data-mm="bI3d"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>Assistant guidé</button>
   <button type="button" data-mm="bPdf"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>Télécharger le dossier en PDF</button><button type="button" data-mm="bCerfa"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18H6z"/><path d="M9 7h6M9 11h6M9 15h3"/><path d="M14 17l1.5 1.5L19 15"/></svg>Formulaire cerfa pré-rempli</button>
   <button type="button" data-mm="bZip"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h14v18H5z"/><path d="M12 3v2M12 7v2M12 11v2"/><rect x="10.5" y="14" width="3" height="4"/></svg>Fichiers pour le dépôt en ligne</button>
   <button type="button" data-mm="bPrint"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="8" rx="1"/><path d="M7 14h10v7H7z"/></svg>Imprimer tout le dossier</button>
@@ -797,7 +856,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
 </div>
 <div class="main">
 <aside>
-  <label class="toggle expert-tg"><input type="checkbox" data-b="ui.expert"> Mode expert <span class="hint">(réglages techniques : altitude NGF, combles, point de mesure…)</span></label>
+  <div class="st-head" id="stHead"></div>
   <!-- 0 TYPE DE DOSSIER -->
   <details class="step" open>
     <summary><span class="n">00</span>Type de dossier<span class="s" id="sumMode"></span></summary>
@@ -887,7 +946,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
   <!-- 3 PROJET -->
   <details class="step" open>
     <summary><span class="n">03</span>Projet<span class="s" id="sumProjet"></span></summary>
-    <div class="body">
+    <div class="body"><div id="feuBox2"></div>
       <div id="dpBat" class="dpbox" hidden>
         <div class="impl-h">Construction concernée par les travaux</div>
         <select id="dpEx" aria-label="Construction concernée"></select>
@@ -915,7 +974,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
       <div id="amStep" class="am-step"><h4>Terrasse et piscine</h4><div id="amEditor"></div></div>
       <div id="divStep" class="am-step" hidden><h4>Division du terrain</h4><div id="divEditor"></div></div>
       <div id="arbStep" class="am-step" hidden><h4>Arbres à abattre</h4><div id="protBox"></div><div id="arbEditor"></div></div>
-      <div id="projBody"><div id="feuBox2"></div>
+      <div id="projBody">
       <label class="f pc-only">Nature du projet
         <select data-b="projet.nature"><option value="maison">Construction d'une maison individuelle</option><option value="extension">Extension d'une construction existante</option><option value="annexe">Annexe (garage, abri, atelier…)</option></select>
       </label>
@@ -1150,6 +1209,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
       <p class="hint">La notice PCMI4 se rédige toute seule à partir de vos réglages et se met à jour à chaque modification. Pour ajouter vos propres informations, écrivez dans les cadres en pointillé sous chaque rubrique de la planche : ils sont conservés et imprimés à la suite du texte généré.</p>
     </div>
   </details>
+  <div class="st-foot" id="stFoot"></div>
 </aside>
 <section class="stagecol">
   <nav class="tabs" id="tabs"></nav>
@@ -3393,7 +3453,7 @@ function zmPanel(){const el=$('#zmPanel');if(!el)return;const T=S.terrain,Z=T.zo
     <p class="hint">Source : Géoportail de l'urbanisme (documents publiés par la commune ou l'intercommunalité). En cas de doute, le document en mairie fait foi.</p>`;zmLegend()}
 document.addEventListener('change',e=>{const t=e.target.closest('[data-zmt]');if(!t||!ZM.map)return;const k=t.dataset.zmt;S.ui['zm_'+k]=t.checked;save();if(t.checked)ZM.lay[k].addTo(ZM.map);else ZM.map.removeLayer(ZM.lay[k])});
 document.addEventListener('input',e=>{if(e.target.id!=='zmOp')return;const v=+e.target.value;S.ui.zm_op=v;for(const {lay} of ZM.cache.values())lay.setStyle({fillOpacity:v})});
-document.addEventListener('click',e=>{{const fx=e.target.closest('[data-feufix]');if(fx){e.preventDefault();feuFix(fx.dataset.feufix);return}}if(e.target.closest('[data-feu]')){e.preventDefault();try{zmClose()}catch(_){}goTab('checks');return}if(e.target.closest('[data-zmopen]')){e.preventDefault();zmOpen();return}if(e.target.closest('#zmX')){zmClose();return}
+document.addEventListener('click',e=>{{const fx=e.target.closest('[data-feufix]');if(fx){e.preventDefault();feuFix(fx.dataset.feufix);return}}if(e.target.closest('[data-feu]')){e.preventDefault();S.ui.feuOpen=!S.ui.feuOpen;renderSide();return}if(e.target.closest('[data-zmopen]')){e.preventDefault();zmOpen();return}if(e.target.closest('#zmX')){zmClose();return}
   const b=e.target.closest('[data-zb]');if(b&&ZM.map){ZM.map.removeLayer(ZM.bases[ZM.base]);ZM.base=b.dataset.zb;ZM.bases[ZM.base].addTo(ZM.map);ZM.bases[ZM.base].bringToBack();$$('#zmSeg button').forEach(x=>x.classList.toggle('on',x===b));return}
   const li=e.target.closest('[data-zl]');if(li){const it=[...ZM.cache.values()].find(v=>v.p.libelle===li.dataset.zl);if(it){zmSelect(it.p);ZM.map.fitBounds(it.lay.getBounds(),{maxZoom:17})}}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#zmap').hidden)zmClose()});
@@ -3522,18 +3582,18 @@ function feuPistes(K,c){const P=[];const add=(t,s,fix)=>P.push({t,s,fix});const 
   return P}
 function feuFix(k){const p=S.projet;
   if(k==='max'){feuMax();fillInputs();schedule();return}
-  if(k==='pickhab'){const d=$('#exAsk');if(d){const st=d.closest('details');if(st)st.open=true;d.scrollIntoView({behavior:'smooth',block:'center'})}return}
+  if(k==='pickhab'){if(typeof stepGo==='function'&&stepCur()!==1)stepGo(1,true);const d=$('#exAsk');if(d){const st=d.closest('details');if(st)st.open=true;d.scrollIntoView({behavior:'smooth',block:'center'})}return}
   if(k==='emp50'){const W=Math.min(+p.W||7,7.07);p.W=W;p.L=Math.floor(GP_COM.anEmp/W*10)/10;if(p.ouvL)p.ouvL=0;toast(`Annexe ramenée à ${fmt(p.L,1)} × ${fmt(W,1)} m.`)}
   if(k==='h25'){const lim=GP_COM.annexeH;p.combles=false;let h=heights();let i=0;
     while(h.hE>lim+0.004&&i++<40){if(p.hPlancher>0.1)p.hPlancher=Math.max(0.1,Math.round((p.hPlancher-0.05)*100)/100);else if(p.hEtage>2.0)p.hEtage=Math.round((p.hEtage-0.05)*100)/100;else break;h=heights()}
     toast(h.hE<=lim+0.004?`Égout ramené à ${fmt(h.hE)} m.`:`Impossible de descendre sous ${fmt(h.hE)} m sur ce terrain en pente : déplacez l'annexe ou décaissez.`)}
   fillInputs();schedule()}
-function feuHTML(full){let F;try{F=feasibility()}catch(e){return''}if(F.c==='none'||F.c==='wait')return`<div class="feu feu-n"><i></i><div><b>${esc(F.t)}</b>${F.it.map(x=>`<p>${esc(x.t)}</p>`).join('')}</div></div>`;
+function feuHTML(full){const fo=!full&&S.ui.feuOpen;if(fo)full=true;let F;try{F=feasibility()}catch(e){return''}if(F.c==='none'||F.c==='wait')return`<div class="feu feu-n"><i></i><div><b>${esc(F.t)}</b>${F.it.map(x=>`<p>${esc(x.t)}</p>`).join('')}</div></div>`;
   const pj=feuProjet();const top=F.it.filter(x=>x.l===F.c).slice(0,full?99:3);
   return`<div class="feu feu-${F.c}"><i></i><div><span>${esc(FEU_LBL[pj]||'Votre projet')} · ${esc(F.ref||'')}</span><b>${esc(F.t)}</b>
     <ul>${(full?F.it:top).map(x=>`<li class="fl-${x.l}"><b>${esc(x.t)}</b>${x.s?`<span>${esc(x.s)}</span>`:''}</li>`).join('')}</ul>
     ${F.pi&&F.pi.length&&F.c!=='g'?(full?`<div class="feu-pi"><h4>💡 Pistes pour rendre le projet possible</h4><p class="hint">Des solutions qui respectent le règlement : à choisir selon votre besoin.</p><ol>${F.pi.map(x=>`<li><b>${esc(x.t)}</b><span>${esc(x.s)}</span>${x.fix?`<button class="btn sm" type="button" data-feufix="${x.fix}">${x.fix==='pickhab'?'Choisir ma maison':'Appliquer au projet'}</button>`:''}</li>`).join('')}</ol></div>`:`<p class="feu-pic">💡 ${F.pi.length} piste${F.pi.length>1?'s':''} pour le rendre possible</p>`):''}
-    ${full?`<p class="hint">Règles transcrites du règlement écrit${F.it.some(x=>x.src)?` (<a href="${esc((F.it.find(x=>x.src)||{}).src)}" target="_blank" rel="noopener">source</a>)`:''}. Un feu vert ne remplace pas l'avis de la mairie : faites confirmer, idéalement par un certificat d'urbanisme opérationnel.</p>`:`<button class="lnk" type="button" data-feu="more">${F.c==='r'?'Voir pourquoi et les solutions':'Voir le détail'} (${F.it.length})</button>`}</div></div>`}
+    ${full?`<p class="hint">Règles transcrites du règlement écrit${F.it.some(x=>x.src)?` (<a href="${esc((F.it.find(x=>x.src)||{}).src)}" target="_blank" rel="noopener">source</a>)`:''}. Un feu vert ne remplace pas l'avis de la mairie : faites confirmer, idéalement par un certificat d'urbanisme opérationnel.</p>${fo?'<button class="lnk" type="button" data-feu="less">Masquer le détail</button>':''}`:`<button class="lnk" type="button" data-feu="more">${F.c==='r'?'Voir le détail et les solutions':'Voir le détail'}</button>`}</div></div>`}
 
 /* ================= Paramétrage facile ================= */
 /* règles de la zone (Grand Périgueux) */
@@ -3613,7 +3673,7 @@ function profAct(a){if(a==='save'){if(!S.dem.nom){toast('Renseignez au moins vot
   if(a==='del'){try{localStorage.removeItem(PROF_KEY)}catch(e){}toast('Coordonnées oubliées.')}
   easyRender()}
 
-function easyRender(){document.body.classList.toggle('simple',!S.ui.expert);
+function easyRender(){
   const set=(id,h)=>{const el=$(id);if(el&&el.__h!==h){el.innerHTML=h;el.__h=h}};
   set('#reglAuto',reglAutoHTML());set('#dimLim',dimLimHTML());set('#exAsk',exAskHTML());set('#profBox',profHTML());
   const he=$('#hEg');if(he&&document.activeElement!==he){try{he.value=heights().hE.toFixed(2)}catch(e){}}
@@ -3626,6 +3686,39 @@ document.addEventListener('click',e=>{const t=e.target;let b;
   if(b=t.closest('[data-exdup]')){const [i,j]=b.dataset.exdup.split(',').map(Number);exMerge(i,j);return}
   if(b=t.closest('[data-prof]')){profAct(b.dataset.prof);return}});
 document.addEventListener('change',e=>{if(e.target.id==='hEg'){setEgout(parseFloat(String(e.target.value).replace(',','.')));fillInputs();schedule()}});
+
+/* ================= Parcours en 4 étapes ================= */
+const STEPS=[{n:1,t:'Terrain',d:'Adresse et règles',h:'Votre terrain',i:'Cherchez votre adresse ou votre parcelle. L\'appli lit le PLU et remplit les règles de votre zone.'},
+  {n:2,t:'Projet',d:'Ce que vous construisez',h:'Votre projet',i:'Dites ce que vous voulez faire et placez-le sur le plan. Le feu vous dit tout de suite si c\'est autorisé.'},
+  {n:3,t:'Plans et photos',d:'Les pièces du dossier',h:'Plans, photos et insertion',i:'Ajoutez les photos du terrain et vérifiez chaque plan dans les onglets à droite.'},
+  {n:4,t:'Dossier',d:'Vérifier et déposer',h:'Votre dossier',i:'Complétez vos coordonnées, relisez les contrôles, puis téléchargez le dossier à déposer.'}];
+const STEP_OF=[2,1,1,2,3,4];/* 00 type, 01 terrain, 02 règles, 03 projet, 04 photos, 05 demandeur */
+function stepCur(){const v=+S.ui.step;return v>=1&&v<=4?v:(S.terrain.parcels.length&&!S.demo?2:1)}
+function stepState(n){try{const T=S.terrain;
+  if(n===1)return T.parcels.length&&!S.demo&&T.zone?{ok:1,s:(T.zone.libelle&&T.zone.libelle!=='?'?'Zone '+T.zone.libelle:'Sans PLU')}:{s:S.demo?'Exemple':'À choisir'};
+  if(n===2){const F=feasibility();return F.c==='g'?{ok:1,s:'Autorisé',c:'g'}:F.c==='o'?{s:'À vérifier',c:'o'}:F.c==='r'?{s:'Non autorisé',c:'r'}:{s:'—'}}
+  if(n===3){const L=activeSheets().filter(s=>s.id!=='cad');const r=L.filter(s=>sheetReady(s.id)).length;return{ok:r===L.length&&L.length,s:`${r}/${L.length} pièces prêtes`}}
+  if(n===4){const p=dossierProgress();return{ok:p>=100,s:`Complet à ${p} %`}}}catch(e){}return{s:''}}
+function stepperRender(){const el=$('#stepper');if(!el)return;const c=stepCur();
+  const h=STEPS.map(x=>{const st=stepState(x.n);return`<button type="button" data-step="${x.n}" class="${x.n===c?'on':''}${st.ok?' ok':''}" aria-current="${x.n===c?'step':'false'}"><i>${st.ok&&x.n!==c?'✓':x.n}</i><span><b>${x.t}</b><small>${st.c?`<em class="fd fd-${st.c}"></em>`:''}${esc(st.s||x.d)}</small></span></button>`}).join('<span class="sep" aria-hidden="true"></span>');
+  if(el.__h!==h){el.innerHTML=h;el.__h=h}
+  const sh=$('#stHead');const X=STEPS[c-1];const hh=`<div class="st-k">Étape ${c} sur 4</div><h2>${X.h}</h2><p>${X.i}</p>`;if(sh&&sh.__h!==hh){sh.innerHTML=hh;sh.__h=hh}
+  const sf=$('#stFoot');let fh='';
+  if(c===4)fh=`<div class="st-exp"><button class="btn primary" type="button" data-click="bPdf">⬇ Télécharger le dossier complet (PDF)</button><button class="btn" type="button" data-click="bCerfa">Formulaire cerfa pré-rempli</button><button class="btn" type="button" data-click="bZip">Fichiers pour le dépôt en ligne</button><button class="btn" type="button" data-click="bPrint">Imprimer le dossier</button></div>`;
+  fh+=`<div class="st-nav">${c>1?`<button class="btn" type="button" data-step="${c-1}">← ${STEPS[c-2].t}</button>`:'<span></span>'}${c<4?`<button class="btn primary" type="button" data-step="${c+1}">Étape suivante : ${STEPS[c].t} →</button>`:''}</div>`;
+  if(sf&&sf.__h!==fh){sf.innerHTML=fh;sf.__h=fh}}
+function stepApply(){const c=stepCur();{const M=$('.modes');if(M&&!$('#modesAll')){const b=document.createElement('button');b.type='button';b.id='modesAll';b.className='lnk st-only';b.textContent='Changer de type de dossier';b.onclick=()=>{M.classList.toggle('all');b.textContent=M.classList.contains('all')?'Masquer les autres types':'Changer de type de dossier'};M.after(b)}}document.body.classList.add('stp');for(let k=1;k<=4;k++)document.body.classList.toggle('stp-'+k,k===c);
+  $$('aside details.step').forEach((d,i)=>{const on=(STEP_OF[i]||4)===c;d.classList.toggle('st-on',on);if(on)d.open=true});stepperRender()}
+function stepGo(n,noTab){n=Math.max(1,Math.min(4,+n));S.ui.step=n;stepApply();const A=$('aside');if(A)A.scrollTop=0;
+  if(!noTab){let t=null;const ids=activeSheets().map(s=>s.id);
+    if(n<=2)t=ids.includes('pcmi2')?'pcmi2':ids[0];
+    else if(n===3)t=ids.includes(S.ui.tab)&&!['pres','pcmi2','checks'].includes(S.ui.tab)?S.ui.tab:(ids.find(x=>!['pres','pcmi1','cad','pcmi2'].includes(x))||ids[0]);
+    else t='checks';
+    if(t)try{goTab(t)}catch(e){}}
+  if(typeof isMobile==='function'&&isMobile())try{setView('panel')}catch(e){}
+  save()}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-step]');if(b){e.preventDefault();stepGo(+b.dataset.step);return}
+  const c=e.target.closest('[data-click]');if(c){const t=$('#'+c.dataset.click);if(t)t.click()}});
 
 /* insertion : avant / après sur la même planche */
 function insBefore(far){const ph=S.photos,o=S.onsite||{};if(far)return ph.insFromShot2&&o.shot2?o.shot2.img:null;
@@ -3943,7 +4036,7 @@ function renderChecks(){let w=$('#w-checks');if(!w){w=document.createElement('di
   const nb=C.filter(c=>c.lvl==='bad').length,nw=C.filter(c=>c.lvl==='warn').length;const ch=$('#chkChip');
   ch.innerHTML=`<span class="d" style="background:${nb?'#E07A6F':nw?'#E3B04B':'#7CC39A'}"></span>${nb?nb+' non-conformité'+(nb>1?'s':''):nw?nw+' point'+(nw>1?'s':'')+' à compléter':'Dossier cohérent'}`;
   ch.style.background='#26322F';ch.style.color='#fff';try{const F=feasibility();if(F.c==='r'){ch.innerHTML=`<span class="d" style="background:#E5483A"></span>Projet non autorisé par le PLU`;ch.style.background='#8E2A20'}}catch(e){}progRender()}
-function renderSide(){if(gpAutoRegles()){toast('Règles de votre zone remplies automatiquement depuis le PLUi. Vérifiez-les à l\'étape 02.',5000);save()}renderModeUI();{const gb=$('#gpuBox');if(gb)gb.innerHTML=gpuHTML();const fb=$('#feuBox'),fb2=$('#feuBox2');if(fb||fb2){const hh=feuHTML(false);if(fb)fb.innerHTML=hh;if(fb2)fb2.innerHTML=hh}}if(typeof swRender==='function')swRender();try{easyRender()}catch(e){}$$('input.dmode').forEach(r=>r.checked=r.value===mode());renderImpl();{const ph=S.photos;const pc=$('#insPhotoCtl');if(pc)pc.hidden=!ph.ins;const img=ph.insMode==='image';$('#insImageCtl').hidden=!img;$('#insAutoCtl').hidden=img;$('#insTreesRow').hidden=!!ph.ins;
+function renderSide(){if(gpAutoRegles()){toast('Règles de votre zone remplies automatiquement depuis le PLUi. Vérifiez-les à l\'étape 1 (Terrain).',5000);save()}renderModeUI();{const gb=$('#gpuBox');if(gb)gb.innerHTML=gpuHTML();const fb=$('#feuBox'),fb2=$('#feuBox2');if(fb||fb2){const hh=feuHTML(false);if(fb)fb.innerHTML=hh;if(fb2)fb2.innerHTML=hh}}if(typeof swRender==='function')swRender();try{easyRender()}catch(e){}try{stepApply()}catch(e){}$$('input.dmode').forEach(r=>r.checked=r.value===mode());renderImpl();{const ph=S.photos;const pc=$('#insPhotoCtl');if(pc)pc.hidden=!ph.ins;const img=ph.insMode==='image';$('#insImageCtl').hidden=!img;$('#insAutoCtl').hidden=img;$('#insTreesRow').hidden=!!ph.ins;
     const IC=insCamera();const ae=document.activeElement;if(ae!==$('#insDist'))$('#insDist').value=IC.dist.toFixed(1);if(ae!==$('#insAz'))$('#insAz').value=Math.round(IC.az)}{const mr=$('#monoInvRow');if(mr)mr.hidden=S.projet.toit!=='mono'}
   const T=S.terrain;$('#topAddr').textContent=(S.demo?'Exemple — ':'')+(adresseTerrain()||T.label||'');
   $('#plist').innerHTML=T.parcels.map(p=>`<span class="pchip">${esc(p.section)} ${esc(String(p.numero).replace(/^0+/,''))} · ${fmt(p.contenance||0,0)} m²</span>`).join('');
