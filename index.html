@@ -5395,7 +5395,9 @@ function ptrDown(e,which){e.preventDefault();const el=e.currentTarget;try{el.set
   if(PL.sh&&e.target.closest('[data-cam]')){PL.g={cam:true};return}
   if(PL.sh&&e.target.closest('[data-camh]')){PL.g={camh:true};return}
   const dl=e.target.closest('[data-dist]');if(dl){const d=PL.dl[+dl.dataset.dist];PL.edit={e:d.e,val:d.d,label:d.e.voie?'Distance à la rue':'Distance à la limite'};PL.g=null;plRender();setTimeout(()=>{const i=$('#plEditV');i.focus();i.select()},50);return}
-  if(PL.view==='split'){PL.g={pan:true,x:e.clientX,y:e.clientY,bb:PL.zoomBB.slice()};return}
+  /* sur le bâtiment (ou tout près) : on le déplace ; ailleurs : on fait glisser la carte */
+  let onB=false;try{const [x,y]=svgPtOf($('#plMap'),e);const w=mRot([x,-y],-(PL.th||0));const B=bldPoly();onB=pip(w,B)||polyDist([w],B).d<1.2}catch(_){onB=PL.view!=='split'}
+  if(!onB&&PL.zoomBB){PL.g={pan:true,x:e.clientX,y:e.clientY,bb:PL.zoomBB.slice()};$('#plMap').style.cursor='grabbing';return}
   PL.g={move:true,x:e.clientX,y:e.clientY,acc:[0,0]}}
 function ptrMove(e,which){if(!PL.ptrs.has(e.pointerId))return;PL.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});if(!PL.g)return;
   PL.pend={e:{clientX:e.clientX,clientY:e.clientY,pointerId:e.pointerId,target:e.target},which};if(!PL.raf)PL.raf=requestAnimationFrame(ptrFlush)}
@@ -5417,7 +5419,7 @@ function ptrMove2(e,which){const g=PL.g;if(!g)return;
     if(g.cam){P.lonlat=toLL(...w);P.acc=null}else{const cw=shotGeom(PL.sh).cw;P.h=bearing(w[0]-cw[0],w[1]-cw[1]);P.dh=0;P.hSrc='manuel'}plRender();return}
   if(g.pan){const r=$('#plMap').getBoundingClientRect();const sc=Math.max((g.bb[2]-g.bb[0])/r.width,(g.bb[3]-g.bb[1])/r.height);const dx=(e.clientX-g.x)*sc,dy=(e.clientY-g.y)*sc;PL.zoomBB=[g.bb[0]-dx,g.bb[1]+dy,g.bb[2]-dx,g.bb[3]+dy];plRender();return}
   if(g.move){const k=PL.fine?0.2:1;const d=scrToWorld((e.clientX-g.x)*k,(e.clientY-g.y)*k);g.x=e.clientX;g.y=e.clientY;moveBy(d);PL.edit=null;plRender()}}
-function ptrUp(e){if(PL.raf){cancelAnimationFrame(PL.raf);ptrFlush()}if(PL.g&&PL.g.tzt){const g=PL.g;PL.g=null;PL.ptrs.delete(e.pointerId);if(!g.moved&&!PL.ptrs.size)tzTap(g.pt);return}if(PL.g&&(PL.g.ch!=null||PL.g.quad)){loupe(PL.sh,null);if(PL.g.T)PL.sh.calib=true;PL.g=null;PL.ptrs.delete(e.pointerId);plRender();return}if(PL.g&&PL.g.stroke){PL.g=null;PL.ptrs.delete(e.pointerId);plRender();return}PL.ptrs.delete(e.pointerId);if(PL.ptrs.size<2&&PL.g&&PL.g.two)PL.g=null;if(!PL.ptrs.size)PL.g=null}
+function ptrUp(e){try{$('#plMap').style.cursor=''}catch(_){}if(PL.raf){cancelAnimationFrame(PL.raf);ptrFlush()}if(PL.g&&PL.g.tzt){const g=PL.g;PL.g=null;PL.ptrs.delete(e.pointerId);if(!g.moved&&!PL.ptrs.size)tzTap(g.pt);return}if(PL.g&&(PL.g.ch!=null||PL.g.quad)){loupe(PL.sh,null);if(PL.g.T)PL.sh.calib=true;PL.g=null;PL.ptrs.delete(e.pointerId);plRender();return}if(PL.g&&PL.g.stroke){PL.g=null;PL.ptrs.delete(e.pointerId);plRender();return}PL.ptrs.delete(e.pointerId);if(PL.ptrs.size<2&&PL.g&&PL.g.two)PL.g=null;if(!PL.ptrs.size)PL.g=null}
 for(const[id,w]of[['#plSvg','photo'],['#plMap','plan']]){const el=$(id);el.addEventListener('pointerdown',e=>ptrDown(e,w));el.addEventListener('pointermove',e=>ptrMove(e,w));el.addEventListener('pointerup',ptrUp);el.addEventListener('pointercancel',ptrUp)}
 $('#plMap').addEventListener('wheel',e=>{e.preventDefault();plZoom(e.deltaY>0?1.15:0.87)},{passive:false});
 $('#plVPhoto').onclick=()=>{PL.view='photo';if(PL.sh&&!PL.sh.calib&&!PL.tz)tzStart();plRender()};
