@@ -807,6 +807,8 @@ body.stp .body>*{min-width:0}body.stp #feuBox2{order:-1}body.stp #cloEditor,body
 .stagecol{position:relative}
 .pick-b{position:absolute;z-index:6;left:16px;top:58px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:8px 14px;font:600 13px var(--f-ui);box-shadow:0 4px 14px rgba(0,0,0,.12);cursor:pointer}
 body.stp-1 .pick-b,body.stp-2 .pick-b{top:14px}
+.pick-g{position:absolute;z-index:6;left:16px;top:104px}.pick-g[hidden]{display:none}body.stp-1 .pick-g,body.stp-2 .pick-g{top:60px}.pick-g .pick-b{position:static}
+@media print{.pick-g{display:none!important}}
 .pick-b.on{background:#E07A00;border-color:#E07A00;color:#fff}
 body.pick-on #svg-masse{cursor:crosshair}
 .pick-pop{position:fixed;z-index:70;width:310px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 40px rgba(0,0,0,.22);padding:10px 12px;display:grid;gap:8px;font-size:13px}
@@ -1039,6 +1041,7 @@ body.pick-on #svg-masse{cursor:crosshair}
         <div style="display:grid;grid-template-columns:1fr 80px;gap:8px;align-items:center"><input type="range" min="-90" max="90" step="0.5" data-b="projet.rot"><input type="number" step="0.5" data-b="projet.rot"></div>
       </label>
       <div class="btns">
+        <button class="btn sm" type="button" data-rot90>↻ Tourner de 90°</button>
         <button class="btn sm" id="bAlign" type="button">Aligner sur la voie</button>
         <button class="btn sm" id="bPlace" type="button">Placer au recul de la voie</button>
         <button class="btn sm" id="bCenter" type="button">Centrer sur la parcelle</button>
@@ -1228,7 +1231,7 @@ body.pick-on #svg-masse{cursor:crosshair}
 </aside>
 <section class="stagecol">
   <nav class="tabs" id="tabs"></nav>
-  <button type="button" id="pickBtn" class="pick-b" hidden title="Cliquez ensuite sur une limite ou le bord d'un bâtiment existant">📐 Placer par rapport à une limite ou un bâtiment</button>
+  <div class="pick-g" id="pickG"><button type="button" class="pick-b pick-r" data-rot90 title="Tourner la construction d'un quart de tour">↻ 90°</button></div><button type="button" id="pickBtn" class="pick-b" hidden title="Cliquez ensuite sur une limite ou le bord d'un bâtiment existant">📐 Placer par rapport à une limite ou un bâtiment</button>
   <div id="stage"></div>
   <div class="scalebar" id="scaleBar" hidden><label for="scSel">Échelle</label><select id="scSel"></select><select id="facLay" aria-label="Mise en page des façades"><option value="duo">2 façades par planche</option><option value="solo">1 façade par planche (plus grand)</option></select><span id="scWarn"></span></div>
   <div class="zoombar" id="zoombar"><button type="button" id="zOut" aria-label="Réduire">−</button><span id="zVal">100 %</span><button type="button" id="zIn" aria-label="Agrandir">+</button><button type="button" id="zFit">Ajuster</button><button type="button" data-v3d="open" title="Vue 3D à faire tourner"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 12l9-5M12 12v10M12 12L3 7"/></svg></button><button type="button" id="zFs" title="Plein écran">⤢</button></div>
@@ -3761,17 +3764,25 @@ function pickEdges(){const out=limits().map(l=>({...l,kind:'lim',label:edgeLabel
 function pickNearest(w,tol){let best=null;for(const e of pickEdges()){const q=pSeg(w,e.a,e.b);if(q.d<tol&&(!best||q.d<best.d))best={e,d:q.d}}return best&&best.e}
 function pickCurDist(e){try{return Math.max(0,lineDist(e,bat().corners))}catch(_){return 0}}
 function pickPlace(){const p=S.projet;const R=PK2.refs;if(!R.length)return;
-  bakTake('implantation par clic');S.ui.bakHide=true;
-  const P=R[PK2.par];if(P){let ang=Math.atan2(P.e.b[1]-P.e.a[1],P.e.b[0]-P.e.a[0])/D2R;if(PK2.side==='short')ang+=90;while(ang>90)ang-=180;while(ang<-90)ang+=180;p.rot=Math.round(ang*100)/100}
+  bakTake('implantation par clic');S.ui.bakHide=true;if(!pickCore(R,PK2.par,PK2.side))return;
+  const {rings}=boundary();const out=!bldPoly().every(c=>inParcel(c,rings));let ov=false;try{ov=exKept().some(e=>{const q=exRing(e);return bldPoly().some(c=>pip(c,q))||q.some(c=>pip(c,bldPoly()))})}catch(_){}
+  toastAct(out?'Attention : à ces distances, la construction dépasse du terrain.':ov?'Attention : la construction chevauche un bâtiment existant.':'Construction placée.','Annuler',bakRestore)}
+function pickCore(R,par,side){const p=S.projet;
+  const P=R[par];if(P){let ang=Math.atan2(P.e.b[1]-P.e.a[1],P.e.b[0]-P.e.a[0])/D2R;if(side==='short')ang+=90;while(ang>90)ang-=180;while(ang<-90)ang+=180;p.rot=Math.round(ang*100)/100}
   const r=p.rot*D2R,U=[Math.cos(r),Math.sin(r)],V=[-Math.sin(r),Math.cos(r)],a=p.L/2,b=p.W/2;const offs=[[-a,-b],[a,-b],[a,b],[-a,b]].map(([u,v])=>[u*U[0]+v*V[0],u*U[1]+v*V[1]]);
   const row=(e,d)=>{const m=[-e.n[0],-e.n[1]];return{m,rhs:d+m[0]*e.a[0]+m[1]*e.a[1]-Math.min(...offs.map(o=>m[0]*o[0]+m[1]*o[1]))}};
   const A=row(R[0].e,R[0].d);
-  if(R[1]){const B2=row(R[1].e,R[1].d);const det=A.m[0]*B2.m[1]-A.m[1]*B2.m[0];if(Math.abs(det)<0.25){toast('Ces deux bords sont presque parallèles : choisissez pour le second un bord qui croise le premier.');return}
+  if(R[1]){const B2=row(R[1].e,R[1].d);const det=A.m[0]*B2.m[1]-A.m[1]*B2.m[0];if(Math.abs(det)<0.25){toast('Ces deux bords sont presque parallèles : choisissez pour le second un bord qui croise le premier.');return false}
     p.x=(A.rhs*B2.m[1]-A.m[1]*B2.rhs)/det;p.y=(A.m[0]*B2.rhs-A.rhs*B2.m[0])/det}
   else{const cur=A.m[0]*p.x+A.m[1]*p.y;p.x+=A.m[0]*(A.rhs-cur);p.y+=A.m[1]*(A.rhs-cur)}
-  fillInputs();renderAll();save();
-  const {rings}=boundary();const out=!bldPoly().every(c=>inParcel(c,rings));let ov=false;try{ov=exKept().some(e=>{const q=exRing(e);return bldPoly().some(c=>pip(c,q))||q.some(c=>pip(c,bldPoly()))})}catch(_){}
-  toastAct(out?'Attention : à ces distances, la construction dépasse du terrain.':ov?'Attention : la construction chevauche un bâtiment existant.':'Construction placée.','Annuler',bakRestore)}
+  PK2.last={refs:R.map(r=>({...r})),x:p.x,y:p.y,rot:p.rot};fillInputs();renderAll();save();return true}
+/* quart de tour : garde les distances choisies si la construction vient d'être implantée par clic, sinon tourne autour de son centre */
+function rot90(){const p=S.projet;bakTake('rotation de 90°');S.ui.bakHide=true;let r=+p.rot+90;while(r>90)r-=180;while(r<=-90)r+=180;
+  const L=PK2.last;const kept=L&&Math.abs(L.x-p.x)<1e-6&&Math.abs(L.y-p.y)<1e-6&&Math.abs(L.rot-p.rot)<1e-6;p.rot=Math.round(r*100)/100;
+  if(kept){pickCore(L.refs,-1,'long')}else{fillInputs();renderAll();save()}
+  if(PK2.refs.length){PK2.par=-1;pickPopRender()}
+  const {rings}=boundary();const out=!bldPoly().every(c=>inParcel(c,rings));
+  toastAct(`Construction tournée d'un quart de tour${kept?', mêmes distances aux limites':''}.${out?' Attention : elle dépasse du terrain.':''}`,'Annuler',bakRestore,5000)}
 function pickPopRender(x,y){let el=$('#pickPop');if(!el){el=document.createElement('div');el.id='pickPop';el.className='pick-pop';document.body.appendChild(el)}
   if(x!=null){el.style.left=Math.min(x+14,innerWidth-330)+'px';el.style.top=Math.min(y+14,innerHeight-300)+'px'}
   const R=PK2.refs;el.hidden=!R.length;if(!R.length)return;
@@ -3783,7 +3794,7 @@ function pickPopRender(x,y){let el=$('#pickPop');if(!el){el=document.createEleme
    <div class="btns"><button class="btn primary sm" type="button" data-pk="place">Placer la construction</button><button class="btn sm" type="button" data-pk="clear">Recommencer</button></div>`}
 function pickModeSet(on){S.ui.pickRef=!!on;if(!on){PK2.refs=[];pickPopRender()}document.body.classList.toggle('pick-on',!!on);const b=$('#pickBtn');if(b)b.classList.toggle('on',!!on);
   if(on){try{if(S.ui.tab!=='pcmi2')goTab('pcmi2')}catch(_){}toast('Cliquez sur une limite de propriété ou sur le bord d\'une construction existante.',5000)}renderAll()}
-function pickBtnUpd(){const b=$('#pickBtn');if(!b)return;const m=mode();b.hidden=!(S.ui.tab==='pcmi2'&&(m==='pc'||m==='dp-constr')&&S.terrain.parcels.length&&!noBuild())}
+function pickBtnUpd(){const b=$('#pickBtn');if(!b)return;const m=mode();const g=$('#pickG');b.hidden=!(S.ui.tab==='pcmi2'&&(m==='pc'||m==='dp-constr')&&S.terrain.parcels.length&&!noBuild());if(g)g.hidden=b.hidden}
 function pickMasse(k){if(!S.ui.pickRef||!PK2.refs.length)return'';return`<g pointer-events="none" data-nodc="1">${PK2.refs.map((r,i)=>lineS(r.e.a,r.e.b,`stroke="#E07A00" stroke-width="${(0.7*k).toFixed(3)}" stroke-linecap="round" opacity=".85"`)+textS(r.e.mid,String(i+1),2.6*k,`text-anchor="middle" dominant-baseline="middle" font-weight="700" fill="#fff" stroke="#E07A00" stroke-width="${(1.6*k).toFixed(3)}" paint-order="stroke"`)).join('')}</g>`}
 $('#stage').addEventListener('pointerdown',e=>{if(!S.ui.pickRef)return;const sv=e.target.closest&&e.target.closest('#svg-masse');if(!sv)return;e.stopPropagation();e.preventDefault();
   const [x,y]=svgPtOf(sv,e);const w=[x,-y];const vb=sv.viewBox.baseVal;const tol=Math.max(1.2,vb.width/sv.getBoundingClientRect().width*14);const ed=pickNearest(w,tol);
@@ -3791,7 +3802,7 @@ $('#stage').addEventListener('pointerdown',e=>{if(!S.ui.pickRef)return;const sv=
   const ref={e:ed,d:Math.round(pickCurDist(ed)*100)/100};if(PK2.refs.length>=2)PK2.refs[1]=ref;else PK2.refs.push(ref);
   if(PK2.refs.length===1){PK2.par=0;PK2.side='long'}pickPopRender(e.clientX,e.clientY);renderAll();setTimeout(()=>{const i=$(`[data-pkd="${PK2.refs.indexOf(ref)}"]`);if(i){i.focus();i.select()}},30)},true);
 document.addEventListener('click',e=>{const b=e.target.closest('[data-pk]');if(b){const a=b.dataset.pk;if(a==='close')pickModeSet(false);else if(a==='clear'){PK2.refs=[];pickPopRender();renderAll()}else if(a==='place'){pickPlace();renderAll()}return}
-  if(e.target.closest('#pickBtn'))pickModeSet(!S.ui.pickRef)});
+  if(e.target.closest('#pickBtn'))pickModeSet(!S.ui.pickRef);if(e.target.closest('[data-rot90]'))rot90()});
 document.addEventListener('input',e=>{const d=e.target.closest('[data-pkd]');if(d){const v=parseFloat(String(d.value).replace(',','.'));if(isFinite(v)&&v>=0)PK2.refs[+d.dataset.pkd].d=v}});
 document.addEventListener('change',e=>{if(e.target.matches('[data-pkpar]')){PK2.par=+e.target.value;pickPopRender()}if(e.target.matches('[data-pkside]')){PK2.side=e.target.value}});
 document.addEventListener('keydown',e=>{if(!S.ui.pickRef)return;if(e.key==='Escape')pickModeSet(false);if(e.key==='Enter'&&e.target.closest&&e.target.closest('#pickPop')){e.preventDefault();pickPlace();renderAll()}});
