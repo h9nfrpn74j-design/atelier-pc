@@ -1,5 +1,5 @@
 /* Atelier PC : page toujours à jour (réseau d'abord), utilisable sans réseau (copie locale) */
-const C='atelier-pc-v2',T='atelier-pc-tiles',D='atelier-pc-data';
+const C='atelier-pc-v3',T='atelier-pc-tiles',D='atelier-pc-data';
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>c.addAll(['./','./manifest.webmanifest','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./lib/pdf-lib.min.js']).catch(()=>{})))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>![C,T,D].includes(x)).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
 let puts=0;
@@ -13,5 +13,5 @@ self.addEventListener('fetch',e=>{const r=e.request;if(r.method!=='GET')return;c
   if(u.origin===location.origin){e.respondWith(fetch(r,{cache:'no-store'}).then(res=>{if(res.ok){const cp=res.clone();caches.open(C).then(c=>c.put(r,cp))}return res}).catch(()=>caches.match(r).then(m=>m||caches.match('./'))));return}
   if(u.host==='data.geopf.fr'&&u.pathname.startsWith('/wmts')){e.respondWith(tile(r));return}
   if(/^(data\.geopf\.fr|apicarto\.ign\.fr|georisques\.gouv\.fr|www\.georisques\.gouv\.fr|wxs\.ign\.fr)$/.test(u.host)){e.respondWith(data(r));return}
-  if(/cdnjs\.cloudflare\.com|fonts\.(googleapis|gstatic)\.com|cdn\.jsdelivr\.net/.test(u.host)){e.respondWith(caches.match(r).then(m=>m||fetch(r).then(res=>{const cp=res.clone();caches.open(C).then(c=>c.put(r,cp));return res})))}
+  if(/cdnjs\.cloudflare\.com|unpkg\.com|fonts\.(googleapis|gstatic)\.com|cdn\.jsdelivr\.net/.test(u.host)){e.respondWith(caches.match(r).then(m=>m||fetch(r).then(res=>{const cp=res.clone();caches.open(C).then(c=>c.put(r,cp));return res})))}
 });
