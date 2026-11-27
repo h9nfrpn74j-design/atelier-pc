@@ -231,6 +231,16 @@ nav.tabs button .d{width:7px;height:7px;border-radius:50%}
 .feu-n{background:#F1F3F2;border-color:#DDE2E0;color:#3A4542}.feu-n>i{background:#AEB7B4}
 .feu .lnk{background:none;border:0;padding:4px 0 0;color:inherit;text-decoration:underline;cursor:pointer;font:inherit;font-size:12px;font-weight:600}
 .feu .hint{margin:6px 0 0;font-size:11.5px}.feu-h{margin:4px 0 0;font-size:14px}
+.regl-auto{background:#EAF6EE;border:1px solid #B5DEC3;border-radius:8px;padding:8px 10px;margin:4px 0 8px;font-size:12.5px}.regl-auto b{display:block;color:#173D27}.regl-auto span{display:block;opacity:.85}.regl-auto.mod{background:#FDF4E1;border-color:#F0D49A}.regl-auto.mod b{color:#4A3505}.regl-auto .btn{margin-top:6px}
+.dimlim{border:1px solid #DDE2E0;border-radius:8px;padding:7px 10px;margin:-2px 0 10px;font-size:12.5px;background:#F6F8F7}.dimlim>span{font-size:11px;text-transform:uppercase;letter-spacing:.05em;opacity:.7}.dimlim ul{margin:3px 0 0;padding-left:16px}.dimlim li.bad{color:#B3261E}.dimlim.bad{border-color:#F1BDB5;background:#FCEBE8}.dimlim .btn{margin-top:6px}
+input.over{border-color:#D2493B!important;background:#FFF5F3!important}
+.tpl{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}.tpl button{border:1px solid #DDE2E0;background:#fff;border-radius:8px;padding:6px 7px;text-align:left;cursor:pointer;font:inherit;font-size:12px;line-height:1.25}.tpl button:hover{border-color:var(--accent)}.tpl b{display:block;font-weight:600}.tpl span{opacity:.7;font-size:11px}
+.ex-ask{border:1px solid #F0D49A;background:#FDF4E1;border-radius:8px;padding:8px 10px;margin:4px 0 8px;font-size:12.5px}.ex-ask b{display:block}.ex-ask>span{display:block;opacity:.85;margin-bottom:6px}.ex-ask.warn{border-color:#F1BDB5;background:#FCEBE8}.ex-ask .btns{display:flex;flex-wrap:wrap;gap:6px}
+.prof{font-size:12.5px;margin:2px 0 10px}.prof>span{display:block;opacity:.8;margin-bottom:4px}.prof .btns{display:flex;flex-wrap:wrap;gap:6px}
+.expert-tg{margin:4px 14px 8px;font-size:12.5px}.expert-tg .hint{font-size:11px}
+body.simple .adv{display:none!important}
+@media (max-width:420px){.tpl{grid-template-columns:repeat(2,1fr)}}
+
 .feu-pi{margin-top:10px;padding:10px 12px;background:#fff;border-radius:8px;border:1px solid rgba(0,0,0,.08);color:#1F2A27}.feu-pi h4{margin:0 0 2px;font-size:14px}.feu-pi .hint{margin:0 0 6px}
 .feu-pi ol{margin:0;padding-left:20px}.feu-pi li{padding:6px 0;border-top:1px solid rgba(0,0,0,.06)}.feu-pi li:first-child{border-top:0}.feu-pi li b{display:block;font-weight:600}.feu-pi li span{display:block;font-size:12px;opacity:.85}.feu-pi .btn{margin-top:5px}
 .feu-pic{margin:6px 0 0;font-size:12px;font-weight:600}.feu-r>div>b{font-size:15px}
@@ -787,6 +797,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
 </div>
 <div class="main">
 <aside>
+  <label class="toggle expert-tg"><input type="checkbox" data-b="ui.expert"> Mode expert <span class="hint">(réglages techniques : altitude NGF, combles, point de mesure…)</span></label>
   <!-- 0 TYPE DE DOSSIER -->
   <details class="step" open>
     <summary><span class="n">00</span>Type de dossier<span class="s" id="sumMode"></span></summary>
@@ -836,7 +847,8 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
       <label class="toggle"><input type="checkbox" id="modeVoie"> Désigner la voie en cliquant sur les limites</label>
       <div class="sub">Constructions existantes</div>
       <p class="hint">Bâtiments relevés par l'IGN sur votre terrain. Indiquez s'ils sont conservés ou démolis, et ajoutez ceux qui manquent (abri récent, piscine couverte…).</p>
-      <div id="exList" class="exlist"></div>
+      <div id="exAsk"></div><div id="exList" class="exlist"></div>
+      <p class="hint">Hauteur = point le plus haut, depuis le sol. Pas de mètre ? Comptez les rangées de parpaings (≈ 0,20 m chacune) ou les lames de bardage, et ajoutez la pointe du toit.</p>
       <div class="btns"><button class="btn sm" id="bExAdd" type="button">Ajouter une construction existante</button></div>
       <p class="hint">La voie est détectée automatiquement (limite sans parcelle voisine). Corrigez-la si besoin : elle sert aux reculs, à l'accès et aux raccordements.</p>
     </div>
@@ -853,7 +865,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
       <button class="btn" type="button" data-zmopen style="width:100%;margin:2px 0 6px"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg> Voir les zones sur une carte</button>
       <div id="feuBox"></div><div id="gpuBox"></div>
       <label class="toggle"><input type="checkbox" data-b="ui.gpuMapOn" id="gpuMapOn"> Afficher les prescriptions du PLU sur le plan de masse</label>
-      <p class="hint">Reportez ci-dessous les règles de votre zone : elles servent aux contrôles de conformité. Le bouton de lecture vous propose les valeurs trouvées dans le règlement.</p>
+      <div id="reglAuto"></div><p class="hint adv">Ces règles servent aux contrôles de conformité. Le bouton de lecture vous propose les valeurs trouvées dans le règlement.</p>
       <div class="grid2">
         <label class="f">Recul min. / voie (m)<input type="number" step="0.5" min="0" data-b="regles.reculVoie"></label>
         <label class="f">Recul min. / limites (m)<input type="number" step="0.5" min="0" data-b="regles.reculLim"></label>
@@ -861,11 +873,11 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
       <label class="toggle"><input type="checkbox" data-b="regles.limiteOk"> Implantation en limite séparative autorisée</label>
       <div class="grid2">
         <label class="f">Hauteur max. (m)<input type="number" step="0.5" min="0" data-b="regles.hMax"></label>
-        <label class="f">Mesurée à
+        <label class="adv f">Mesurée à
           <select data-b="regles.hRef"><option value="faitage">au faîtage</option><option value="egout">à l'égout</option></select>
         </label>
       </div>
-      <label class="f">Point de mesure de la hauteur<select data-b="regles.hPoint"><option value="bas">Terrain naturel au point le plus bas</option><option value="milieu">Milieu de la façade (terrain avant travaux)</option></select></label>
+      <label class="adv f">Point de mesure de la hauteur<select data-b="regles.hPoint"><option value="bas">Terrain naturel au point le plus bas</option><option value="milieu">Milieu de la façade (terrain avant travaux)</option></select></label>
       <div class="grid3"><label class="f">Annexe : hauteur max. (m)<input type="number" step="0.1" min="0" data-b="regles.annexeH" placeholder="—"></label><label class="f">Annexe : emprise max. (m²)<input type="number" step="1" min="0" data-b="regles.annexeEmp" placeholder="—"></label><label class="f">Carport : hauteur max. (m)<input type="number" step="0.1" min="0" data-b="regles.carportH" placeholder="—"></label></div>
       <p class="hint">Exemple PLUi du Grand Périgueux (zones U, A et N) : annexe non accolée 2,50 m et, en zone A/N, 50 m² ; carport (abri non entièrement clos) 4 m.</p>
       <label class="f">Hauteur max. des clôtures (m, vide = sans règle)<input type="number" step="0.05" min="0" data-b="regles.hClo"></label>
@@ -907,8 +919,9 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
       <label class="f pc-only">Nature du projet
         <select data-b="projet.nature"><option value="maison">Construction d'une maison individuelle</option><option value="extension">Extension d'une construction existante</option><option value="annexe">Annexe (garage, abri, atelier…)</option></select>
       </label>
+      <div class="pc-only"><div class="impl-h" style="margin:2px 0 4px">Partir d'un modèle</div><div class="tpl"><button type="button" data-tpl="garage"><b>Garage 1 voiture</b><span>6 × 3,5 m</span></button><button type="button" data-tpl="garage2"><b>Garage 2 voitures</b><span>6 × 6 m</span></button><button type="button" data-tpl="atelier"><b>Atelier 50 m²</b><span>7,1 × 7 m</span></button><button type="button" data-tpl="abri"><b>Abri de jardin</b><span>3 × 2,5 m</span></button><button type="button" data-tpl="ext"><b>Extension 20 m²</b><span>5 × 4 m</span></button><button type="button" data-tpl="maison"><b>Maison plain-pied</b><span>12 × 8,5 m</span></button></div></div>
       <div class="grid2 pc-only"><label class="f">Usage de l'annexe<select data-b="projet.usage"><option value="garage">Garage / stationnement</option><option value="atelier">Atelier / stockage</option><option value="abri">Abri de jardin</option><option value="autre">Autre</option></select></label>
-      <label class="f">Garage intégré (m², hors SDP)<input type="number" step="0.5" min="0" data-b="projet.garageSurf" placeholder="auto"></label></div>
+      <label class="adv f">Garage intégré (m², hors SDP)<input type="number" step="0.5" min="0" data-b="projet.garageSurf" placeholder="auto"></label></div>
       <div class="grid2 pc-only ann-only"><label class="f">Partie ouverte sur poteaux (m)<input type="number" step="0.1" min="0" data-b="projet.ouvL" placeholder="0 = fermé"></label><label class="f">Côté de la partie ouverte<select data-b="projet.ouvSide"><option value="g">À gauche, vu de la rue</option><option value="d">À droite, vu de la rue</option></select></label></div>
       <div class="grid2 pc-only ann-only"><label class="f">Poteaux et poutres<select data-b="projet.charpente"><option value="bois">Bois</option><option value="metal">Métal</option></select></label><label class="f">Teinte (ex. RAL 7024)<input type="color" data-b="projet.charpenteCouleur" aria-label="Couleur des poteaux"></label></div>
       <label class="f pc-only">Décrivez votre projet
@@ -918,14 +931,16 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
       <ul class="understood" id="understood" hidden></ul>
 
       <div class="sub">Volume et implantation</div>
+      <label class="toggle pc-only"><input type="checkbox" data-b="ui.zoneOk"> Montrer sur le plan de masse où je peux construire</label>
       <div class="preview3d" id="prev3d"></div>
-      <label class="f">Rotation de la vue 3D<input type="range" min="0" max="359" step="1" data-b="ui.yaw3d"></label>
+      <label class="adv f">Rotation de la vue 3D<input type="range" min="0" max="359" step="1" data-b="ui.yaw3d"></label>
       <div class="grid2">
         <label class="f">Longueur L (m)<input type="number" step="0.1" min="3" data-b="projet.L"></label>
         <label class="f">Largeur l (m)<input type="number" step="0.1" min="3" data-b="projet.W"></label>
       </div>
-      <label class="f pc-only">Surface de plancher réelle (m², facultatif)<input type="number" step="0.1" min="0" data-b="projet.sdpManuel" id="sdpMan" placeholder="calcul automatique"></label>
-      <p class="hint pc-only" id="sdpHint" style="margin-top:-4px"></p>
+      <div id="dimLim"></div>
+      <label class="adv f pc-only">Surface de plancher réelle (m², facultatif)<input type="number" step="0.1" min="0" data-b="projet.sdpManuel" id="sdpMan" placeholder="calcul automatique"></label>
+      <p class="hint pc-only adv" id="sdpHint" style="margin-top:-4px"></p>
       <div class="aile-box pc-only" id="aileBox">
         <label class="toggle"><input type="checkbox" data-b="projet.aile.on"> <b>Maison en L ou en T</b> : ajouter une aile</label>
         <div class="aile-f">
@@ -965,11 +980,13 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
       <div class="grid3">
         <label class="f">Niveaux<input type="number" step="1" min="1" max="4" data-b="projet.niveaux"></label>
         <label class="f">H. d'étage (m)<input type="number" step="0.05" min="2.4" data-b="projet.hEtage"></label>
-        <label class="f">Plancher / TN (m)<input type="number" step="0.05" min="0" data-b="projet.hPlancher"></label>
+        <label class="adv f">Plancher / TN (m)<input type="number" step="0.05" min="0" data-b="projet.hPlancher"></label>
       </div>
-      <label class="f">Altitude NGF du plancher RDC (facultatif, en mètres NGF)<input type="number" step="0.01" data-b="projet.plancherNGF" id="plNGF"></label>
-      <label class="toggle"><input type="checkbox" data-b="projet.regrade"> Terrain naturel repris au droit de la construction (plateforme)</label>
-      <p class="hint" id="plHint">Laissez vide : l'altitude est calculée depuis le terrain. Pour régler la hauteur du plancher au-dessus du sol, utilisez « Plancher / TN ».</p>
+      <label class="f">Hauteur à l'égout souhaitée (m)<input type="number" step="0.05" min="1.8" id="hEg" inputmode="decimal"></label>
+      <p class="hint" style="margin-top:-4px">Bas de la toiture (gouttière), mesuré depuis le terrain avant travaux. L'appli ajuste la hauteur d'étage pour vous.</p>
+      <label class="adv f">Altitude NGF du plancher RDC (facultatif, en mètres NGF)<input type="number" step="0.01" data-b="projet.plancherNGF" id="plNGF"></label>
+      <label class="adv toggle"><input type="checkbox" data-b="projet.regrade"> Terrain naturel repris au droit de la construction (plateforme)</label>
+      <p class="hint adv" id="plHint">Laissez vide : l'altitude est calculée depuis le terrain. Pour régler la hauteur du plancher au-dessus du sol, utilisez « Plancher / TN ».</p>
       <div class="sub">Toiture</div>
       <div class="grid3">
         <label class="f">Type
@@ -980,7 +997,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
       </div>
       <label class="toggle" id="monoInvRow"><input type="checkbox" data-b="projet.monoInv"> Inverser la pente (le point haut passe de l'autre côté)</label>
       <label class="toggle"><input type="checkbox" data-b="projet.combles"> Combles aménagés</label>
-      <label class="f">Hauteur de jambette (m)<input type="number" step="0.05" min="0" max="1.8" data-b="projet.jambette"></label>
+      <label class="adv f">Hauteur de jambette (m)<input type="number" step="0.05" min="0" max="1.8" data-b="projet.jambette"></label>
       <div class="sub">Fenêtres de toit et panneaux solaires</div>
       <div id="tiList" class="exlist"></div>
       <div class="btns"><button class="btn sm" data-addti="velux" type="button">+ Fenêtres de toit</button><button class="btn sm" data-addti="pv" type="button">+ Panneaux solaires</button></div>
@@ -1120,6 +1137,7 @@ body.land .cam-bar{left:auto;top:0;bottom:0;width:110px;grid-template-columns:1f
         <label class="f">Téléphone<input type="tel" data-b="dem.tel"></label>
         <label class="f">Courriel<input type="email" data-b="dem.email"></label>
       </div>
+      <div id="profBox"></div>
       <div class="grid2">
         <label class="f">Date des plans<input type="date" data-b="meta.date"></label>
         <label class="f">Indice<input type="text" data-b="meta.indice"></label>
@@ -2010,6 +2028,7 @@ function svgMasse(){
   let lastPts=[];for(const r of rings)for(const v of r){if(lastPts.some(q=>hyp(q[0]-v[0],q[1]-v[1])<5))continue;lastPts.push(v);const z=alt(v[0],v[1]);if(z==null)continue;
     o+=`<g>${lineS([v[0]-0.6*k,v[1]],[v[0]+0.6*k,v[1]],`stroke="#111" stroke-width="${0.15*k}"`)}${lineS([v[0],v[1]-0.6*k],[v[0],v[1]+0.6*k],`stroke="#111" stroke-width="${0.15*k}"`)}${textS([v[0]+0.8*k,v[1]+0.8*k],'TN '+fmt(z),1.7*k,`fill="#555" paint-order="stroke" stroke="#fff" stroke-width="${0.5*k}"`)}</g>`}
   o+=gpuMasse(k);
+  if(BLD&&!MZOOM&&!PRINTING&&S.ui.zoneOk!==false)try{o+=zoneOkMasse(k,vx,-cy-vh/2,vw,vh)}catch(e){}
   if(MODE==='dp-division')o+=divMasse(k,DIVHIDE);
   // constructions existantes
   o+=abordsMasse(k);
@@ -3443,7 +3462,7 @@ function feasibility(){const T=S.terrain,P=S.projet;const it=[];const K={};const
   // ----- régime des habitations existantes en zone A / N / 2AU
   const hab=feuHab();K.hab=hab;
   if(R.an&&R.hab!==true&&['extension','annexe','carport','piscine'].includes(pj)){
-    if(!hab)add('o','Aucune habitation existante repérée sur le terrain','En zone '+zk+', extensions et annexes ne sont admises que pour une habitation existante. Indiquez-la dans « Constructions déjà sur le terrain ».',src);
+    if(!hab){K.noHab=1}if(!hab)add('o','Aucune habitation existante repérée sur le terrain','En zone '+zk+', extensions et annexes ne sont admises que pour une habitation existante. Indiquez-la dans « Constructions déjà sur le terrain ».',src);
     if(pj==='extension'&&hab){const E0=exArea(hab),mx=Math.max(GP_COM.anExtPct*E0,GP_COM.anExtM2);if(sf.emprise>mx+0.5)K.ext={e:sf.emprise,mx};add(sf.emprise<=mx+0.5?'g':'r',`Extension : ${fmt(sf.emprise,0)} m² pour ${fmt(mx,0)} m² maximum`,`+30 % de l'emprise de la maison (${fmt(E0,0)} m²) ou +60 m², la règle la plus favorable.`,src)}
     if(pj==='annexe'||pj==='carport'||pj==='piscine'){
       const nbEx=exKept().filter(e=>e!==hab&&!/habit|r[ée]sid|logement|maison/i.test(e.usage||'')).length;const nb=nbEx+1;K.nbEx=nbEx;if(nb>GP_COM.anNb)K.nb=nb;add(nb<=GP_COM.anNb?'g':'r',`${nb} annexe${nb>1?'s':''} après travaux pour ${GP_COM.anNb} maximum`,nbEx?`Dont ${nbEx} existante${nbEx>1?'s':''} conservée${nbEx>1?'s':''}.`:'',src);
@@ -3469,6 +3488,7 @@ function feuOut(it,ref,K){const c=it.some(x=>x.l==='r')?'r':it.some(x=>x.l==='o'
 function feuPistes(K,c){const P=[];const add=(t,s,fix)=>P.push({t,s,fix});const sf=K.sf||{},R=K.R||{};const pj=K.pj;
   const W=+S.projet.W||7;const Lmax=Math.floor(GP_COM.anEmp/W*10)/10;
   const DM=(()=>{try{return exDem()}catch(e){return[]}})();
+  if(K.noHab)add('Indiquer quelle construction est votre maison','Un clic dans « Constructions déjà sur le terrain » suffit : le feu se recalcule aussitôt.','pickhab');
   if(K.ebc)add('Déplacer le projet hors de l\'espace boisé classé','Tracez-le sur la carte des zones : la partie boisée est hachurée en vert. Le reste du terrain suit la règle de la zone.');
   if(K.none)add('Vérifier si une autre partie du terrain est dans une autre zone','Un terrain est parfois partagé entre deux zones. Ouvrez la carte des zones et placez le projet sur la partie la moins protégée.');
   if(K.none||K.maisonAN)add('Demander une évolution du PLUi','Une modification ou révision du PLUi peut créer un petit secteur constructible (STECAL). C\'est long (1 à 3 ans) et incertain : à évoquer avec la mairie et le Grand Périgueux.');
@@ -3501,6 +3521,8 @@ function feuPistes(K,c){const P=[];const add=(t,s,fix)=>P.push({t,s,fix});const 
   if(c!=='g'&&!K.rnu)add('Faire confirmer par un certificat d\'urbanisme opérationnel','Avant d\'investir dans les plans, la mairie répond en 2 mois sur la faisabilité de la solution retenue.');
   return P}
 function feuFix(k){const p=S.projet;
+  if(k==='max'){feuMax();fillInputs();schedule();return}
+  if(k==='pickhab'){const d=$('#exAsk');if(d){const st=d.closest('details');if(st)st.open=true;d.scrollIntoView({behavior:'smooth',block:'center'})}return}
   if(k==='emp50'){const W=Math.min(+p.W||7,7.07);p.W=W;p.L=Math.floor(GP_COM.anEmp/W*10)/10;if(p.ouvL)p.ouvL=0;toast(`Annexe ramenée à ${fmt(p.L,1)} × ${fmt(W,1)} m.`)}
   if(k==='h25'){const lim=GP_COM.annexeH;p.combles=false;let h=heights();let i=0;
     while(h.hE>lim+0.004&&i++<40){if(p.hPlancher>0.1)p.hPlancher=Math.max(0.1,Math.round((p.hPlancher-0.05)*100)/100);else if(p.hEtage>2.0)p.hEtage=Math.round((p.hEtage-0.05)*100)/100;else break;h=heights()}
@@ -3510,8 +3532,100 @@ function feuHTML(full){let F;try{F=feasibility()}catch(e){return''}if(F.c==='non
   const pj=feuProjet();const top=F.it.filter(x=>x.l===F.c).slice(0,full?99:3);
   return`<div class="feu feu-${F.c}"><i></i><div><span>${esc(FEU_LBL[pj]||'Votre projet')} · ${esc(F.ref||'')}</span><b>${esc(F.t)}</b>
     <ul>${(full?F.it:top).map(x=>`<li class="fl-${x.l}"><b>${esc(x.t)}</b>${x.s?`<span>${esc(x.s)}</span>`:''}</li>`).join('')}</ul>
-    ${F.pi&&F.pi.length&&F.c!=='g'?(full?`<div class="feu-pi"><h4>💡 Pistes pour rendre le projet possible</h4><p class="hint">Des solutions qui respectent le règlement : à choisir selon votre besoin.</p><ol>${F.pi.map(x=>`<li><b>${esc(x.t)}</b><span>${esc(x.s)}</span>${x.fix?`<button class="btn sm" type="button" data-feufix="${x.fix}">Appliquer au projet</button>`:''}</li>`).join('')}</ol></div>`:`<p class="feu-pic">💡 ${F.pi.length} piste${F.pi.length>1?'s':''} pour le rendre possible</p>`):''}
+    ${F.pi&&F.pi.length&&F.c!=='g'?(full?`<div class="feu-pi"><h4>💡 Pistes pour rendre le projet possible</h4><p class="hint">Des solutions qui respectent le règlement : à choisir selon votre besoin.</p><ol>${F.pi.map(x=>`<li><b>${esc(x.t)}</b><span>${esc(x.s)}</span>${x.fix?`<button class="btn sm" type="button" data-feufix="${x.fix}">${x.fix==='pickhab'?'Choisir ma maison':'Appliquer au projet'}</button>`:''}</li>`).join('')}</ol></div>`:`<p class="feu-pic">💡 ${F.pi.length} piste${F.pi.length>1?'s':''} pour le rendre possible</p>`):''}
     ${full?`<p class="hint">Règles transcrites du règlement écrit${F.it.some(x=>x.src)?` (<a href="${esc((F.it.find(x=>x.src)||{}).src)}" target="_blank" rel="noopener">source</a>)`:''}. Un feu vert ne remplace pas l'avis de la mairie : faites confirmer, idéalement par un certificat d'urbanisme opérationnel.</p>`:`<button class="lnk" type="button" data-feu="more">${F.c==='r'?'Voir pourquoi et les solutions':'Voir le détail'} (${F.it.length})</button>`}</div></div>`}
+
+/* ================= Paramétrage facile ================= */
+/* règles de la zone (Grand Périgueux) */
+function feuZoneR(){try{const Z=S.terrain.zone;if(!Z||S.demo)return null;const sec=gpSecteur();if(!sec)return null;const tab=GP_Z[sec===1?2:sec];const zk=zoneKey(Z.libelle,tab);return zk?{...tab[zk],zk,sec}:null}catch(e){return null}}
+function gpRegles(){const R=feuZoneR();if(!R)return null;const r1=R.r1==null?null:Array.isArray(R.r1)?R.r1[1]:R.r1;const r2=R.r2==null?null:R.r2==='H/2'?3:R.r2;
+  return{key:R.sec+'|'+R.zk,lbl:`PLUi du Grand Périgueux, secteur ${R.sec}, zone ${R.zk}`,v:{reculVoie:r1,reculLim:r2,limiteOk:!!R.r2lim,hMax:R.h??null,hRef:'egout',hPoint:'milieu',annexeH:GP_COM.annexeH,annexeEmp:R.an?GP_COM.anEmp:null,carportH:GP_COM.carportH,hClo:1.8,ces:R.emp??null}}}
+function gpAutoRegles(force){const G=gpRegles();if(!G)return false;if(!force&&S.regles.autoKey===G.key)return false;Object.assign(S.regles,G.v);S.regles.autoKey=G.key;S.regles.autoLbl=G.lbl;try{fillInputs()}catch(e){}return true}
+function reglAutoHTML(){const G=gpRegles();if(!G)return S.terrain.zone&&!S.demo?'<p class="hint">Pour cette commune, l\'appli ne connaît pas encore les chiffres du règlement : reportez-les ci-dessous.</p>':'';
+  const same=S.regles.autoKey===G.key&&Object.entries(G.v).every(([k,v])=>(S.regles[k]??null)==v);
+  return`<div class="regl-auto${same?'':' mod'}"><b>${same?'✓ Règles remplies automatiquement':'Règles modifiées à la main'}</b><span>${esc(G.lbl)}. ${same?'Vérifiez-les : vous pouvez les modifier.':'Les valeurs ci-dessous ne correspondent plus au règlement.'}</span>${same?'':'<button class="btn sm" type="button" data-reglauto>Remettre les valeurs du PLUi</button>'}</div>`}
+
+/* plan de masse : où le bâtiment peut se placer */
+let ZOKN=0;
+function zoneOkMasse(k,vx,vyTop,vw,vh){const zid='zk'+(++ZOKN)+'_';const {rings,E}=boundary();if(!rings.length)return'';const R=S.regles;const rv=+R.reculVoie||0,rl=R.limiteOk?0:(+R.reculLim||0);
+  let m=`<mask id="${zid}m" maskUnits="userSpaceOnUse" x="${vx}" y="${vyTop}" width="${vw}" height="${vh}">`+rings.map(r=>polyS(r,'fill="#fff"')).join('');
+  for(const e of E){const r=e.voie?rv:rl;if(r>0)m+=lineS(e.a,e.b,`stroke="#000" stroke-width="${(2*r).toFixed(2)}" stroke-linecap="round"`)}
+  try{const G=S.terrain.gpu;if(G&&G.ok)for(const p of G.presc||[])if(/bois|EBC/i.test((p.lib||'')+(p.libelle||'')))m+=(p.r||[]).map(r=>polyS(r,'fill="#000"')).join('')}catch(e){}
+  m+='</mask>';let o=`<g class="zok" pointer-events="none" data-nodc="1"><defs>${m}`;let ring='';
+  const Z=feuZoneR();const pj=feuProjet();const hab=feuHab();let lim=null;
+  if(Z&&Z.an&&Z.hab!==true&&hab&&['annexe','carport','piscine'].includes(pj)){lim=pj==='piscine'?GP_COM.anDistPisc:GP_COM.anDist;const hr=exRing(hab);
+    o+=`<mask id="${zid}r" maskUnits="userSpaceOnUse" x="${vx}" y="${vyTop}" width="${vw}" height="${vh}">${polyS(hr,`fill="#fff" stroke="#fff" stroke-width="${(2*lim+0.35*k).toFixed(3)}" stroke-linejoin="round"`)}${polyS(hr,`fill="#000" stroke="#000" stroke-width="${(2*lim-0.35*k).toFixed(3)}" stroke-linejoin="round"`)}</mask>`;
+    const top=hr.reduce((a,q)=>q[1]>a[1]?q:a,hr[0]);ring=`<rect x="${vx}" y="${vyTop}" width="${vw}" height="${vh}" fill="#C76A00" mask="url(#${zid}r)"/>`+textS([top[0],top[1]+lim+1.2*k],`limite des ${lim} m autour de la maison`,1.7*k,`text-anchor="middle" fill="#A65800" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="${0.5*k}" data-nodc="1"`)}
+  o+=`</defs><rect x="${vx}" y="${vyTop}" width="${vw}" height="${vh}" fill="#2F9E5B" fill-opacity=".14" mask="url(#${zid}m)"/>${ring}`;
+  const lx=vx+3*k,ly=-(vyTop+4*k);o+=`<rect x="${lx.toFixed(3)}" y="${(-ly-1.4*k).toFixed(3)}" width="${(2.6*k).toFixed(3)}" height="${(1.8*k).toFixed(3)}" fill="#2F9E5B" fill-opacity=".35"/>`+textS([lx+3.4*k,ly],`Zone où placer le bâtiment (reculs ${fmt(rv,1)} m voie / ${R.limiteOk?'limite ou '+fmt(+R.reculLim||0,1)+' m':fmt(rl,1)+' m'} limites)${lim?` · annexe à ${lim} m max. de la maison`:''}`,1.7*k,`fill="#1E6B3E" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="${0.5*k}" data-nodc="1"`);
+  return o+'</g>'}
+
+/* limites des dimensions, affichées sous les champs */
+function feuLimits(){const R=feuZoneR(),pj=feuProjet(),p=S.projet,G=S.regles;const L={};const hab=feuHab();
+  let accol=false;try{const ne=nearestExisting();accol=ne&&ne.d<0.1}catch(e){}
+  if(pj==='annexe'||pj==='carport'){if(R&&R.an&&R.hab!==true)L.emp=GP_COM.anEmp;else if(+G.annexeEmp)L.emp=+G.annexeEmp;
+    if(!accol){if(pj==='carport')L.hF=+G.carportH||null;else L.hE=+G.annexeH||null}}
+  else if(pj==='extension'&&R&&R.an&&R.hab!==true&&hab){L.emp=Math.max(GP_COM.anExtPct*exArea(hab),GP_COM.anExtM2)}
+  if(['maison','extension'].includes(pj)&&+G.hMax){if(G.hRef==='egout')L.hE=+G.hMax;else L.hF=+G.hMax}
+  if(+G.ces&&['maison','extension','annexe','carport'].includes(pj)){const A=parcelArea();const ex=exKept().reduce((a,e)=>a+exArea(e),0);const m=G.ces*A/100-ex;if(m>0&&(!L.emp||m<L.emp))L.emp=m}
+  return L}
+function dimLimHTML(){const L=feuLimits(),p=S.projet;let h={};try{h=heights()}catch(e){}const sf=(()=>{try{return surfaces()}catch(e){return{}}})();const out=[];
+  if(L.emp){const over=sf.emprise>L.emp+0.05;out.push(`<li class="${over?'bad':''}">Emprise au sol : <b>${fmt(sf.emprise,1)} m²</b> pour <b>${fmt(L.emp,0)} m² au plus</b>${over?` → avec l = ${fmt(p.W,1)} m, L ≤ ${fmt(Math.floor(L.emp/p.W*10)/10,1)} m`:''}</li>`)}
+  if(L.hE){const over=h.hE>L.hE+0.005;out.push(`<li class="${over?'bad':''}">Hauteur à l'égout : <b>${fmt(h.hE)} m</b> pour <b>${fmt(L.hE)} m au plus</b></li>`)}
+  if(L.hF){const over=h.hF>L.hF+0.005;out.push(`<li class="${over?'bad':''}">Hauteur totale : <b>${fmt(h.hF)} m</b> pour <b>${fmt(L.hF)} m au plus</b></li>`)}
+  if(!out.length)return'';const bad=out.some(x=>x.includes('class="bad"'));
+  return`<div class="dimlim${bad?' bad':''}"><span>Ce que le PLU autorise ici</span><ul>${out.join('')}</ul>${bad?'<button class="btn sm primary" type="button" data-feufix="max">Taille maximale autorisée</button>':''}</div>`}
+function feuMax(silent){const L=feuLimits(),p=S.projet;const msg=[];
+  if(L.emp){const sf=surfaces();if(sf.emprise>L.emp+0.05){if(p.ouvL&&p.ouvL>0&&sf.empClos<=L.emp)p.ouvL=0;const W=Math.min(+p.W,Math.sqrt(L.emp)*1.6);p.W=Math.round(W*10)/10;p.L=Math.max(3,Math.floor(L.emp/p.W*10)/10);if(p.ouvL>p.L-1.5)p.ouvL=0;msg.push(`${fmt(p.L,1)} × ${fmt(p.W,1)} m`)}}
+  const tgt=L.hE||null;if(tgt){let h=heights();if(h.hE>tgt+0.004){p.combles=false;let i=0;h=heights();while(h.hE>tgt+0.004&&i++<60){if(p.hPlancher>0.1)p.hPlancher=Math.max(0.1,Math.round((p.hPlancher-0.05)*100)/100);else if(p.hEtage>2.0)p.hEtage=Math.round((p.hEtage-0.05)*100)/100;else break;h=heights()}msg.push(`égout à ${fmt(h.hE)} m`)}}
+  if(L.hF){let h=heights();let i=0;while(h.hF>L.hF+0.004&&i++<60){if(p.toit!=='plat'&&p.pente>10)p.pente=Math.max(10,p.pente-1);else if(p.hEtage>2.0)p.hEtage=Math.round((p.hEtage-0.05)*100)/100;else break;h=heights()}}
+  if(!silent)toast(msg.length?'Projet ramené à la taille maximale : '+msg.join(', ')+'.':'Le projet respecte déjà les limites.');return msg.length}
+/* hauteur à l'égout saisie directement */
+function setEgout(v){const p=S.projet;if(!(v>0))return;const n=Math.max(1,+p.niveaux||1);
+  for(let k=0;k<3;k++){const d=v-heights().hE;if(Math.abs(d)<0.005)break;let he=p.hEtage+d/n;if(he<2.0){p.hPlancher=Math.max(0,Math.round((p.hPlancher-(2.0-he)*n)*100)/100);he=2.0}p.hEtage=Math.round(he*100)/100}}
+
+/* modèles prêts à l'emploi */
+const TPL={garage:{t:'Garage 1 voiture',s:'6 × 3,5 m',p:{nature:'annexe',usage:'garage',L:6,W:3.5,niveaux:1,hEtage:2.4,combles:false,toit:'2pans',pente:30,ouvL:0}},
+  garage2:{t:'Garage 2 voitures',s:'6 × 6 m',p:{nature:'annexe',usage:'garage',L:6,W:6,niveaux:1,hEtage:2.4,combles:false,toit:'2pans',pente:30,ouvL:0}},
+  atelier:{t:'Atelier 50 m²',s:'7,1 × 7 m',p:{nature:'annexe',usage:'atelier',L:7.1,W:7,niveaux:1,hEtage:2.4,combles:false,toit:'2pans',pente:25,ouvL:0}},
+  abri:{t:'Abri de jardin',s:'3 × 2,5 m',p:{nature:'annexe',usage:'abri',L:3,W:2.5,niveaux:1,hEtage:2.1,combles:false,toit:'mono',pente:15,ouvL:0}},
+  ext:{t:'Extension 20 m²',s:'5 × 4 m',p:{nature:'extension',L:5,W:4,niveaux:1,hEtage:2.6,combles:false,toit:'mono',pente:15,ouvL:0}},
+  maison:{t:'Maison plain-pied',s:'12 × 8,5 m',p:{nature:'maison',L:12,W:8.5,niveaux:1,hEtage:2.6,combles:false,toit:'2pans',pente:35,ouvL:0}}};
+function tplApply(k){const T=TPL[k];if(!T)return;Object.assign(S.projet,JSON.parse(JSON.stringify(T.p)));S.projet.hPlancher=0.2;S.projet.sdpManuel=null;
+  const n=feuMax(true);fillInputs();schedule();toast(`Modèle « ${T.t} » appliqué${n?', ajusté aux limites du PLU':''}. Placez-le sur le plan de masse.`)}
+
+/* constructions existantes : quelle est la maison, doublons */
+function exDups(){const K=S.existants;const out=[];for(let i=0;i<K.length;i++)for(let j=i+1;j<K.length;j++){try{const a=exRing(K[i]),b=exRing(K[j]);if(pip(centroid(a),b)||pip(centroid(b),a))out.push([i,j])}catch(e){}}return out}
+function exAskHTML(){if(S.demo||!S.existants.length)return'';let o='';
+  for(const [i,j] of exDups()){const a=S.existants[i],b=S.existants[j];o+=`<div class="ex-ask warn"><b>Ces deux contours semblent être le même bâtiment</b><span>${esc(a.usage||'Construction')} (${fmt(exArea(a),0)} m²) et ${esc(b.usage||'Construction')} (${fmt(exArea(b),0)} m²) se superposent. Un bâtiment compté deux fois fausse le plan et le feu du PLU.</span><button class="btn sm primary" type="button" data-exdup="${i},${j}">Ne garder qu'un bâtiment</button></div>`}
+  const kept=S.existants.map((e,i)=>({e,i})).filter(x=>x.e.statut!=='demoli');
+  if(kept.length&&!feuHab()&&!S.ui.noHab)o+=`<div class="ex-ask"><b>Laquelle est votre maison ?</b><span>Le PLU accorde des droits (extension, annexes) à partir de la maison existante.</span><div class="btns">${kept.map(x=>`<button class="btn sm" type="button" data-exhab="${x.i}">${esc(x.e.usage||'Construction')} · ${fmt(exArea(x.e),0)} m²</button>`).join('')}<button class="btn sm ghost" type="button" data-exhab="none">Aucune</button></div></div>`;
+  return o}
+
+/* profil du demandeur, gardé dans ce navigateur */
+const PROF_KEY='atelier-pc-profil';
+function profGet(){try{return JSON.parse(localStorage.getItem(PROF_KEY)||'null')}catch(e){return null}}
+function profHTML(){const P=profGet();const empty=!S.dem.nom&&!S.dem.prenom;
+  return P?`<div class="prof"><span>✓ Coordonnées mémorisées sur cet appareil (${esc([P.prenom,P.nom].filter(Boolean).join(' '))})</span><div class="btns">${empty?'<button class="btn sm primary" type="button" data-prof="fill">Remplir avec mes coordonnées</button>':''}<button class="btn sm" type="button" data-prof="save">Mettre à jour</button><button class="btn sm ghost" type="button" data-prof="del">Oublier</button></div></div>`
+   :`<div class="prof"><span>Évitez de les ressaisir : elles resteront uniquement dans ce navigateur.</span><div class="btns"><button class="btn sm" type="button" data-prof="save">Mémoriser mes coordonnées pour mes prochains dossiers</button></div></div>`}
+function profAct(a){if(a==='save'){if(!S.dem.nom){toast('Renseignez au moins votre nom.');return}try{localStorage.setItem(PROF_KEY,JSON.stringify(S.dem));toast('Coordonnées mémorisées sur cet appareil.')}catch(e){toast('Mémorisation impossible dans ce navigateur.')}}
+  if(a==='fill'){const P=profGet();if(P){S.dem={...S.dem,...P};fillInputs();schedule()}}
+  if(a==='del'){try{localStorage.removeItem(PROF_KEY)}catch(e){}toast('Coordonnées oubliées.')}
+  easyRender()}
+
+function easyRender(){document.body.classList.toggle('simple',!S.ui.expert);
+  const set=(id,h)=>{const el=$(id);if(el&&el.__h!==h){el.innerHTML=h;el.__h=h}};
+  set('#reglAuto',reglAutoHTML());set('#dimLim',dimLimHTML());set('#exAsk',exAskHTML());set('#profBox',profHTML());
+  const he=$('#hEg');if(he&&document.activeElement!==he){try{he.value=heights().hE.toFixed(2)}catch(e){}}
+  const L=feuLimits();for(const s of['#hEg']){const el=$(s);if(el){let bad=false;try{const h=heights();bad=(L.hE&&h.hE>L.hE+0.005)}catch(e){}el.classList.toggle('over',!!bad)}}
+  try{const sf=surfaces();const bad=L.emp&&sf.emprise>L.emp+0.05;$$('input[data-b="projet.L"],input[data-b="projet.W"]').forEach(i=>i.classList.toggle('over',!!bad))}catch(e){}}
+document.addEventListener('click',e=>{const t=e.target;let b;
+  if(b=t.closest('[data-reglauto]')){gpAutoRegles(true);schedule();return}
+  if(b=t.closest('[data-tpl]')){tplApply(b.dataset.tpl);return}
+  if(b=t.closest('[data-exhab]')){const v=b.dataset.exhab;if(v==='none')S.ui.noHab=true;else{const x=S.existants[+v];if(x){x.usage='Habitation';S.existants.forEach(o=>{if(o!==x&&/^habitation$/i.test(o.usage||''))o.usage='Annexe'})}}renderExList();schedule();return}
+  if(b=t.closest('[data-exdup]')){const [i,j]=b.dataset.exdup.split(',').map(Number);exMerge(i,j);return}
+  if(b=t.closest('[data-prof]')){profAct(b.dataset.prof);return}});
+document.addEventListener('change',e=>{if(e.target.id==='hEg'){setEgout(parseFloat(String(e.target.value).replace(',','.')));fillInputs();schedule()}});
 
 /* insertion : avant / après sur la même planche */
 function insBefore(far){const ph=S.photos,o=S.onsite||{};if(far)return ph.insFromShot2&&o.shot2?o.shot2.img:null;
@@ -3829,7 +3943,7 @@ function renderChecks(){let w=$('#w-checks');if(!w){w=document.createElement('di
   const nb=C.filter(c=>c.lvl==='bad').length,nw=C.filter(c=>c.lvl==='warn').length;const ch=$('#chkChip');
   ch.innerHTML=`<span class="d" style="background:${nb?'#E07A6F':nw?'#E3B04B':'#7CC39A'}"></span>${nb?nb+' non-conformité'+(nb>1?'s':''):nw?nw+' point'+(nw>1?'s':'')+' à compléter':'Dossier cohérent'}`;
   ch.style.background='#26322F';ch.style.color='#fff';try{const F=feasibility();if(F.c==='r'){ch.innerHTML=`<span class="d" style="background:#E5483A"></span>Projet non autorisé par le PLU`;ch.style.background='#8E2A20'}}catch(e){}progRender()}
-function renderSide(){renderModeUI();{const gb=$('#gpuBox');if(gb)gb.innerHTML=gpuHTML();const fb=$('#feuBox'),fb2=$('#feuBox2');if(fb||fb2){const hh=feuHTML(false);if(fb)fb.innerHTML=hh;if(fb2)fb2.innerHTML=hh}}if(typeof swRender==='function')swRender();$$('input.dmode').forEach(r=>r.checked=r.value===mode());renderImpl();{const ph=S.photos;const pc=$('#insPhotoCtl');if(pc)pc.hidden=!ph.ins;const img=ph.insMode==='image';$('#insImageCtl').hidden=!img;$('#insAutoCtl').hidden=img;$('#insTreesRow').hidden=!!ph.ins;
+function renderSide(){if(gpAutoRegles()){toast('Règles de votre zone remplies automatiquement depuis le PLUi. Vérifiez-les à l\'étape 02.',5000);save()}renderModeUI();{const gb=$('#gpuBox');if(gb)gb.innerHTML=gpuHTML();const fb=$('#feuBox'),fb2=$('#feuBox2');if(fb||fb2){const hh=feuHTML(false);if(fb)fb.innerHTML=hh;if(fb2)fb2.innerHTML=hh}}if(typeof swRender==='function')swRender();try{easyRender()}catch(e){}$$('input.dmode').forEach(r=>r.checked=r.value===mode());renderImpl();{const ph=S.photos;const pc=$('#insPhotoCtl');if(pc)pc.hidden=!ph.ins;const img=ph.insMode==='image';$('#insImageCtl').hidden=!img;$('#insAutoCtl').hidden=img;$('#insTreesRow').hidden=!!ph.ins;
     const IC=insCamera();const ae=document.activeElement;if(ae!==$('#insDist'))$('#insDist').value=IC.dist.toFixed(1);if(ae!==$('#insAz'))$('#insAz').value=Math.round(IC.az)}{const mr=$('#monoInvRow');if(mr)mr.hidden=S.projet.toit!=='mono'}
   const T=S.terrain;$('#topAddr').textContent=(S.demo?'Exemple — ':'')+(adresseTerrain()||T.label||'');
   $('#plist').innerHTML=T.parcels.map(p=>`<span class="pchip">${esc(p.section)} ${esc(String(p.numero).replace(/^0+/,''))} · ${fmt(p.contenance||0,0)} m²</span>`).join('');
@@ -4430,10 +4544,10 @@ $$('input[name=editState]').forEach(r=>r.addEventListener('change',e=>{if(e.targ
 $('#bCopyState').onclick=()=>{if(!S.dossier.avant)return;const keep=['facade','facadeCouleur','couv','couvCouleur','menuis','menuisCouleur','ouv','toit','pente','debord','monoInv','toitItems'];Object.assign(S.projet,JSON.parse(JSON.stringify(S.dossier.avant)));fillInputs();renderAll();save();toast('État existant recopié dans le projet : modifiez maintenant ce qui change.')};
 
 // Liste des constructions existantes
-function renderExList(){const box=$('#exList');if(!box)return;
+function renderExList(){const box=$('#exList');if(!box)return;setTimeout(()=>{try{easyRender()}catch(e){}},0);
   if(!S.existants.length){box.innerHTML='<p class="hint" style="margin:0">Aucune construction relevée sur le terrain.</p>';return}
   box.innerHTML=S.existants.map((e,i)=>`<div class="exi${e.statut==='demoli'?' dem':''}"><div class="exh"><b>${esc(e.usage||'Construction')}</b><span>${e.src==='manuel'?'ajoutée':'IGN'} · ${fmt(exArea(e),0)} m² au sol</span><button type="button" data-exrm="${i}" aria-label="Retirer de la liste" title="Retirer de la liste">×</button></div>
-    <div class="grid3"><label class="f">Usage<input type="text" data-ex="${i}" data-k="usage" value="${esc(e.usage||'')}"></label><label class="f">Hauteur (m)<input type="number" step="0.1" min="0" data-ex="${i}" data-k="hauteur" value="${e.hauteur??''}"></label><label class="f">Niveaux<input type="number" step="1" min="1" data-ex="${i}" data-k="etages" value="${e.etages??''}"></label></div>
+    <div class="grid3"><label class="f">Usage<input type="text" data-ex="${i}" data-k="usage" value="${esc(e.usage||'')}"></label><label class="f">Hauteur au plus haut (m)<input type="number" step="0.1" min="0" data-ex="${i}" data-k="hauteur" value="${e.hauteur??''}"></label><label class="f">Niveaux<input type="number" step="1" min="1" data-ex="${i}" data-k="etages" value="${e.etages??''}"></label></div>
     ${S.existants.length>1?`<label class="f">Même bâtiment que…<select data-exmerge="${i}"><option value="">— (bâtiment distinct)</option>${S.existants.map((o,j)=>j===i?'':`<option value="${j}">${esc(o.usage||'Construction')} · ${fmt(exArea(o),0)} m²</option>`).join('')}</select></label>`:''}
     <div class="grid2"><label class="f">Devenir<select data-ex="${i}" data-k="statut"><option value="conserve"${e.statut!=='demoli'?' selected':''}>Conservée</option><option value="demoli"${e.statut==='demoli'?' selected':''}>À démolir</option></select></label><label class="f">Surface de plancher (m²)<input type="number" step="1" min="0" data-ex="${i}" data-k="sdp" value="${e.sdp??''}" placeholder="≈ ${exSdp({...e,sdp:null})}"></label></div>
     ${e.src==='manuel'?`<div class="grid3"><label class="f">Longueur (m)<input type="number" step="0.1" min="1" data-ex="${i}" data-k="L" value="${e.L}"></label><label class="f">Largeur (m)<input type="number" step="0.1" min="1" data-ex="${i}" data-k="W" value="${e.W}"></label><label class="f">Rotation (°)<input type="number" step="1" data-ex="${i}" data-k="rot" value="${e.rot}"></label></div><p class="hint" style="margin:0">Faites-la glisser sur le plan de masse pour la placer.</p>`:''}</div>`).join('')}
@@ -4659,7 +4773,7 @@ $('#diagRetry').onclick=()=>{$('#diag').hidden=true;window.__errs=[];netCheck(tr
 /* ================= Démarrage ================= */
 if(!S.meta.date)S.meta.date=today();
 /* premier affichage : lancé en fin de script, quand tous les modules sont définis */
-function startApp(){if(S.ui&&S.ui.gpuMapOn==null)S.ui.gpuMapOn=true;setTimeout(()=>{try{helpInit();const J=soonJalons(7);if(J.length&&!S.demo)toast(`Bientôt : ${frDate(J[0][0])} — ${J[0][1]}`,6000)}catch(e){}},400);setTimeout(()=>{histReset();savedUI(S.demo?'demo':'saved')},0);if(!S.demo){const d0=document.querySelector('aside details.step');if(d0)d0.open=false}try{fillInputs();renderExList();renderAll()}catch(e){window.__errs.push('Démarrage : '+e.message);window.__showErr()}
+function startApp(){if(S.ui&&S.ui.gpuMapOn==null)S.ui.gpuMapOn=true;if(S.ui&&S.ui.zoneOk==null)S.ui.zoneOk=true;setTimeout(()=>{try{helpInit();const J=soonJalons(7);if(J.length&&!S.demo)toast(`Bientôt : ${frDate(J[0][0])} — ${J[0][1]}`,6000)}catch(e){}},400);setTimeout(()=>{histReset();savedUI(S.demo?'demo':'saved')},0);if(!S.demo){const d0=document.querySelector('aside details.step');if(d0)d0.open=false}try{fillInputs();renderExList();renderAll()}catch(e){window.__errs.push('Démarrage : '+e.message);window.__showErr()}
   setTimeout(()=>netCheck(false),800);
   if(isMobile()){let v=isTablet()?'split':'panel';try{v=sessionStorage.getItem('apc-view')||v}catch(e){}setView(v)}
   if(S.demo)status('#stTerrain','','Exemple chargé (terrain fictif). Saisissez l\'adresse de votre terrain pour commencer.');
@@ -6226,7 +6340,7 @@ async function idbRestore(){let cur=null;try{cur=localStorage.getItem('atelier-p
     if(rec.updated>lsT+1000||lost){openDossierData(rec.data,true)}}catch(e){}}
 function openDossierData(d,silent){setTimeout(()=>{if(typeof histReset==='function')histReset()},50);S=unpackS(JSON.parse(JSON.stringify(d)));S.dossier=S.dossier||{type:'pc',exId:null,avant:null,apres:null};S.clo=S.clo||[];S.existants=S.existants||[];if(!S.projet.toitItems)S.projet.toitItems=[];
   mapCache={};WZ.plu=null;try{fillInputs();renderExList();renderClo&&renderClo();renderModeUI&&renderModeUI();renderAll()}catch(e){console.error(e)}saveLocal();if(!silent)toast('Dossier ouvert.')}
-function newDossier(){const keep=S.ui;S=demoState();S.dossier={type:'pc',exId:null,avant:null,apres:null};S.clo=[];S.vege=[];S.wz=null;S.onsite=null;S.projet.toitItems=[];S.regles.hClo=null;S.ui={...keep,tab:'pcmi2'};S.meta.id=null;
+function newDossier(){const keep=S.ui;S=demoState();S.dossier={type:'pc',exId:null,avant:null,apres:null};S.clo=[];S.vege=[];S.wz=null;S.onsite=null;S.projet.toitItems=[];S.regles.hClo=null;S.ui={...keep,tab:'pcmi2'};S.meta.id=null;{const P=profGet();if(P)S.dem={...S.dem,...P}}
   mapCache={};WZ.step=0;WZ.t0=null;WZ.plu=null;fillInputs();renderExList();renderAll();saveLocal();histReset();try{localStorage.removeItem('atelier-pc-cur')}catch(e){}closeDossiers();wzOpen()}
 async function openDossiers(){const M=$('#dos');M.hidden=false;const box=$('#dosList');box.innerHTML='<p class="hint">Chargement…</p>';let L=[];try{L=await idbAll()}catch(e){box.innerHTML='<p class="hint">Stockage indisponible dans ce navigateur.</p>';return}
   L.sort((a,b)=>b.updated-a.updated);const cur=S.meta&&S.meta.id;
